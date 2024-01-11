@@ -36,14 +36,14 @@ public class SwerveModule {
     private final String name;
 
     // Gains are for example purposes only - must be determined for your own robot!
-    private final PIDController drivePIDController = new PIDController(6.1, 0, 0);
+    private final PIDController drivePIDController = new PIDController(5.8, 0, 0);
 
     // Gains are for example purposes only - must be determined for your own robot!
     private final ProfiledPIDController turningPIDController = new ProfiledPIDController(0.2, 0, 0,
             new TrapezoidProfile.Constraints(MODULE_MAX_ANGULAR_VELOCITY, MODULE_MAX_ANGULAR_ACCELERATION));
 
     // Gains are for example purposes only - must be determined for your own robot!
-    private final SimpleMotorFeedforward driveFeedforward = new SimpleMotorFeedforward(0.3, 0);
+    private final SimpleMotorFeedforward driveFeedforward = new SimpleMotorFeedforward(1.2, 0);
     private final SimpleMotorFeedforward turnFeedforward = new SimpleMotorFeedforward(0, 0);
 
     /**
@@ -131,6 +131,7 @@ public class SwerveModule {
         setVoltages(0, 0);
     }
 
+    private double previousVoltage = 0;
     /**
      * Sets the desired state for the module.
      *
@@ -153,7 +154,8 @@ public class SwerveModule {
         final double turnFeedforward = this.turnFeedforward.calculate(turningPIDController.getSetpoint().velocity);
         System.out.print(this.name + " velocity: " + TroyMathUtil.roundNearestHundredth(driveEncoder.getVelocity()) + " target speed: " + TroyMathUtil.roundNearestHundredth(state.speedMetersPerSecond));
         // System.out.println(this.name + ", position: " + this.driveEncoder.getPosition());
-        System.out.println(/*this.name + */" drive output: " + TroyMathUtil.roundNearestHundredth(finalDriveOutput));
+        System.out.println(/*this.name + */" drive output: " + TroyMathUtil.roundNearestHundredth(previousVoltage));
+        previousVoltage = finalDriveOutput;
         // System.out.println("turn output: " + (turnOutput + turnFeedforward));
         driveMotor.setVoltage(MathUtil.clamp(finalDriveOutput, SWERVE_MODULE_PLS_NO_EXPLODE_MIN_SPEED, SWERVE_MODULE_PLS_NO_EXPLODE_MAX_SPEED));
         // turningMotor.setVoltage(MathUtil.clamp(turnOutput + turnFeedforward, SWERVE_MODULE_PLS_NO_EXPLODE_MIN_SPEED, SWERVE_MODULE_PLS_NO_EXPLODE_MAX_SPEED));

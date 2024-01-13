@@ -8,9 +8,10 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkPIDController;
+import com.revrobotics.CANSparkBase.ControlType;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -21,8 +22,6 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.util.TroyMathUtil;
 
 public class SwerveModule {
-    private static final double DEADZONE_DRIVE_VOLTAGE = 2;
-
     private static final double MODULE_MAX_ANGULAR_VELOCITY = DriveTrainSubsystem.MAX_ANGULAR_SPEED;
     private static final double MODULE_MAX_ANGULAR_ACCELERATION = 2 * Math.PI; // radians per second squared
 
@@ -35,19 +34,16 @@ public class SwerveModule {
     private final RelativeEncoder driveEncoder;
     private final CANcoder turningEncoder;
 
-    private final double canCoderOffset;
-
     private final String name;
 
     // Gains are for example purposes only - must be determined for your own robot!
-    private final PIDController drivePIDController = new PIDController(5.9, 0, 0);
+    private final SparkPIDController drivePIDController; //  = new PIDController(5.7, 0, 0);
 
     // Gains are for example purposes only - must be determined for your own robot!
-    private final ProfiledPIDController turningPIDController = new ProfiledPIDController(1.5, 0, 0,
+    private final ProfiledPIDController turningPIDController = new ProfiledPIDController(2, 0, 0,
             new TrapezoidProfile.Constraints(MODULE_MAX_ANGULAR_VELOCITY, MODULE_MAX_ANGULAR_ACCELERATION));
 
     // Gains are for example purposes only - must be determined for your own robot!
-    private final SimpleMotorFeedforward driveFeedforward = new SimpleMotorFeedforward(0, 0);
     private final SimpleMotorFeedforward turnFeedforward = new SimpleMotorFeedforward(0, 0);
 
     /**
@@ -57,14 +53,12 @@ public class SwerveModule {
      * @param turningMotorCANID    CAN ID for the turning motor.
      * @param turningEncoderCANID DIO input for the turning encoder channel A
      */
-    public SwerveModule(int driveMotorCANID, int turningMotorCANID, int turningEncoderCANID, String name, double canCoderOffset) {
+    public SwerveModule(int driveMotorCANID, int turningMotorCANID, int turningEncoderCANID, String name) {
         driveMotor = new CANSparkMax(driveMotorCANID, MotorType.kBrushless);
         turningMotor = new CANSparkMax(turningMotorCANID, MotorType.kBrushless);
         this.name = name;
         driveEncoder = driveMotor.getEncoder();
         turningEncoder = new CANcoder(turningEncoderCANID);
-
-        this.canCoderOffset = canCoderOffset;
 
         // Circumference / Gear Ratio (L2 of MK4i). This evaluates to ~1.86 inches/rotation, which is close to experimental values.
         // We are therefore using the calculated value. (Thanks Ivan)
@@ -73,6 +67,15 @@ public class SwerveModule {
         this.driveEncoder.setVelocityConversionFactor(Units.inchesToMeters(4 * Math.PI / 6.75) / 60);
 
         this.driveEncoder.setPosition(0);
+
+        this.driveMotor.enableVoltageCompensation(10);
+        this.drivePIDController = this.driveMotor.getPIDController();
+
+        this.drivePIDController.setP(0.85);
+        this.drivePIDController.setI(0);
+        this.drivePIDController.setD(0.3);
+        this.drivePIDController.setFF(0.11);
+        this.drivePIDController.setOutputRange(-1, 1);
 
         // Set the distance per pulse for the drive encoder. We can simply use the
         // distance traveled for one rotation of the wheel divided by the encoder
@@ -101,7 +104,7 @@ public class SwerveModule {
         return this.driveEncoder.getPosition();
     }
 
-    public double getTurningEncoderPositionConverted() {
+    public double getTurningAbsEncoderPositionConverted() {
         // WE NEED RADIANS I THINK
         // MAGIC NUMBER FROM DOCUMENTATION COMMENT ON METHOD COPY-PASTED. THIS SHOULD NOT BE TOUCHED UNLESS MASSIVE BREAK.
         // turningEncoder.configFeedbackCoefficient(0.087890625 * Math.PI / 180, "rad");
@@ -114,7 +117,7 @@ public class SwerveModule {
         return encoderValue * 360 * Math.PI / 180;
     }
 
-    public double getTurningEncoderVelocityConverted() {
+    public double getTurningAbsEncoderVelocityConverted() {
         // WE NEED RADIANS I THINK
         // MAGIC NUMBER FROM DOCUMENTATION COMMENT ON METHOD COPY-PASTED. THIS SHOULD NOT BE TOUCHED UNLESS MASSIVE BREAK.
         // turningEncoder.configFeedbackCoefficient(0.087890625 * Math.PI / 180, "rad");
@@ -126,13 +129,17 @@ public class SwerveModule {
         return this.turningEncoder.getVelocity().getValueAsDouble() * 360 * Math.PI / 180;
     }
 
+    public double getDriveVelocity() {
+        return this.driveEncoder.getVelocity();
+    }
+
     /**
      * Returns the current state of the module.
      *
      * @return The current state of the module.
      */
     public SwerveModuleState getState() {
-        return new SwerveModuleState(driveEncoder.getVelocity(), new Rotation2d(this.getTurningEncoderPositionConverted()));
+        return new SwerveModuleState(driveEncoder.getVelocity(), new Rotation2d(this.getTurningAbsEncoderPositionConverted()));
     }
 
     /**
@@ -141,7 +148,7 @@ public class SwerveModule {
      * @return The current position of the module.
      */
     public SwerveModulePosition getPosition() {
-        return new SwerveModulePosition(driveEncoder.getPosition(), new Rotation2d(this.getTurningEncoderPositionConverted()));
+        return new SwerveModulePosition(driveEncoder.getPosition(), new Rotation2d(this.getTurningAbsEncoderPositionConverted()));
     }
 
     public void setVoltages(double driveVoltage, double turnVoltage) {
@@ -153,7 +160,6 @@ public class SwerveModule {
         setVoltages(0, 0);
     }
 
-    private double previousDriveVoltage = 0;
     private double previousTurnVoltage = 0;
 
     public void rotateToAbsoluteZero() {
@@ -168,7 +174,7 @@ public class SwerveModule {
      */
     public void setDesiredState(SwerveModuleState desiredState) {
         // Optimize the reference state to avoid spinning further than 90 degrees
-        SwerveModuleState state = SwerveModuleState.optimize(desiredState, new Rotation2d(this.getTurningEncoderPositionConverted()));
+        SwerveModuleState state = SwerveModuleState.optimize(desiredState, new Rotation2d(this.getTurningAbsEncoderPositionConverted()));
 
         this.setDesiredStateNoOptimize(state);
     }
@@ -184,22 +190,11 @@ public class SwerveModule {
      */
     private void setDriveDesiredState(SwerveModuleState optimizedDesiredState) {
         // Calculate the drive output from the drive PID controller.
-        final double driveOutput = drivePIDController.calculate(driveEncoder.getVelocity(), optimizedDesiredState.speedMetersPerSecond);
 
-        final double driveFeedforward = this.driveFeedforward.calculate(optimizedDesiredState.speedMetersPerSecond);
-
-        double finalDriveOutput = driveOutput + driveFeedforward;
-        if(Math.abs(finalDriveOutput) < DEADZONE_DRIVE_VOLTAGE) {
-            System.out.println("canceling voltage");
-            finalDriveOutput = 0;
-        }
-
-        System.out.print(this.name + " velocity: " + TroyMathUtil.roundNearestHundredth(driveEncoder.getVelocity()) + " target speed: " + TroyMathUtil.roundNearestHundredth(optimizedDesiredState.speedMetersPerSecond));
+        drivePIDController.setReference(optimizedDesiredState.speedMetersPerSecond, ControlType.kVelocity);
+        
+        // System.out.println(this.name + " velocity: " + TroyMathUtil.roundNearestHundredth(driveEncoder.getVelocity()) + " target speed: " + TroyMathUtil.roundNearestHundredth(optimizedDesiredState.speedMetersPerSecond));
         // System.out.println(this.name + ", position: " + this.driveEncoder.getPosition());
-        System.out.println(/*this.name + */" drive output: " + TroyMathUtil.roundNearestHundredth(previousDriveVoltage));
-
-        previousDriveVoltage = finalDriveOutput;
-        driveMotor.setVoltage(MathUtil.clamp(finalDriveOutput, SWERVE_MODULE_PLS_NO_EXPLODE_MIN_SPEED, SWERVE_MODULE_PLS_NO_EXPLODE_MAX_SPEED));
     }
 
     /**
@@ -208,14 +203,14 @@ public class SwerveModule {
      */
     private void setRotationDesiredState(SwerveModuleState optimizedDesiredState) {
         // Calculate the turning motor output from the turning PID controller.
-        final double turnOutput = turningPIDController.calculate(this.getTurningEncoderPositionConverted(), optimizedDesiredState.angle.getRadians());
+        final double turnOutput = turningPIDController.calculate(this.getTurningAbsEncoderPositionConverted(), optimizedDesiredState.angle.getRadians());
 
         final double turnFeedforward = this.turnFeedforward.calculate(turningPIDController.getSetpoint().velocity);
 
         final double finalTurnOutput = turnOutput + turnFeedforward;
         
         // System.out.print(this.name + " velocity: " + TroyMathUtil.roundNearestHundredth(turningEncoder.getVelocity().getValueAsDouble()) + " target speed: " + TroyMathUtil.roundNearestHundredth(state.speedMetersPerSecond));
-        // System.out.print(this.name + " turning pos: " + TroyMathUtil.roundNearestHundredth(this.getTurningEncoderPositionConverted()) + " target rad: " + optimizedDesiredState.angle.getRadians());
+        System.out.println(this.name + " turning pos deg: " + TroyMathUtil.roundNearestHundredth(this.getTurningAbsEncoderPositionConverted() * 180 / Math.PI) + " target deg: " + TroyMathUtil.roundNearestHundredth(optimizedDesiredState.angle.getDegrees()));
         // System.out.println(/*this.name + */" turn output: " + TroyMathUtil.roundNearestHundredth(previousTurnVoltage));
 
         previousTurnVoltage = finalTurnOutput;

@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems.swerve;
 
-import com.ctre.phoenix6.hardware.CANcoder;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -18,9 +16,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.RobotConstants;
-import frc.robot.Constants.DriveConstants.CANcoderOffsets;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
-import frc.robot.util.TroyMathUtil;
 import frc.robot.Constants.PortConstants;
 
 /**
@@ -41,29 +37,25 @@ public class DriveTrainSubsystem extends SubsystemBase {
             PortConstants.FRONT_LEFT_DRIVE_MOTOR_ID,
             PortConstants.FRONT_LEFT_ROTATION_MOTOR_ID,
             PortConstants.FRONT_LEFT_ROTATION_CANCODER_ID,
-            "fL_12",
-            CANcoderOffsets.FRONT_LEFT_OFFSET
+            "fL_12"
     );
     private final SwerveModule frontRight = new SwerveModule(
             PortConstants.FRONT_RIGHT_DRIVE_MOTOR_ID,
             PortConstants.FRONT_RIGHT_ROTATION_MOTOR_ID,
             PortConstants.FRONT_RIGHT_ROTATION_CANCODER_ID,
-            "fR_03",
-            CANcoderOffsets.FRONT_RIGHT_OFFSET
+            "fR_03"
     );
     private final SwerveModule backLeft = new SwerveModule(
             PortConstants.BACK_LEFT_DRIVE_MOTOR_ID,
             PortConstants.BACK_LEFT_ROTATION_MOTOR_ID,
             PortConstants.BACK_LEFT_ROTATION_CANCODER_ID,
-            "bL_06",
-            CANcoderOffsets.BACK_LEFT_OFFSET
+            "bL_06"
     );
     private final SwerveModule backRight = new SwerveModule(
             PortConstants.BACK_RIGHT_DRIVE_MOTOR_ID,
             PortConstants.BACK_RIGHT_ROTATION_MOTOR_ID,
             PortConstants.BACK_RIGHT_ROTATION_CANCODER_ID,
-            "bR_01",
-            CANcoderOffsets.BACK_RIGHT_OFFSET
+            "bR_01"
     );
 
     private final SwerveModule[] swerveModules = {frontLeft, frontRight, backLeft, backRight};

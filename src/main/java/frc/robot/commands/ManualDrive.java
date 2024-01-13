@@ -13,7 +13,7 @@ public class ManualDrive extends Command {
     private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(3);
     private final SlewRateLimiter rotLimiter = new SlewRateLimiter(3);
 
-    private static final double MAX_SPEED_METERS_PER_SEC = 1.5;
+    private static final double MAX_SPEED_METERS_PER_SEC = 3.5;
 
     public ManualDrive(DriveTrainSubsystem driveTrain, FlightJoystick joystick) {
         this.driveTrain = driveTrain;
@@ -28,9 +28,9 @@ public class ManualDrive extends Command {
 
     @Override
     public void execute() {
-        
+        // System.out.println("vert: " + this.joystick.getVerticalMovement() + ", hor: " + this.joystick.getHorizontalMovement());
         // this.driveTrain.drive(this.joystick.getVerticalMovement());
-        this.driveTrain.drive(this.ySpeedLimiter.calculate(this.joystick.getVerticalMovement()) * MAX_SPEED_METERS_PER_SEC, this.xSpeedLimiter.calculate(this.joystick.getHorizontalMovement()) * MAX_SPEED_METERS_PER_SEC, this.rotLimiter.calculate(this.joystick.getRotation()), false);
+        this.driveTrain.drive(this.ySpeedLimiter.calculate(this.joystick.getVerticalMovement()) * MAX_SPEED_METERS_PER_SEC, this.xSpeedLimiter.calculate(-this.joystick.getHorizontalMovement()) * MAX_SPEED_METERS_PER_SEC, this.rotLimiter.calculate(this.joystick.getRotation()), false);
     }
 
     // Called once the command ends or is interrupted.

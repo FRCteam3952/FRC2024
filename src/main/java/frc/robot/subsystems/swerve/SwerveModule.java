@@ -19,6 +19,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import frc.robot.Flags;
 import frc.robot.util.TroyMathUtil;
 
 public class SwerveModule {
@@ -245,8 +246,9 @@ public class SwerveModule {
      */
     private void setDriveDesiredState(SwerveModuleState optimizedDesiredState) {
         // Calculate the drive output from the drive PID controller.
-
-        drivePIDController.setReference(optimizedDesiredState.speedMetersPerSecond, ControlType.kVelocity);
+        if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_DRIVE_MOTORS && Flags.DriveTrain.DRIVE_PID_CONTROL) {
+            drivePIDController.setReference(optimizedDesiredState.speedMetersPerSecond, ControlType.kVelocity);
+        }
         
         // System.out.println(this.name + " velocity: " + TroyMathUtil.roundNearestHundredth(driveEncoder.getVelocity()) + " target speed: " + TroyMathUtil.roundNearestHundredth(optimizedDesiredState.speedMetersPerSecond));
         // System.out.println(this.name + ", position: " + this.driveEncoder.getPosition());
@@ -270,10 +272,15 @@ public class SwerveModule {
         System.out.println(/*this.name + */" turn output: " + TroyMathUtil.roundNearestHundredth(previousTurnVoltage));
 
         previousTurnVoltage = finalTurnOutput;
-        turningMotor.setVoltage(MathUtil.clamp(finalTurnOutput, SWERVE_MODULE_PLS_NO_EXPLODE_MIN_SPEED, SWERVE_MODULE_PLS_NO_EXPLODE_MAX_SPEED));
+
+        if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_TURN_MOTORS && Flags.DriveTrain.TURN_PID_CONTROL) {
+            turningMotor.setVoltage(MathUtil.clamp(finalTurnOutput, SWERVE_MODULE_PLS_NO_EXPLODE_MIN_SPEED, SWERVE_MODULE_PLS_NO_EXPLODE_MAX_SPEED));
+        }
     }
 
     public void drive(double speed) {
-        this.driveMotor.set(speed);
+        if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_DRIVE_MOTORS) {
+            this.driveMotor.set(speed);
+        }
     }
 }

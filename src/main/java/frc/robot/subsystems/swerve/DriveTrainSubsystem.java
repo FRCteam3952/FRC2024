@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.RobotConstants;
+import frc.robot.Flags;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.Constants.PortConstants;
 
@@ -97,15 +98,17 @@ public class DriveTrainSubsystem extends SubsystemBase {
      * @param fieldRelative Whether the provided x and y speeds are relative to the field.
      */
     public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
-        // System.out.println("targets: x: " + xSpeed + " y: " + ySpeed + " rot: " + rot);
-        var swerveModuleStates = kinematics.toSwerveModuleStates(fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, RobotGyro.getRotation2d()) : new ChassisSpeeds(xSpeed, ySpeed, rot));
-        SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, MAX_SPEED);
-        frontLeft.setDesiredState(swerveModuleStates[0], 0);
-        frontRight.setDesiredState(swerveModuleStates[1], 1);
-        backLeft.setDesiredState(swerveModuleStates[2], 2);
-        backRight.setDesiredState(swerveModuleStates[3], 3);
+        if(Flags.DriveTrain.ENABLED) {
+            // System.out.println("targets: x: " + xSpeed + " y: " + ySpeed + " rot: " + rot);
+            var swerveModuleStates = kinematics.toSwerveModuleStates(fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, RobotGyro.getRotation2d()) : new ChassisSpeeds(xSpeed, ySpeed, rot));
+            SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, MAX_SPEED);
+            frontLeft.setDesiredState(swerveModuleStates[0], 0);
+            frontRight.setDesiredState(swerveModuleStates[1], 1);
+            backLeft.setDesiredState(swerveModuleStates[2], 2);
+            backRight.setDesiredState(swerveModuleStates[3], 3);
 
-        targetSwerveStatePublisher.set(optimizedTargetStates);
+            targetSwerveStatePublisher.set(optimizedTargetStates);
+        }
     }
 
     public void drive(double speed) { // INCHES: 10 rot ~= 18.25, ~ 9 rot ~= 15.75

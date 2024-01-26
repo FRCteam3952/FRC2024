@@ -8,11 +8,13 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.struct.Pose2dStruct;
 import edu.wpi.first.math.kinematics.*;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
@@ -79,9 +81,11 @@ public class DriveTrainSubsystem extends SubsystemBase {
     public DriveTrainSubsystem() {
         RobotGyro.resetGyroAngle();
     }
-
+    //prints joystick movement 
     StructArrayPublisher<SwerveModuleState> targetSwerveStatePublisher = NetworkTableInstance.getDefault().getTable("a").getStructArrayTopic("MyStates", SwerveModuleState.struct).publish();
     StructArrayPublisher<SwerveModuleState> realSwerveStatePublisher = NetworkTableInstance.getDefault().getTable("a").getStructArrayTopic("MyStatesReal", SwerveModuleState.struct).publish();
+    //makes object to publish robot position relative to field 
+    StructPublisher<Pose2d> posePositionPublisher = NetworkTableInstance.getDefault().getTable("a").getStructTopic("estimatedOdometryPosition", Pose2d.struct).publish();
 
     static SwerveModuleState[] optimizedTargetStates = new SwerveModuleState[4];
 
@@ -142,13 +146,19 @@ public class DriveTrainSubsystem extends SubsystemBase {
     
     @Override
     public void periodic() {
+        //publishes each wheel information to network table for debugging
         realSwerveStatePublisher.set(new SwerveModuleState[]{frontLeft.getState(), frontRight.getState(), backLeft.getState(), backRight.getState()});
+        //posts robot position to network table 
+        posePositionPublisher.set(odometry.getPoseMeters());
+
         for(SwerveModule module : swerveModules) {
             // System.out.println(module.getName() + " " + module.getDriveRotations());
             // System.out.println(module.getName() + " " + module.getPosition());
             
             // System.out.println(module.getName() + " " + TroyMathUtil.roundNearestHundredth(module.getTurningEncoderPositionConverted()));
         }
+
+
     }
 
     public Command generateTrajectoryFollowerCommand(Trajectory trajectory, boolean stopOnEnd) {
@@ -171,6 +181,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
     /**
      * Updates the field relative position of the robot.
      */
+    //constantly updates odometry
     public void updateOdometry() {
         odometry.update(RobotGyro.getRotation2d(), new SwerveModulePosition[]{frontLeft.getPosition(), frontRight.getPosition(), backLeft.getPosition(), backRight.getPosition()});
     }

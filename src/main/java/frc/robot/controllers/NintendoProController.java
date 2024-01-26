@@ -7,7 +7,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
  * <p>
  * This class is necessary because the Nintendo Pro Controller has different deadzones than the XBox controller, as well as not reaching all values from [-1, 1] on joysticks.
  */
-public class NintendoProController extends AbstractJoystick {
+public class NintendoProController extends AbstractController {
     public static final double IGNORE_DELTA = 0.15;
 
     public final CommandXboxController controller;
@@ -86,30 +86,24 @@ public class NintendoProController extends AbstractJoystick {
         return val / deadzoneRawVals(0.8); */
     }
 
+    @Override
     public double getRightHorizontalMovement() {
         return correctDeadzone(this.getControllerRightX());
     }
 
+    @Override
     public double getRightVerticalMovement() {
         return correctDeadzone(this.getControllerRightY());
     }
 
+    @Override
     public double getLeftHorizontalMovement() {
         return correctDeadzone(this.getControllerLeftX());
     }
 
+    @Override
     public double getLeftVerticalMovement() {
         return correctDeadzone(this.getControllerLeftY());
-    }
-
-    @Override
-    public double getHorizontalMovement() {
-        return this.getRightHorizontalMovement();
-    }
-
-    @Override
-    public double getVerticalMovement() {
-        return this.getRightVerticalMovement();
     }
 
     @Override

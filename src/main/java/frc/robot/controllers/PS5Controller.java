@@ -2,34 +2,44 @@ package frc.robot.controllers;
 
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 
-public class PS5Controller extends AbstractJoystick {
+public class PS5Controller extends AbstractController {
     public final CommandPS5Controller controller;
 
     public PS5Controller(CommandPS5Controller controller) {
         this.controller = controller;
     }
+
     @Override
-    public double getHorizontalMovement() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getHorizontalMovement'");
+    public double getRightHorizontalMovement() {
+        return controller.getRightX();
     }
 
     @Override
-    public double getVerticalMovement() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getVerticalMovement'");
+    public double getRightVerticalMovement() {
+        return controller.getRightY();
+    }
+
+    @Override
+    public double getLeftHorizontalMovement() {
+        return controller.getLeftX();
+    }
+
+    @Override
+    public double getLeftVerticalMovement() {
+        return controller.getLeftY();
     }
 
     @Override
     public boolean getRawButtonWrapper(int button) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getRawButtonWrapper'");
+        return controller.getHID().getRawButton(button);
     }
 
     @Override
     public boolean getRawButtonReleasedWrapper(int button) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getRawButtonReleasedWrapper'");
+        return controller.getHID().getRawButtonReleased(button);
     }
 
+    public boolean getRawButtonPressedWrapper(int button) {
+        return controller.getHID().getRawButtonPressed(button);
+    }
 }

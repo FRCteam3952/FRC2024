@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
  * <p>
  * The values here were copied from previous years' code and is known to work, so don't change them.
  */
-public class FlightJoystick extends AbstractJoystick {
+public class FlightJoystick {
     public static final double c = 0.1;
     public static final double deadzone = 0.2;
     public static final double max = 0.8;
@@ -25,14 +25,12 @@ public class FlightJoystick extends AbstractJoystick {
         this.joystick = joystick;
     }
 
-    @Override
     public double getHorizontalMovement() {
         double x = joystick.getX();
 
         return Math.abs(x) >= deadzone ? k * Math.signum(x) * (Math.log(Math.abs(x) + 1 - deadzone) + c) : 0;
     }
 
-    @Override
     public double getVerticalMovement() {
         double y = joystick.getY();
 
@@ -45,12 +43,10 @@ public class FlightJoystick extends AbstractJoystick {
         return Math.abs(t) >= deadzoneT ? kT * Math.signum(t) * (Math.log(Math.abs(t) + 1 - deadzoneT) + cT) : 0;
     }
 
-    @Override
     public boolean getRawButtonWrapper(int button) {
         return this.joystick.getHID().getRawButton(button);
     }
 
-    @Override
     public boolean getRawButtonReleasedWrapper(int button) {
         return this.joystick.getHID().getRawButtonReleased(button);
     }

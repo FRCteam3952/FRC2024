@@ -2,12 +2,12 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.controllers.NintendoProController;
+import frc.robot.controllers.AbstractController;
 import frc.robot.subsystems.swerve.DriveTrainSubsystem;
 
 public class ManualDrive extends Command {
     private final DriveTrainSubsystem driveTrain;
-    private final NintendoProController joystick;
+    private final AbstractController joystick;
 
     private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(3);
     private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(3);
@@ -15,7 +15,7 @@ public class ManualDrive extends Command {
 
     private static final double MAX_SPEED_METERS_PER_SEC = 3.5;
 
-    public ManualDrive(DriveTrainSubsystem driveTrain, NintendoProController joystick) {
+    public ManualDrive(DriveTrainSubsystem driveTrain, AbstractController joystick) {
         this.driveTrain = driveTrain;
         this.joystick = joystick;
 

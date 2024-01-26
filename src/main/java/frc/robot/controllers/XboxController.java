@@ -58,6 +58,7 @@ public class XboxController extends AbstractController {
         return controller.getHID().getRawButtonReleased(button);
     }
 
+    @Override
     public boolean getRawButtonPressedWrapper(int button) {
         return controller.getHID().getRawButtonPressed(button);
     }

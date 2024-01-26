@@ -8,13 +8,16 @@ import static edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis; // i dont wanna type 
  * Wrapper around gyro
  */
 
-public class RobotGyro {
+public final class RobotGyro {
     private static final ADIS16470_IMU gyro = new ADIS16470_IMU();
 
     static {
         // gyro.setYawAxis(ADIS16470_IMU.IMUAxis.kZ);
         gyro.calibrate();
         gyro.reset();
+    }
+
+    private RobotGyro() {
     }
 
     /**

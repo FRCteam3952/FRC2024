@@ -17,4 +17,5 @@ public abstract class AbstractController {
 
     public abstract boolean getRawButtonReleasedWrapper(int button);
 
+    public abstract boolean getRawButtonPressedWrapper(int button);
 }

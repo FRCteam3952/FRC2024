@@ -183,17 +183,22 @@ public class SwerveModule {
     /**
      * Minimize the change in heading the desired swerve module state would require by potentially
      * reversing the direction the wheel spins. If this is used with the PIDController class's
-     * continuous input functionality, the furthest a wheel will ever rotate is {@link SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG} degrees.
+     * continuous input functionality, the furthest a wheel will ever rotate is {@link SwerveModule#SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG} degrees.
      *
      * <p>
      * NOTE: Team 3419 suggested this change on ChiefDelphi for mechanical reasons (sending the motors in the opposite direction at top speed is bad),
      * but we are primarily using this to resolve a separate issue where occasionally one swerve module would turn in a direction opposite of the other modules when executing a direction change of 90 degrees.
-     * 
+     *
+     * <p>
+     * ChiefDelphi comment: <a href="https://www.chiefdelphi.com/t/swerve-pid-continuous-input-and-swerve-state-optimization/416292/6">...</a>
+     * <p>
+     * Team 3419's code with the relevant change: <a href="https://github.com/RoHawks/UniversalSwerve/blob/2fb7c0c9c9d7d3def7ba680bcd48b4b5456f09e1/src/main/java/universalSwerve/SwerveDrive.java#L267">...</a>
+     *
      * <p>
      * Change made: only optimize the rotation direction when the angle is greater than a certain amount (higher than 90deg).
      * Original value in WPILIB code: 90 degrees.
-     * New value determined by {@link SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG}
-     * 
+     * New value determined by {@link SwerveModule#SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG}
+     *
      * @param desiredState The desired state.
      * @param currentAngle The current module angle.
      * @return Optimized swerve module state.
@@ -260,7 +265,7 @@ public class SwerveModule {
         final double finalTurnOutput = -(turnOutput + turnFeedforward);
         
         //System.out.print(this.name + " velocity: " + TroyMathUtil.roundNearestHundredth(turningEncoder.getVelocity().getValueAsDouble()) + " target speed: " + TroyMathUtil.roundNearestHundredth(state.speedMetersPerSecond));
-        System.out.print(this.name + " turning pos: " + TroyMathUtil.roundNearestHundredth(this.getTurningAbsEncoderPositionConverted() /** 180 / Math.PI*/) + " target: " + TroyMathUtil.roundNearestHundredth(optimizedDesiredState.angle.getRadians()));
+        System.out.print(this.name + " turning pos: " + TroyMathUtil.roundNearestHundredth(this.getTurningAbsEncoderPositionConverted() /* * 180 / Math.PI*/) + " target: " + TroyMathUtil.roundNearestHundredth(optimizedDesiredState.angle.getRadians()));
         System.out.print(" rel enc: " + this.turningEncoder.getPosition());
         System.out.println(/*this.name + */" turn output: " + TroyMathUtil.roundNearestHundredth(previousTurnVoltage));
 

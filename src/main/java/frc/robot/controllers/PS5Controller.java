@@ -14,24 +14,31 @@ public class PS5Controller extends AbstractController {
         this.controller = controller;
     }
 
+    private static double deadzone(double val) {
+        if(Math.abs(val) < IGNORE_DELTA) {
+            return 0;
+        }
+        return val;
+    }
+
     @Override
     public double getRightHorizontalMovement() {
-        return controller.getRightX();
+        return deadzone(controller.getRightX());
     }
 
     @Override
     public double getRightVerticalMovement() {
-        return controller.getRightY();
+        return deadzone(controller.getRightY());
     }
 
     @Override
     public double getLeftHorizontalMovement() {
-        return controller.getLeftX();
+        return deadzone(controller.getLeftX());
     }
 
     @Override
     public double getLeftVerticalMovement() {
-        return controller.getLeftY();
+        return deadzone(controller.getLeftY());
     }
 
     @Override
@@ -44,6 +51,7 @@ public class PS5Controller extends AbstractController {
         return controller.getHID().getRawButtonReleased(button);
     }
 
+    @Override
     public boolean getRawButtonPressedWrapper(int button) {
         return controller.getHID().getRawButtonPressed(button);
     }

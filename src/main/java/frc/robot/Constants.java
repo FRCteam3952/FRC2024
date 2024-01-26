@@ -25,8 +25,6 @@ public final class Constants {
      * 10 (ROT)
      * 11 (DRI)
      * 12 (COD)
-     * 
-     * 
      */
     public static class PortConstants {
         public static final int FRONT_LEFT_DRIVE_MOTOR_ID           = 9;
@@ -51,13 +49,6 @@ public final class Constants {
         public static final double TRAJ_THETA_CONTROLLER_KP = 0;
         public static final double TRAJ_MAX_ANG_VELO = 0;
         public static final double TRAJ_MAX_ANG_ACCEL = 0;
-
-        public static class CANcoderOffsets {
-            public static final double FRONT_LEFT_OFFSET    = -0.404296875;     // ID 12
-            public static final double FRONT_RIGHT_OFFSET   = 0.0859375;        // ID 3
-            public static final double BACK_LEFT_OFFSET     = 0.029296875;      // ID 6
-            public static final double BACK_RIGHT_OFFSET    = 0.171142578125;   // ID 1
-        }
     }
 
     public static class RobotConstants {

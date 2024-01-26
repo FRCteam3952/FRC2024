@@ -22,6 +22,7 @@ import frc.robot.Constants.RobotConstants;
 import frc.robot.Flags;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.Constants.PortConstants;
+import frc.robot.util.NetworkTablesUtil;
 
 /**
  * Represents a swerve drive style drivetrain.
@@ -82,10 +83,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
         RobotGyro.resetGyroAngle();
     }
     //prints joystick movement 
-    StructArrayPublisher<SwerveModuleState> targetSwerveStatePublisher = NetworkTableInstance.getDefault().getTable("a").getStructArrayTopic("MyStates", SwerveModuleState.struct).publish();
-    StructArrayPublisher<SwerveModuleState> realSwerveStatePublisher = NetworkTableInstance.getDefault().getTable("a").getStructArrayTopic("MyStatesReal", SwerveModuleState.struct).publish();
+    StructArrayPublisher<SwerveModuleState> targetSwerveStatePublisher = NetworkTablesUtil.getTable("datatable").getStructArrayTopic("MyStates", SwerveModuleState.struct).publish();
+    StructArrayPublisher<SwerveModuleState> realSwerveStatePublisher = NetworkTablesUtil.getTable("datatable").getStructArrayTopic("MyStatesReal", SwerveModuleState.struct).publish();
     //makes object to publish robot position relative to field 
-    StructPublisher<Pose2d> posePositionPublisher = NetworkTableInstance.getDefault().getTable("a").getStructTopic("estimatedOdometryPosition", Pose2d.struct).publish();
+    StructPublisher<Pose2d> posePositionPublisher = NetworkTablesUtil.getTable("datatable").getStructTopic("estimatedOdometryPosition", Pose2d.struct).publish();
 
     static SwerveModuleState[] optimizedTargetStates = new SwerveModuleState[4];
 
@@ -151,9 +152,9 @@ public class DriveTrainSubsystem extends SubsystemBase {
         //publishes each wheel information to network table for debugging
         realSwerveStatePublisher.set(new SwerveModuleState[]{frontLeft.getState(), frontRight.getState(), backLeft.getState(), backRight.getState()});
         //posts robot position to network table 
-        posePositionPublisher.set(odometry.getPoseMeters());
+        posePositionPublisher.set(getPose());
 
-        for(SwerveModule module : swerveModules) {
+        for (SwerveModule module : swerveModules) {
             // System.out.println(module.getName() + " " + module.getDriveRotations());
             // System.out.println(module.getName() + " " + module.getPosition());
             

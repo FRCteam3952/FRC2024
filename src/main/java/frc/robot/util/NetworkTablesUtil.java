@@ -94,7 +94,7 @@ public class NetworkTablesUtil {
      */
     public static Pose2d getJetsonPoseMeters() {
         NetworkTable table = INSTANCE.getTable("jetson");
-        double[] jetsonPoseXYZ = TroyMathUtil.inchesArrayToMetersArray(table.getEntry("pose").getDoubleArray(new double[]{0.0, 0.0, 0.0})); // X, Y, Z
+        double[] jetsonPoseXYZ = RobotMathUtil.inchesArrayToMetersArray(table.getEntry("pose").getDoubleArray(new double[]{0.0, 0.0, 0.0})); // X, Y, Z
         return new Pose2d(jetsonPoseXYZ[2], jetsonPoseXYZ[0], RobotGyro.getRotation2d());
     }
 

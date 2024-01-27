@@ -1,14 +1,13 @@
 package frc.robot.util;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 
 /**
  * Does Math stuff for us
  */
-public final class TroyMathUtil {
-    private TroyMathUtil() {
-        throw new UnsupportedOperationException("MathUtil is a utility class and should not be instantiated!");
+public final class RobotMathUtil {
+    private RobotMathUtil() {
+        throw new UnsupportedOperationException("RobotMathUtil is a utility class and should not be instantiated!");
     }
 
     /**
@@ -92,16 +91,6 @@ public final class TroyMathUtil {
     }
 
     /**
-     * Converts inches to meters
-     *
-     * @param inches inches
-     * @return meters
-     */
-    public static double inchesToMeters(double inches) {
-        return inches / 39.37;
-    }
-
-    /**
      * Converts an array of inch values to an array of meters values. Returns a new array.
      *
      * @param inchesArray The array of inches
@@ -110,29 +99,9 @@ public final class TroyMathUtil {
     public static double[] inchesArrayToMetersArray(double[] inchesArray) {
         double[] metersArray = new double[inchesArray.length];
         for (int i = 0; i < inchesArray.length; i++) {
-            metersArray[i] = inchesToMeters(inchesArray[i]);
+            metersArray[i] = Units.inchesToMeters(inchesArray[i]);
         }
         return metersArray;
-    }
-
-    /**
-     * Given the robot's field relative position, and the claw's robot relative position, find the claw's field relative position.
-     *
-     * @param robotPoseFieldRelative The robot's field relative position.
-     * @param clawPoseRobotRelative  The claw's robot relative position (rotation not necessary). This could be anything, but we only use it for the claw.
-     * @return The claw's field relative position
-     */
-    public static Pose2d findFieldRelativePose(Pose2d robotPoseFieldRelative, Pose2d clawPoseRobotRelative) {
-        double robotX = robotPoseFieldRelative.getX(), robotY = robotPoseFieldRelative.getY();
-        double clawX = clawPoseRobotRelative.getX(), clawY = clawPoseRobotRelative.getY();
-
-        Rotation2d robotAngle = robotPoseFieldRelative.getRotation();
-        double newClawX = clawX * robotAngle.getCos() - clawY * robotAngle.getSin();
-        double newClawY = clawX * robotAngle.getSin() + clawY * robotAngle.getCos();
-
-        double fieldClawX = newClawX + robotX;
-        double fieldClawY = newClawY + robotY;
-        return new Pose2d(fieldClawX, fieldClawY, new Rotation2d());
     }
 
     /**

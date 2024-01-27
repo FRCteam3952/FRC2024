@@ -20,7 +20,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Flags;
-import frc.robot.util.TroyMathUtil;
+import frc.robot.util.RobotMathUtil;
 
 public class SwerveModule {
     private static final double MODULE_MAX_ANGULAR_VELOCITY = DriveTrainSubsystem.MAX_ANGULAR_SPEED * 2;
@@ -121,31 +121,28 @@ public class SwerveModule {
         return this.driveEncoder.getPosition();
     }
 
+    /**
+     * Get the Absolute Encoder's position, converted to a usable value (in radians)
+     * @return The absolute encoder's position in radians.
+     */
     public double getTurningAbsEncoderPositionConverted() {
-        // WE NEED RADIANS I THINK
-        // MAGIC NUMBER FROM DOCUMENTATION COMMENT ON METHOD COPY-PASTED. THIS SHOULD NOT BE TOUCHED UNLESS MASSIVE BREAK.
-        // turningEncoder.configFeedbackCoefficient(0.087890625 * Math.PI / 180, "rad");
-
-        // They changed the API on me so we have to do this now.
-        // System.out.println("UNITS: " + this.turningEncoder.getAbsolutePosition().getUnits());
-
-        // UNITS is a rotation.
-        double encoderValue = this.turnAbsoluteEncoder.getPosition().getValueAsDouble();
-        return encoderValue * 360 * Math.PI / 180;
+        // ORIGINAL UNITS: rotations. Converted to radians.
+        return this.turnAbsoluteEncoder.getPosition().getValueAsDouble() * 360 * Math.PI / 180;
     }
 
+    /**
+     * Get the Absolute Encoder's velocity, converted to a usable value (in radians/sec)
+     * @return The absolute encoder's velocity in radians per second.
+     */
     public double getTurningAbsEncoderVelocityConverted() {
-        // WE NEED RADIANS I THINK
-        // MAGIC NUMBER FROM DOCUMENTATION COMMENT ON METHOD COPY-PASTED. THIS SHOULD NOT BE TOUCHED UNLESS MASSIVE BREAK.
-        // turningEncoder.configFeedbackCoefficient(0.087890625 * Math.PI / 180, "rad");
-
-        // They changed the API on me so we have to do this now.
-        // System.out.println("UNITS: " + this.turningEncoder.getAbsolutePosition().getUnits());
-
-        // UNITS is a rotation per second.
+        // ORIGINAL UNITS: rotations per second. Converted to radians per second.
         return this.turnAbsoluteEncoder.getVelocity().getValueAsDouble() * 360 * Math.PI / 180;
     }
 
+    /**
+     * Gets the velocity of the drive encoder.
+     * @return The velocity of the drive encoder, in meters/sec
+     */
     public double getDriveVelocity() {
         return this.driveEncoder.getVelocity();
     }
@@ -168,17 +165,28 @@ public class SwerveModule {
         return new SwerveModulePosition(driveEncoder.getPosition(), new Rotation2d(this.getTurningAbsEncoderPositionConverted()));
     }
 
+    /**
+     * Directly set the voltage outputs of the motors.
+     * @param driveVoltage Voltage of drive motor
+     * @param turnVoltage Voltage of turn motor
+     */
     public void setVoltages(double driveVoltage, double turnVoltage) {
         driveMotor.setVoltage(driveVoltage);
         turnMotor.setVoltage(turnVoltage);
     }
 
+    /**
+     * Stops the motors by sending a voltage output of 0 to both the drive and turn motors.
+     */
     public void stop() {
         setVoltages(0, 0);
     }
 
     private double previousTurnVoltage = 0;
 
+    /**
+     * DOESNT WORK
+     */
     public void rotateToAbsoluteZero() {
         SwerveModuleState zeroedState = new SwerveModuleState();
         this.setDesiredStateNoOptimize(zeroedState);
@@ -253,7 +261,7 @@ public class SwerveModule {
             drivePIDController.setReference(optimizedDesiredState.speedMetersPerSecond, ControlType.kVelocity);
         }
         
-        System.out.println(this.name + " velocity: " + TroyMathUtil.roundNearestHundredth(driveEncoder.getVelocity()) + " target speed: " + TroyMathUtil.roundNearestHundredth(optimizedDesiredState.speedMetersPerSecond));
+        System.out.println(this.name + " velocity: " + RobotMathUtil.roundNearestHundredth(driveEncoder.getVelocity()) + " target speed: " + RobotMathUtil.roundNearestHundredth(optimizedDesiredState.speedMetersPerSecond));
         // System.out.println(this.name + ", position: " + this.driveEncoder.getPosition());
     }
 

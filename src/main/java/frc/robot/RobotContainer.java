@@ -1,10 +1,14 @@
 package frc.robot;
 
-import edu.wpi.first.wpilibj2.command.InstantCommand;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+
+import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.ManualDrive;
+import frc.robot.controllers.AbstractController;
 import frc.robot.controllers.FlightJoystick;
 import frc.robot.controllers.NintendoProController;
 import frc.robot.controllers.PS5Controller;
@@ -12,6 +16,7 @@ import frc.robot.subsystems.swerve.DriveTrainSubsystem;
 import frc.robot.subsystems.staticsubsystems.LimeLight;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.util.NetworkTablesUtil;
 
 public class RobotContainer {
     private final DriveTrainSubsystem driveTrain = new DriveTrainSubsystem();
@@ -38,7 +43,39 @@ public class RobotContainer {
     }
 
     public void onRobotInit() {
+        printFlagsClass();
+    }
 
+    private static void printFlagsClass() {
+        try {
+            Class<Flags> clazz = Flags.class;
+            var flagsTable = NetworkTablesUtil.getTable("Flags");
+
+            for(Field field : clazz.getDeclaredFields()) {
+                if(Modifier.isStatic(field.getModifiers())) {
+                    try {
+                        flagsTable.getEntry(field.getName()).setValue(field.get(null));
+                    } catch(IllegalAccessException e) {
+                        System.out.println("Unable to upload value of Flags field " + field.getName());
+                    }
+                }
+            }
+
+            for(Class<?> c : clazz.getClasses()) {
+                var subTable = flagsTable.getSubTable(c.getCanonicalName());
+                for(Field field : c.getDeclaredFields()) {
+                    if(Modifier.isStatic(field.getModifiers())) {
+                        try {
+                            subTable.getEntry(field.getName()).setValue(field.get(null));
+                        } catch(IllegalAccessException e) {
+                            System.out.println("Unable to upload value from Flags subclass " + c.getName() + ", field " + field.getName());
+                        }
+                    }
+                }
+            }
+        } catch(Exception e) {
+            System.out.println("error while printing the flags classes");
+        }
     }
 
     public void onAutonInit() {
@@ -47,5 +84,11 @@ public class RobotContainer {
 
     public void onTeleopInit() {
         this.driveTrain.setDefaultCommand(new ManualDrive(this.driveTrain, this.ps5Controller));
+    }
+
+    BooleanPublisher a = NetworkTablesUtil.getTable("isaac_man").getBooleanTopic("a button press").publish();
+
+    public void onTeleopPeriodic() {
+        a.set(this.ps5Controller.getRawButtonWrapper(2));
     }
 }

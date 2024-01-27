@@ -152,4 +152,8 @@ public final class TroyMathUtil {
     public static double roundNearestHundredth(double d) {
         return Math.floor(d * 100) / 100d;
     }
+
+    public static double squareKeepSign(double d) {
+        return d * d * Math.signum(d);
+    }
 }

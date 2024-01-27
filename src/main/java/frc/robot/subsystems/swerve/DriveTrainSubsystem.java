@@ -7,11 +7,11 @@ package frc.robot.subsystems.swerve;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.*;
 import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;  
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.RobotConstants;
+import frc.robot.commands.ManualDrive;
 import frc.robot.Flags;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.Constants.PortConstants;
@@ -28,7 +29,7 @@ import frc.robot.util.NetworkTablesUtil;
  * Represents a swerve drive style drivetrain.
  */
 public class DriveTrainSubsystem extends SubsystemBase {
-    public static final double MAX_SPEED = 3.0; // 3 meters per second
+    // public static final double MAX_SPEED = 3.0; // 3 meters per second
     public static final double MAX_ANGULAR_SPEED = Math.PI; // 1/2 rotation per second
 
 
@@ -42,25 +43,29 @@ public class DriveTrainSubsystem extends SubsystemBase {
             PortConstants.FRONT_LEFT_DRIVE_MOTOR_ID,
             PortConstants.FRONT_LEFT_ROTATION_MOTOR_ID,
             PortConstants.FRONT_LEFT_ROTATION_CANCODER_ID,
-            "fL_12"
+            "fL_12",
+            true
     );
     private final SwerveModule frontRight = new SwerveModule(
             PortConstants.FRONT_RIGHT_DRIVE_MOTOR_ID,
             PortConstants.FRONT_RIGHT_ROTATION_MOTOR_ID,
             PortConstants.FRONT_RIGHT_ROTATION_CANCODER_ID,
-            "fR_03"
+            "fR_03",
+            true
     );
     private final SwerveModule backLeft = new SwerveModule(
             PortConstants.BACK_LEFT_DRIVE_MOTOR_ID,
             PortConstants.BACK_LEFT_ROTATION_MOTOR_ID,
             PortConstants.BACK_LEFT_ROTATION_CANCODER_ID,
-            "bL_06"
+            "bL_06",
+            true
     );
     private final SwerveModule backRight = new SwerveModule(
             PortConstants.BACK_RIGHT_DRIVE_MOTOR_ID,
             PortConstants.BACK_RIGHT_ROTATION_MOTOR_ID,
             PortConstants.BACK_RIGHT_ROTATION_CANCODER_ID,
-            "bR_01"
+            "bR_01",
+            true
     );
 
     private final SwerveModule[] swerveModules = {frontLeft, frontRight, backLeft, backRight};
@@ -82,27 +87,30 @@ public class DriveTrainSubsystem extends SubsystemBase {
     public DriveTrainSubsystem() {
         RobotGyro.resetGyroAngle();
     }
+
     //prints joystick movement 
-    StructArrayPublisher<SwerveModuleState> targetSwerveStatePublisher = NetworkTablesUtil.getTable("datatable").getStructArrayTopic("MyStates", SwerveModuleState.struct).publish();
-    StructArrayPublisher<SwerveModuleState> realSwerveStatePublisher = NetworkTablesUtil.getTable("datatable").getStructArrayTopic("MyStatesReal", SwerveModuleState.struct).publish();
+    StructArrayPublisher<SwerveModuleState> targetSwerveStatePublisher = NetworkTablesUtil.getTable("datatable").getStructArrayTopic("TargetStates", SwerveModuleState.struct).publish();
+    StructArrayPublisher<SwerveModuleState> realSwerveStatePublisher = NetworkTablesUtil.getTable("datatable").getStructArrayTopic("ActualStates", SwerveModuleState.struct).publish();
     //makes object to publish robot position relative to field 
     StructPublisher<Pose2d> posePositionPublisher = NetworkTablesUtil.getTable("datatable").getStructTopic("estimatedOdometryPosition", Pose2d.struct).publish();
+    StructPublisher<Rotation2d> robotRotationPublisher = NetworkTablesUtil.getTable("datatable").getStructTopic("rotation", Rotation2d.struct).publish();
 
     static SwerveModuleState[] optimizedTargetStates = new SwerveModuleState[4];
 
     /**
      * Method to drive the robot using joystick info.
      *
-     * @param xSpeed        Speed of the robot in the x direction (forward).
-     * @param ySpeed        Speed of the robot in the y direction (sideways).
-     * @param rot           Angular rate of the robot.
+     * @param forwardSpeed  Speed of the robot in the x direction (forward).
+     * @param sidewaysSpeed Speed of the robot in the y direction (sideways).
+     * @param rotSpeed      Angular rate of the robot.
      * @param fieldRelative Whether the provided x and y speeds are relative to the field.
      */
-    public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
+    public void drive(double forwardSpeed, double sidewaysSpeed, double rotSpeed, boolean fieldRelative) {
         if(Flags.DriveTrain.ENABLED) {
             // System.out.println("targets: x: " + xSpeed + " y: " + ySpeed + " rot: " + rot);
-            var swerveModuleStates = kinematics.toSwerveModuleStates(fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, RobotGyro.getRotation2d()) : new ChassisSpeeds(xSpeed, ySpeed, rot));
-            SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, MAX_SPEED);
+            // System.out.println("Gyro angle: " + RobotGyro.getRotation2d().getDegrees());
+            var swerveModuleStates = kinematics.toSwerveModuleStates(fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed, RobotGyro.getRotation2d()) : new ChassisSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed));
+            SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, ManualDrive.MAX_SPEED_METERS_PER_SEC);
             frontLeft.setDesiredState(swerveModuleStates[0], 0);
             frontRight.setDesiredState(swerveModuleStates[1], 1);
             backLeft.setDesiredState(swerveModuleStates[2], 2);
@@ -152,7 +160,8 @@ public class DriveTrainSubsystem extends SubsystemBase {
         //publishes each wheel information to network table for debugging
         realSwerveStatePublisher.set(new SwerveModuleState[]{frontLeft.getState(), frontRight.getState(), backLeft.getState(), backRight.getState()});
         //posts robot position to network table 
-        posePositionPublisher.set(getPose());
+        posePositionPublisher.set(this.getPose());
+        robotRotationPublisher.set(RobotGyro.getRotation2d());
 
         for (SwerveModule module : swerveModules) {
             // System.out.println(module.getName() + " " + module.getDriveRotations());
@@ -161,7 +170,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             // System.out.println(module.getName() + " " + TroyMathUtil.roundNearestHundredth(module.getTurningEncoderPositionConverted()));
         }
 
-
+        this.updateOdometry();
     }
 
     public Command generateTrajectoryFollowerCommand(Trajectory trajectory, boolean stopOnEnd) {

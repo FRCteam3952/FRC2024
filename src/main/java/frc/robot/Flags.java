@@ -15,5 +15,7 @@ public final class Flags {
 
         public static final boolean DRIVE_PID_CONTROL = true;
         public static final boolean TURN_PID_CONTROL = true;
+
+        public static final boolean LOWER_MAX_SPEED = false;
     }
 }

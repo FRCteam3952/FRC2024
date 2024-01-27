@@ -2,18 +2,20 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Flags;
 import frc.robot.controllers.AbstractController;
 import frc.robot.subsystems.swerve.DriveTrainSubsystem;
+import frc.robot.util.TroyMathUtil;
 
 public class ManualDrive extends Command {
     private final DriveTrainSubsystem driveTrain;
     private final AbstractController joystick;
 
-    private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(3);
-    private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(3);
-    private final SlewRateLimiter rotLimiter = new SlewRateLimiter(3);
+    private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(2);
+    private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(2);
+    private final SlewRateLimiter rotLimiter = new SlewRateLimiter(2);
 
-    private static final double MAX_SPEED_METERS_PER_SEC = 3.5;
+    public static final double MAX_SPEED_METERS_PER_SEC = Flags.DriveTrain.LOWER_MAX_SPEED ? 3 : 5;
 
     public ManualDrive(DriveTrainSubsystem driveTrain, AbstractController joystick) {
         this.driveTrain = driveTrain;
@@ -30,7 +32,12 @@ public class ManualDrive extends Command {
     public void execute() {
         // System.out.println("vert: " + this.joystick.getRightVerticalMovement() + ", hor: " + this.joystick.getRightHorizontalMovement());
         // this.driveTrain.drive(this.joystick.getVerticalMovement());
-        this.driveTrain.drive(this.ySpeedLimiter.calculate(this.joystick.getRightVerticalMovement()) * MAX_SPEED_METERS_PER_SEC, this.xSpeedLimiter.calculate(this.joystick.getRightHorizontalMovement()) * MAX_SPEED_METERS_PER_SEC, this.rotLimiter.calculate(this.joystick.getLeftHorizontalMovement()), false);
+        double ySpeed = TroyMathUtil.squareKeepSign(this.ySpeedLimiter.calculate(-this.joystick.getLeftVerticalMovement())) * MAX_SPEED_METERS_PER_SEC;
+        double xSpeed = TroyMathUtil.squareKeepSign(this.xSpeedLimiter.calculate(-this.joystick.getLeftHorizontalMovement())) * MAX_SPEED_METERS_PER_SEC;
+        double rotSpeed = this.rotLimiter.calculate(-this.joystick.getRightHorizontalMovement());
+        // System.out.println("forward speed: " + ySpeed + ", x speed: " + xSpeed);
+        System.out.println("y: " + TroyMathUtil.roundNearestHundredth(this.joystick.getLeftVerticalMovement()) + ", x: " + TroyMathUtil.roundNearestHundredth(this.joystick.getLeftHorizontalMovement()));
+        this.driveTrain.drive(ySpeed, xSpeed, rotSpeed, true);
     }
 
     // Called once the command ends or is interrupted.

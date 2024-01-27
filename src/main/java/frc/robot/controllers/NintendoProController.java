@@ -39,7 +39,8 @@ public class NintendoProController extends AbstractController {
     }
 
     private double getControllerLeftY() {
-        return deadzoneAndScaleRawVals(-controller.getRawAxis(1), 0.74, -0.84); // inverted
+        // NOTE: INVERTED. KEEP INVERTED
+        return -deadzoneAndScaleRawVals(-controller.getRawAxis(1), 0.74, -0.84);
     }
 
     private double getControllerRightX() {
@@ -47,7 +48,8 @@ public class NintendoProController extends AbstractController {
     }
 
     private double getControllerRightY() {
-        return deadzoneAndScaleRawVals(-controller.getRawAxis(3), 0.8, -0.76); // inverted
+        // NOTE: INVERTED. KEEP INVERTED
+        return -deadzoneAndScaleRawVals(-controller.getRawAxis(3), 0.8, -0.76);
     }
 
     @Override

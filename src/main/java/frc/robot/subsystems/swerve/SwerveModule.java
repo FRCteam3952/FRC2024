@@ -59,7 +59,7 @@ public class SwerveModule {
      * @param turningMotorCANID    CAN ID for the turning motor.
      * @param turningEncoderCANID DIO input for the turning encoder channel A
      */
-    public SwerveModule(int driveMotorCANID, int turningMotorCANID, int turningEncoderCANID, String name, boolean invertDriveMotor) {
+    public SwerveModule(int driveMotorCANID, int turningMotorCANID, int turningEncoderCANID, String name, boolean invertDriveMotor, boolean invertTurnMotor) {
         driveMotor = new CANSparkMax(driveMotorCANID, MotorType.kBrushless);
         turnMotor = new CANSparkMax(turningMotorCANID, MotorType.kBrushless);
         this.name = name;
@@ -68,6 +68,7 @@ public class SwerveModule {
         turnAbsoluteEncoder = new CANcoder(turningEncoderCANID);
 
         driveMotor.setInverted(invertDriveMotor);
+        turnMotor.setInverted(invertTurnMotor);
 
         // Circumference / Gear Ratio (L2 of MK4i). This evaluates to ~1.86 inches/rotation, which is close to experimental values.
         // We are therefore using the calculated value. (Thanks Ivan)
@@ -78,12 +79,10 @@ public class SwerveModule {
         this.turnEncoder.setPositionConversionFactor(150d / 7 * Math.PI / 180 / 1.28); // ???
         this.turnEncoder.setVelocityConversionFactor(150d / 7d / 60d * Math.PI / 180 / 1.28);
 
-        // this.turningMotor.setInverted(true);
-
         this.driveEncoder.setPosition(0);
         this.turnEncoder.setPosition(0);
-        this.turnAbsoluteEncoder.setPosition(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
-        this.turnEncoder.setPosition(this.getTurningAbsEncoderPositionConverted());
+        // this.turnAbsoluteEncoder.setPosition(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
+        this.turnEncoder.setPosition(-this.getTurningAbsEncoderPositionConverted());
 
         this.driveMotor.enableVoltageCompensation(10);
         this.drivePIDController = this.driveMotor.getPIDController();
@@ -94,6 +93,8 @@ public class SwerveModule {
         this.drivePIDController.setFF(0);
         this.drivePIDController.setOutputRange(-1, 1);
 
+        //System.out.println(this.name + " inverts drive: " + this.driveMotor.getInverted() + " turn: " + this.turnMotor.getInverted());
+        System.out.println(this.name + " abs pos " + RobotMathUtil.roundNearestHundredth(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble()));
         // Set the distance per pulse for the drive encoder. We can simply use the
         // distance traveled for one rotation of the wheel divided by the encoder
         // resolution.
@@ -152,7 +153,7 @@ public class SwerveModule {
      *
      * @return The current state of the module.
      */
-    public SwerveModuleState getState() {
+    public SwerveModuleState getAbsoluteModuleState() {
         return new SwerveModuleState(driveEncoder.getVelocity(), new Rotation2d(this.getTurningAbsEncoderPositionConverted()));
     }
 
@@ -161,8 +162,16 @@ public class SwerveModule {
      *
      * @return The current position of the module.
      */
-    public SwerveModulePosition getPosition() {
+    public SwerveModulePosition getAbsoluteModulePosition() {
         return new SwerveModulePosition(driveEncoder.getPosition(), new Rotation2d(this.getTurningAbsEncoderPositionConverted()));
+    }
+
+    public SwerveModuleState getRelativeModuleState() {
+        return new SwerveModuleState(driveEncoder.getVelocity(), new Rotation2d(this.turnEncoder.getPosition()));
+    }
+
+    public SwerveModulePosition getRelativeModulePosition() {
+        return new SwerveModulePosition(driveEncoder.getPosition(), new Rotation2d(this.turnEncoder.getPosition()));
     }
 
     /**
@@ -193,6 +202,8 @@ public class SwerveModule {
     }
 
     /**
+     * ORIGINAL: {@link SwerveModuleState#optimize(SwerveModuleState, Rotation2d)}
+     * <p>
      * Minimize the change in heading the desired swerve module state would require by potentially
      * reversing the direction the wheel spins. If this is used with the PIDController class's
      * continuous input functionality, the furthest a wheel will ever rotate is {@link SwerveModule#SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG} degrees.
@@ -242,13 +253,19 @@ public class SwerveModule {
     public void setDesiredState(SwerveModuleState desiredState, int debugIdx) {
         SwerveModuleState state = optimize(desiredState, new Rotation2d(this.getTurningAbsEncoderPositionConverted()));
 
-        this.setDesiredStateNoOptimize(state);
-        DriveTrainSubsystem.optimizedTargetStates[debugIdx] = state;
+        this.setDesiredStateNoOptimize(state, debugIdx);
     }
 
-    private void setDesiredStateNoOptimize(SwerveModuleState desiredState) {
+    public void setDesiredStateNoOptimize(SwerveModuleState desiredState) {
         this.setDriveDesiredState(desiredState);
         this.setRotationDesiredState(desiredState);
+    }
+
+    public void setDesiredStateNoOptimize(SwerveModuleState desiredState, int debugIdx) {
+        this.setDriveDesiredState(desiredState);
+        this.setRotationDesiredState(desiredState);
+
+        DriveTrainSubsystem.optimizedTargetStates[debugIdx] = desiredState;
     }
 
     /**
@@ -261,7 +278,7 @@ public class SwerveModule {
             drivePIDController.setReference(optimizedDesiredState.speedMetersPerSecond, ControlType.kVelocity);
         }
         
-        System.out.println(this.name + " velocity: " + RobotMathUtil.roundNearestHundredth(driveEncoder.getVelocity()) + " target speed: " + RobotMathUtil.roundNearestHundredth(optimizedDesiredState.speedMetersPerSecond));
+        // System.out.println(this.name + " velocity: " + RobotMathUtil.roundNearestHundredth(driveEncoder.getVelocity()) + " target speed: " + RobotMathUtil.roundNearestHundredth(optimizedDesiredState.speedMetersPerSecond));
         // System.out.println(this.name + ", position: " + this.driveEncoder.getPosition());
     }
 

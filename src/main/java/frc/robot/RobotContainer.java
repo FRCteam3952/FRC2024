@@ -17,6 +17,7 @@ import frc.robot.subsystems.staticsubsystems.LimeLight;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.util.NetworkTablesUtil;
+import frc.robot.Constants.NetworkTablesConstants;
 
 public class RobotContainer {
     private final DriveTrainSubsystem driveTrain = new DriveTrainSubsystem();
@@ -24,6 +25,8 @@ public class RobotContainer {
     public final FlightJoystick driverController = new FlightJoystick(new CommandJoystick(OperatorConstants.RIGHT_JOYSTICK_PORT));
     public final NintendoProController nintendoProController = new NintendoProController(new CommandXboxController(OperatorConstants.NINTENDO_PRO_CONTROLLER));
     public final PS5Controller ps5Controller = new PS5Controller(new CommandPS5Controller(OperatorConstants.PS5_CONTROLLER));
+
+    public final AbstractController primaryController = this.ps5Controller;
 
     public RobotContainer() {
         configureBindings();
@@ -49,7 +52,7 @@ public class RobotContainer {
     private static void printFlagsClass() {
         try {
             Class<Flags> clazz = Flags.class;
-            var flagsTable = NetworkTablesUtil.getTable("Flags");
+            var flagsTable = NetworkTablesUtil.MAIN_ROBOT_TABLE.getSubTable(NetworkTablesConstants.MAIN_TABLE_NAME).getSubTable("Flags");
 
             for(Field field : clazz.getDeclaredFields()) {
                 if(Modifier.isStatic(field.getModifiers())) {
@@ -74,7 +77,7 @@ public class RobotContainer {
                 }
             }
         } catch(Exception e) {
-            System.out.println("error while printing the flags classes");
+            System.out.println("error while uploading the flags classes");
         }
     }
 
@@ -83,12 +86,12 @@ public class RobotContainer {
     }
 
     public void onTeleopInit() {
-        this.driveTrain.setDefaultCommand(new ManualDrive(this.driveTrain, this.ps5Controller));
+        this.driveTrain.setDefaultCommand(new ManualDrive(this.driveTrain, this.primaryController));
     }
 
-    BooleanPublisher a = NetworkTablesUtil.getTable("isaac_man").getBooleanTopic("a button press").publish();
+    BooleanPublisher a = NetworkTablesUtil.MAIN_ROBOT_TABLE.getSubTable("isaac_man").getBooleanTopic("a button press").publish();
 
     public void onTeleopPeriodic() {
-        a.set(this.ps5Controller.getRawButtonWrapper(2));
+        a.set(this.primaryController.getRawButtonWrapper(2));
     }
 }

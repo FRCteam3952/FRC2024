@@ -5,13 +5,11 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 /**
  * A wrapper around {@link CommandPS5Controller}. Our left joystick is not working right now though, so I'm just going to use the right side one for now.
  */
-public class PS5Controller extends AbstractController {
+public class PS5Controller extends AbstractController<CommandPS5Controller> {
     public static final double IGNORE_DELTA = 0.08;
 
-    public final CommandPS5Controller controller;
-
     public PS5Controller(CommandPS5Controller controller) {
-        this.controller = controller;
+        super(controller);
     }
 
     private static double deadzone(double val) {

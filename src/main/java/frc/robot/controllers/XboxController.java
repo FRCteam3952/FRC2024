@@ -5,13 +5,11 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 /**
  * A wrapper around {@link CommandXboxController}. Our left joystick is not working right now though, so I'm just going to use the right side one for now.
  */
-public class XboxController extends AbstractController {
+public class XboxController extends AbstractController<CommandXboxController> {
     public static final double IGNORE_DELTA = 0.08;
 
-    public final CommandXboxController controller;
-
     public XboxController(CommandXboxController controller) {
-        this.controller = controller;
+        super(controller);
     }
 
     /**

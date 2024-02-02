@@ -17,5 +17,7 @@ public final class Flags {
         public static final boolean TURN_PID_CONTROL = true;
 
         public static final boolean LOWER_MAX_SPEED = false;
+
+        public static final boolean SMART_SWERVE_MODULE_OPTIMIZATION = false;
     }
 }

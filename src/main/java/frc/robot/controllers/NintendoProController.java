@@ -7,13 +7,11 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
  * <p>
  * This class is necessary because the Nintendo Pro Controller has different deadzones than the XBox controller, as well as not reaching all values from [-1, 1] on joysticks.
  */
-public class NintendoProController extends AbstractController {
+public class NintendoProController extends AbstractController<CommandXboxController> {
     public static final double IGNORE_DELTA = 0.15;
 
-    public final CommandXboxController controller;
-
     public NintendoProController(CommandXboxController controller) {
-        this.controller = controller;
+        super(controller);
     }
 
     /**

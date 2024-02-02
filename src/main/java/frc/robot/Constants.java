@@ -1,6 +1,9 @@
 package frc.robot;
 
 public final class Constants {
+    public static class NetworkTablesConstants {
+        public static final String MAIN_TABLE_NAME = "robot";
+    }
     public static class OperatorConstants {
         public static final int RIGHT_JOYSTICK_PORT = 0;
         public static final int NINTENDO_PRO_CONTROLLER = 1;

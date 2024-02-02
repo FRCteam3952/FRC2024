@@ -31,6 +31,7 @@ import frc.robot.util.NetworkTablesUtil;
 public class DriveTrainSubsystem extends SubsystemBase {
     // public static final double MAX_SPEED = 3.0; // 3 meters per second
     public static final double MAX_ANGULAR_SPEED = Math.PI; // 1/2 rotation per second
+    private static final double SMART_OPTIMIZATION_THRESH_M_PER_SEC = 2;
 
 
     // Location of each swerve drive, relative to motor center. +X -> moving to front of robot, +Y -> moving to left of robot. IMPORTANT.
@@ -44,28 +45,32 @@ public class DriveTrainSubsystem extends SubsystemBase {
             PortConstants.FRONT_LEFT_ROTATION_MOTOR_ID,
             PortConstants.FRONT_LEFT_ROTATION_CANCODER_ID,
             "fL_12",
-            true
+            true,
+            false
     );
     private final SwerveModule frontRight = new SwerveModule(
             PortConstants.FRONT_RIGHT_DRIVE_MOTOR_ID,
             PortConstants.FRONT_RIGHT_ROTATION_MOTOR_ID,
             PortConstants.FRONT_RIGHT_ROTATION_CANCODER_ID,
             "fR_03",
-            true
+            true,
+            false
     );
     private final SwerveModule backLeft = new SwerveModule(
             PortConstants.BACK_LEFT_DRIVE_MOTOR_ID,
             PortConstants.BACK_LEFT_ROTATION_MOTOR_ID,
             PortConstants.BACK_LEFT_ROTATION_CANCODER_ID,
             "bL_06",
-            true
+            true,
+            false
     );
     private final SwerveModule backRight = new SwerveModule(
             PortConstants.BACK_RIGHT_DRIVE_MOTOR_ID,
             PortConstants.BACK_RIGHT_ROTATION_MOTOR_ID,
             PortConstants.BACK_RIGHT_ROTATION_CANCODER_ID,
             "bR_01",
-            true
+            true,
+            false
     );
 
     private final SwerveModule[] swerveModules = {frontLeft, frontRight, backLeft, backRight};
@@ -74,10 +79,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     private final SwerveDriveOdometry odometry = new SwerveDriveOdometry(kinematics, RobotGyro.getRotation2d(),
             new SwerveModulePosition[] {
-                    frontLeft.getPosition(),
-                    frontRight.getPosition(),
-                    backLeft.getPosition(),
-                    backRight.getPosition()
+                    frontLeft.getAbsoluteModulePosition(),
+                    frontRight.getAbsoluteModulePosition(),
+                    backLeft.getAbsoluteModulePosition(),
+                    backRight.getAbsoluteModulePosition()
     });
 
     public Pose2d getPose() {
@@ -89,11 +94,13 @@ public class DriveTrainSubsystem extends SubsystemBase {
     }
 
     //prints joystick movement 
-    StructArrayPublisher<SwerveModuleState> targetSwerveStatePublisher = NetworkTablesUtil.getTable("datatable").getStructArrayTopic("TargetStates", SwerveModuleState.struct).publish();
-    StructArrayPublisher<SwerveModuleState> realSwerveStatePublisher = NetworkTablesUtil.getTable("datatable").getStructArrayTopic("ActualStates", SwerveModuleState.struct).publish();
-    //makes object to publish robot position relative to field 
-    StructPublisher<Pose2d> posePositionPublisher = NetworkTablesUtil.getTable("datatable").getStructTopic("estimatedOdometryPosition", Pose2d.struct).publish();
-    StructPublisher<Rotation2d> robotRotationPublisher = NetworkTablesUtil.getTable("datatable").getStructTopic("rotation", Rotation2d.struct).publish();
+    StructArrayPublisher<SwerveModuleState> targetSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("TargetStates", SwerveModuleState.struct).publish();
+    StructArrayPublisher<SwerveModuleState> realSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("ActualStates", SwerveModuleState.struct).publish();
+
+    StructArrayPublisher<SwerveModuleState> relativeSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("RelativeStates", SwerveModuleState.struct).publish();
+    //makes object to publish robot position relative to field
+    StructPublisher<Pose2d> posePositionPublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructTopic("estimatedOdometryPosition", Pose2d.struct).publish();
+    StructPublisher<Rotation2d> robotRotationPublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructTopic("rotation", Rotation2d.struct).publish();
 
     static SwerveModuleState[] optimizedTargetStates = new SwerveModuleState[4];
 
@@ -111,10 +118,27 @@ public class DriveTrainSubsystem extends SubsystemBase {
             // System.out.println("Gyro angle: " + RobotGyro.getRotation2d().getDegrees());
             var swerveModuleStates = kinematics.toSwerveModuleStates(fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed, RobotGyro.getRotation2d()) : new ChassisSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed));
             SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, ManualDrive.MAX_SPEED_METERS_PER_SEC);
-            frontLeft.setDesiredState(swerveModuleStates[0], 0);
-            frontRight.setDesiredState(swerveModuleStates[1], 1);
-            backLeft.setDesiredState(swerveModuleStates[2], 2);
-            backRight.setDesiredState(swerveModuleStates[3], 3);
+
+            boolean shouldOptimize = true;
+            for (SwerveModule swerveModule : swerveModules) {
+                if (Math.abs(swerveModule.getDriveVelocity()) > SMART_OPTIMIZATION_THRESH_M_PER_SEC) {
+                    shouldOptimize = false;
+                    break;
+                }
+            }
+            if(shouldOptimize || !Flags.DriveTrain.SMART_SWERVE_MODULE_OPTIMIZATION) {
+                // System.out.println("Optimizing");
+                frontLeft.setDesiredState(swerveModuleStates[0], 0);
+                frontRight.setDesiredState(swerveModuleStates[1], 1);
+                backLeft.setDesiredState(swerveModuleStates[2], 2);
+                backRight.setDesiredState(swerveModuleStates[3], 3);
+            } else {
+                System.out.println("Not Optimizing");
+                frontLeft.setDesiredStateNoOptimize(swerveModuleStates[0], 0);
+                frontRight.setDesiredStateNoOptimize(swerveModuleStates[1], 1);
+                backLeft.setDesiredStateNoOptimize(swerveModuleStates[2], 2);
+                backRight.setDesiredStateNoOptimize(swerveModuleStates[3], 3);
+            }
 
             targetSwerveStatePublisher.set(optimizedTargetStates);
         }
@@ -158,15 +182,17 @@ public class DriveTrainSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         //publishes each wheel information to network table for debugging
-        realSwerveStatePublisher.set(new SwerveModuleState[]{frontLeft.getState(), frontRight.getState(), backLeft.getState(), backRight.getState()});
-        //posts robot position to network table 
+        realSwerveStatePublisher.set(new SwerveModuleState[]{frontLeft.getAbsoluteModuleState(), frontRight.getAbsoluteModuleState(), backLeft.getAbsoluteModuleState(), backRight.getAbsoluteModuleState()});
+        relativeSwerveStatePublisher.set(new SwerveModuleState[]{frontLeft.getRelativeModuleState(), frontRight.getRelativeModuleState(), backLeft.getRelativeModuleState(), backRight.getRelativeModuleState()});
+        //posts robot position to network table
         posePositionPublisher.set(this.getPose());
         robotRotationPublisher.set(RobotGyro.getRotation2d());
 
+        //noinspection StatementWithEmptyBody
         for (SwerveModule module : swerveModules) {
             // System.out.println(module.getName() + " " + module.getDriveRotations());
             // System.out.println(module.getName() + " " + module.getPosition());
-            
+
             // System.out.println(module.getName() + " " + TroyMathUtil.roundNearestHundredth(module.getTurningEncoderPositionConverted()));
         }
 
@@ -195,6 +221,6 @@ public class DriveTrainSubsystem extends SubsystemBase {
      */
     //constantly updates odometry
     public void updateOdometry() {
-        odometry.update(RobotGyro.getRotation2d(), new SwerveModulePosition[]{frontLeft.getPosition(), frontRight.getPosition(), backLeft.getPosition(), backRight.getPosition()});
+        odometry.update(RobotGyro.getRotation2d(), new SwerveModulePosition[]{frontLeft.getAbsoluteModulePosition(), frontRight.getAbsoluteModulePosition(), backLeft.getAbsoluteModulePosition(), backRight.getAbsoluteModulePosition()});
     }
 }

@@ -19,11 +19,12 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.RobotConstants;
-import frc.robot.commands.ManualDrive;
+import frc.robot.commands.ManualDriveCommand;
 import frc.robot.Flags;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.Constants.PortConstants;
 import frc.robot.util.NetworkTablesUtil;
+import frc.robot.util.RobotMathUtil;
 
 /**
  * Represents a swerve drive style drivetrain.
@@ -46,7 +47,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             PortConstants.FRONT_LEFT_ROTATION_CANCODER_ID,
             "fL_12",
             true,
-            false
+            true
     );
     private final SwerveModule frontRight = new SwerveModule(
             PortConstants.FRONT_RIGHT_DRIVE_MOTOR_ID,
@@ -54,7 +55,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             PortConstants.FRONT_RIGHT_ROTATION_CANCODER_ID,
             "fR_03",
             true,
-            false
+            true
     );
     private final SwerveModule backLeft = new SwerveModule(
             PortConstants.BACK_LEFT_DRIVE_MOTOR_ID,
@@ -62,7 +63,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             PortConstants.BACK_LEFT_ROTATION_CANCODER_ID,
             "bL_06",
             true,
-            false
+            true
     );
     private final SwerveModule backRight = new SwerveModule(
             PortConstants.BACK_RIGHT_DRIVE_MOTOR_ID,
@@ -70,7 +71,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             PortConstants.BACK_RIGHT_ROTATION_CANCODER_ID,
             "bR_01",
             true,
-            false
+            true
     );
 
     private final SwerveModule[] swerveModules = {frontLeft, frontRight, backLeft, backRight};
@@ -112,12 +113,12 @@ public class DriveTrainSubsystem extends SubsystemBase {
      * @param rotSpeed      Angular rate of the robot.
      * @param fieldRelative Whether the provided x and y speeds are relative to the field.
      */
-    public void drive(double forwardSpeed, double sidewaysSpeed, double rotSpeed, boolean fieldRelative) {
+    public void directDrive(double forwardSpeed, double sidewaysSpeed, double rotSpeed, boolean fieldRelative) {
         if(Flags.DriveTrain.ENABLED) {
             // System.out.println("targets: x: " + xSpeed + " y: " + ySpeed + " rot: " + rot);
             // System.out.println("Gyro angle: " + RobotGyro.getRotation2d().getDegrees());
             var swerveModuleStates = kinematics.toSwerveModuleStates(fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed, RobotGyro.getRotation2d()) : new ChassisSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed));
-            SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, ManualDrive.MAX_SPEED_METERS_PER_SEC);
+            SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, ManualDriveCommand.MAX_SPEED_METERS_PER_SEC);
 
             boolean shouldOptimize = true;
             for (SwerveModule swerveModule : swerveModules) {
@@ -144,11 +145,18 @@ public class DriveTrainSubsystem extends SubsystemBase {
         }
     }
 
-    public void drive(double speed) { // INCHES: 10 rot ~= 18.25, ~ 9 rot ~= 15.75
-        frontLeft.drive(speed);
-        frontRight.drive(speed);
-        backLeft.drive(speed);
-        backRight.drive(speed);
+    public void directDrive(double speed) { // INCHES: 10 rot ~= 18.25, ~ 9 rot ~= 15.75
+        frontLeft.directDrive(speed);
+        frontRight.directDrive(speed);
+        backLeft.directDrive(speed);
+        backRight.directDrive(speed);
+    }
+
+    public void directTurn(double speed) {
+        frontLeft.directTurn(speed);
+        frontRight.directTurn(speed);
+        backLeft.directTurn(speed);
+        backRight.directTurn(speed);
     }
 
     public void driveVoltage(double volts) {
@@ -190,6 +198,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
         //noinspection StatementWithEmptyBody
         for (SwerveModule module : swerveModules) {
+            // System.out.println(module.getName() + " rel vel: " + RobotMathUtil.roundNearestHundredth(module.getRelativeTurnVelocity()) + ", abs vel: " + RobotMathUtil.roundNearestHundredth(module.getTurningAbsEncoderVelocityConverted()));
             // System.out.println(module.getName() + " " + module.getDriveRotations());
             // System.out.println(module.getName() + " " + module.getPosition());
 
@@ -211,7 +220,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             this
         ).andThen(() -> {
             if (stopOnEnd) {
-                drive(0, 0, 0, false);
+                directDrive(0, 0, 0, false);
             }
         });
     }

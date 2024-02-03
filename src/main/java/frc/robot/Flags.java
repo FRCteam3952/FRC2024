@@ -19,5 +19,7 @@ public final class Flags {
         public static final boolean LOWER_MAX_SPEED = false;
 
         public static final boolean SMART_SWERVE_MODULE_OPTIMIZATION = false;
+
+        public static final boolean USE_TEST_DRIVE_COMMAND = false;
     }
 }

@@ -7,7 +7,8 @@ import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.commands.ManualDrive;
+import frc.robot.commands.ManualDriveCommand;
+import frc.robot.commands.TestDriveCommand;
 import frc.robot.controllers.AbstractController;
 import frc.robot.controllers.FlightJoystick;
 import frc.robot.controllers.NintendoProController;
@@ -26,7 +27,7 @@ public class RobotContainer {
     public final NintendoProController nintendoProController = new NintendoProController(new CommandXboxController(OperatorConstants.NINTENDO_PRO_CONTROLLER));
     public final PS5Controller ps5Controller = new PS5Controller(new CommandPS5Controller(OperatorConstants.PS5_CONTROLLER));
 
-    public final AbstractController primaryController = this.ps5Controller;
+    public final AbstractController primaryController = this.nintendoProController;
 
     public RobotContainer() {
         configureBindings();
@@ -86,7 +87,11 @@ public class RobotContainer {
     }
 
     public void onTeleopInit() {
-        this.driveTrain.setDefaultCommand(new ManualDrive(this.driveTrain, this.primaryController));
+        if(Flags.DriveTrain.USE_TEST_DRIVE_COMMAND) {
+            this.driveTrain.setDefaultCommand(new TestDriveCommand(this.driveTrain, this.primaryController));
+        } else {
+            this.driveTrain.setDefaultCommand(new ManualDriveCommand(this.driveTrain, this.primaryController));
+        }
     }
 
     BooleanPublisher a = NetworkTablesUtil.MAIN_ROBOT_TABLE.getSubTable("isaac_man").getBooleanTopic("a button press").publish();

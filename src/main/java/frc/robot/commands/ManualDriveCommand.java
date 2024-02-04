@@ -15,7 +15,7 @@ public class ManualDriveCommand extends Command {
     private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(2);
     private final SlewRateLimiter rotLimiter = new SlewRateLimiter(2);
 
-    public static final double MAX_SPEED_METERS_PER_SEC = Flags.DriveTrain.LOWER_MAX_SPEED ? 3 : 5;
+    public static final double MAX_SPEED_METERS_PER_SEC = Flags.DriveTrain.LOWER_MAX_SPEED ? 3 : 5; 
 
     public ManualDriveCommand(DriveTrainSubsystem driveTrain, AbstractController joystick) {
         this.driveTrain = driveTrain;

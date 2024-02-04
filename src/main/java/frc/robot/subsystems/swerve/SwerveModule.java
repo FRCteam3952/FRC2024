@@ -6,6 +6,7 @@ package frc.robot.subsystems.swerve;
 
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.REVLibError;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
@@ -43,7 +44,7 @@ public class SwerveModule {
 
     // Gains are for example purposes only - must be determined for your own robot!
     private final SparkPIDController drivePIDController;
-    // private final SparkPIDController turningPIDController;
+    private final SparkPIDController turnPIDController;
     // Gains are for example purposes only - must be determined for your own robot!
     
     private final ProfiledPIDController turningPIDController = new ProfiledPIDController(3, 0, 0,
@@ -76,12 +77,13 @@ public class SwerveModule {
         this.driveEncoder.setPositionConversionFactor(Units.inchesToMeters(4 * Math.PI / 6.75));
         this.driveEncoder.setVelocityConversionFactor(Units.inchesToMeters(4 * Math.PI / 6.75) / 60);
 
-        this.turnEncoder.setPositionConversionFactor(150d / 7 * Math.PI / 180 / 1.28); // ???
+        this.turnEncoder.setPositionConversionFactor(150d / 7d * Math.PI / 180 / 1.28); // ???
         this.turnEncoder.setVelocityConversionFactor(150d / 7d / 60d * Math.PI / 180 / 1.28);
 
         this.driveEncoder.setPosition(0);
         // this.turnEncoder.setPosition(0);
-        // this.turnAbsoluteEncoder.setPosition(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
+        this.turnAbsoluteEncoder.setPosition(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
+
         this.turnEncoder.setPosition(this.getTurningAbsEncoderPositionConverted());
 
         this.driveMotor.enableVoltageCompensation(10);
@@ -92,6 +94,20 @@ public class SwerveModule {
         this.drivePIDController.setD(0);
         this.drivePIDController.setFF(0);
         this.drivePIDController.setOutputRange(-1, 1);
+
+        this.turnMotor.enableVoltageCompensation(10);
+        this.turnPIDController = this.turnMotor.getPIDController();
+
+        this.turnPIDController.setPositionPIDWrappingEnabled(true);
+        this.turnPIDController.setPositionPIDWrappingMinInput(-Math.PI);
+        this.turnPIDController.setPositionPIDWrappingMaxInput(Math.PI);
+
+        this.turnPIDController.setP(0.35);
+        this.turnPIDController.setI(0);
+        this.turnPIDController.setD(0);
+        this.turnPIDController.setFF(0.02);
+        this.turnPIDController.setOutputRange(-1, 1);
+
 
         //System.out.println(this.name + " inverts drive: " + this.driveMotor.getInverted() + " turn: " + this.turnMotor.getInverted());
         System.out.println(this.name + " abs pos " + RobotMathUtil.roundNearestHundredth(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble()));
@@ -112,6 +128,10 @@ public class SwerveModule {
         // Limit the PID Controller's input range between -pi and pi and set the input
         // to be continuous.
         turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
+    }
+
+    public void resetRelativeEncodersToAbsoluteValue() {
+        this.turnEncoder.setPosition(this.getTurningAbsEncoderPositionConverted());
     }
 
     public String getName() {
@@ -267,6 +287,11 @@ public class SwerveModule {
     public void setDesiredStateNoOptimize(SwerveModuleState desiredState) {
         this.setDriveDesiredState(desiredState);
         this.setRotationDesiredState(desiredState);
+
+        if(Math.abs(desiredState.speedMetersPerSecond) < 0.01 && Math.abs(this.getRelativeTurnVelocity()) < 0.01) {
+            this.resetRelativeEncodersToAbsoluteValue();
+            System.out.println("resetting encoders");
+        }
     }
 
     public void setDesiredStateNoOptimize(SwerveModuleState desiredState, int debugIdx) {
@@ -274,6 +299,11 @@ public class SwerveModule {
         this.setRotationDesiredState(desiredState);
 
         DriveTrainSubsystem.optimizedTargetStates[debugIdx] = desiredState;
+
+        if(Math.abs(desiredState.speedMetersPerSecond) < 0.01 && Math.abs(this.getRelativeTurnVelocity()) < 0.01) {
+            this.resetRelativeEncodersToAbsoluteValue();
+            System.out.println("resetting encoders");
+        }
     }
 
     /**
@@ -295,6 +325,12 @@ public class SwerveModule {
      * @param optimizedDesiredState The desired module state. Should already be optimized (i.e. this method will NOT optimize them for you.)
      */
     private void setRotationDesiredState(SwerveModuleState optimizedDesiredState) {
+        System.out.println("turn encoder at: " + RobotMathUtil.roundNearestHundredth(this.turnEncoder.getPosition()) + ", abs val: " + RobotMathUtil.roundNearestHundredth(this.getTurningAbsEncoderPositionConverted()));
+        if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_TURN_MOTORS && Flags.DriveTrain.TURN_PID_CONTROL) {
+            turnPIDController.setReference(optimizedDesiredState.angle.getRadians(), ControlType.kPosition);
+        }
+
+        /*
         // Calculate the turning motor output from the turning PID controller.
         final double turnOutput = turningPIDController.calculate(this.getTurningAbsEncoderPositionConverted(), optimizedDesiredState.angle.getRadians());
 
@@ -303,7 +339,7 @@ public class SwerveModule {
         final double finalTurnOutput = (turnOutput + turnFeedforward);
         
         //System.out.print(this.name + " velocity: " + TroyMathUtil.roundNearestHundredth(turningEncoder.getVelocity().getValueAsDouble()) + " target speed: " + TroyMathUtil.roundNearestHundredth(state.speedMetersPerSecond));
-        // System.out.print(this.name + " turning pos: " + TroyMathUtil.roundNearestHundredth(this.getTurningAbsEncoderPositionConverted() /* * 180 / Math.PI*/) + " target: " + TroyMathUtil.roundNearestHundredth(optimizedDesiredState.angle.getRadians()));
+        // System.out.print(this.name + " turning pos: " + TroyMathUtil.roundNearestHundredth(this.getTurningAbsEncoderPositionConverted() /* * 180 / Math.PI) + " target: " + TroyMathUtil.roundNearestHundredth(optimizedDesiredState.angle.getRadians()));
         // System.out.print(" rel enc: " + TroyMathUtil.roundNearestHundredth(this.turningEncoder.getPosition()));
         /*
         if(Math.abs(this.getTurningAbsEncoderPositionConverted()) > 0.02 && Math.abs(this.turningEncoder.getPosition()) > 0.02) {
@@ -313,13 +349,14 @@ public class SwerveModule {
             }
         }
         System.out.println();*/
+        /*
         System.out.println(this.name + " turn output: " + RobotMathUtil.roundNearestHundredth(finalTurnOutput));
 
         previousTurnVoltage = finalTurnOutput;
 
         if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_TURN_MOTORS && Flags.DriveTrain.TURN_PID_CONTROL) {
             turnMotor.setVoltage(MathUtil.clamp(finalTurnOutput, MODULE_MIN_VOLTAGE_OUTPUT, MODULE_MAX_VOLTAGE_OUTPUT));
-        }
+        }*/
     }
 
     public void directDrive(double speed) {

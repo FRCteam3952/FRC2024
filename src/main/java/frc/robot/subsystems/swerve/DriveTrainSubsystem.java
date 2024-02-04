@@ -6,6 +6,7 @@ package frc.robot.subsystems.swerve;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -78,16 +79,15 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(frontLeftLocation, frontRightLocation, backLeftLocation, backRightLocation);
 
-    private final SwerveDriveOdometry odometry = new SwerveDriveOdometry(kinematics, RobotGyro.getRotation2d(),
-            new SwerveModulePosition[] {
+    private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, RobotGyro.getRotation2d(), new SwerveModulePosition[] {
                     frontLeft.getAbsoluteModulePosition(),
                     frontRight.getAbsoluteModulePosition(),
                     backLeft.getAbsoluteModulePosition(),
                     backRight.getAbsoluteModulePosition()
-    });
+    }, new Pose2d());
 
     public Pose2d getPose() {
-        return odometry.getPoseMeters();
+        return this.poseEstimator.getEstimatedPosition();
     }
 
     public DriveTrainSubsystem() {
@@ -230,6 +230,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
      */
     //constantly updates odometry
     public void updateOdometry() {
-        odometry.update(RobotGyro.getRotation2d(), new SwerveModulePosition[]{frontLeft.getAbsoluteModulePosition(), frontRight.getAbsoluteModulePosition(), backLeft.getAbsoluteModulePosition(), backRight.getAbsoluteModulePosition()});
+        this.poseEstimator.update(RobotGyro.getRotation2d(), new SwerveModulePosition[]{frontLeft.getAbsoluteModulePosition(), frontRight.getAbsoluteModulePosition(), backLeft.getAbsoluteModulePosition(), backRight.getAbsoluteModulePosition()});
+    }
+
+    public void updateOdometryWithVision() {
+        // this.poseEstimator.addVisionMeasurement();
     }
 }

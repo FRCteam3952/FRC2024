@@ -1,28 +1,13 @@
 package frc.robot.subsystems.intake;
 
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.REVLibError;
 import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 import com.revrobotics.CANSparkBase.ControlType;
+
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DigitalSource;
-
-
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Flags;
-import frc.robot.util.RobotMathUtil;
-
-
 import frc.robot.Constants.PortConstants;
 
 public class IntakeSubsytem extends SubsystemBase{
@@ -38,6 +23,8 @@ public class IntakeSubsytem extends SubsystemBase{
 
     private final DigitalInput intakeLimitSwitch;
 
+    private final SparkPIDController pivotPIDController;
+
 
     public IntakeSubsytem(){
         leaderMotor = new CANSparkMax(PortConstants.LEADER_INTAKE_MOTOR_ID, MotorType.kBrushless);
@@ -50,7 +37,17 @@ public class IntakeSubsytem extends SubsystemBase{
         pivotMotor = new CANSparkMax(PortConstants.PIVOT_INTAKE_MOTOR_ID, MotorType.kBrushless);
         pivotEncoder = pivotMotor.getEncoder();
 
-        intakeLimitSwitch = new DigitalInput(0); //change this stupid AVNI
+        intakeLimitSwitch = new DigitalInput(PortConstants.INTAKE_LIMIT_SWITCH_CHANNEL);
+
+        pivotPIDController = pivotMotor.getPIDController();
+        //tune these later
+        //also addison what do you mean by make pivotvpidcontroller a class variable on cansparkmax??? 
+        //ik what a class variable is...im pretty sure at lest
+        pivotPIDController.setP(0);
+        pivotPIDController.setI(0);
+        pivotPIDController.setD(0);
+        pivotPIDController.setFF(0);
+        
 
     }
 
@@ -69,5 +66,25 @@ public class IntakeSubsytem extends SubsystemBase{
    
     public void resetPivotEncoder(){
         setPivotSpeed(0.0);
+    }
+
+    public boolean getLimitSwitchPosition(){
+        return intakeLimitSwitch.get();
+    }
+
+    public double getLeaderMotorCurrent(){
+        return leaderMotor.getOutputCurrent();
+    }
+
+    public double getFollowerMotorCurrent(){
+        return followerMotor.getOutputCurrent();
+    }
+
+    public double getPivotMotorCurrent(){
+        return pivotMotor.getOutputCurrent();
+    }
+
+    public void setPivotPIDController(double pivotAngle){
+        pivotPIDController.setReference(pivotAngle, ControlType.kPosition);
     }
 }

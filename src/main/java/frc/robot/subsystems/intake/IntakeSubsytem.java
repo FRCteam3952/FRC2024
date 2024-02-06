@@ -17,8 +17,7 @@ public class IntakeSubsytem extends SubsystemBase{
     private final CANSparkMax pivotMotor;
 
 
-    private final RelativeEncoder leaderEncoder;
-    private final RelativeEncoder followerEncoder;
+
     private final RelativeEncoder pivotEncoder;
 
     private final DigitalInput intakeLimitSwitch;

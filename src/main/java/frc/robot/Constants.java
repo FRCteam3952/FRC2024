@@ -35,7 +35,6 @@ public final class Constants {
         public static final int LEADER_INTAKE_ENCODER_ID            = 15; // change
         public static final int FOLLOWER_INTAKE_ENCODER_ID          = 13; //change
         public static final int PIVOT_INTAKE_MOTOR_ID               = 18; //the age to vote - change
-        public static final int INTAKE_LIMIT_SWITCH_CHANNEL         = 0; //change this cero 
         
 
         public static final int FRONT_LEFT_DRIVE_MOTOR_ID           = 9;
@@ -52,6 +51,10 @@ public final class Constants {
         public static final int FRONT_RIGHT_ROTATION_CANCODER_ID    = 3;
         public static final int BACK_LEFT_ROTATION_CANCODER_ID      = 6;
         public static final int BACK_RIGHT_ROTATION_CANCODER_ID     = 1;
+
+
+        //WMP
+        public static final int INTAKE_LIMIT_SWITCH_CHANNEL         = 0; //change this cero 
     }
 
     public static class DriveConstants {

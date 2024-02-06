@@ -30,6 +30,14 @@ public final class Constants {
      * 12 (COD)
      */
     public static class PortConstants {
+        public static final int LEADER_INTAKE_MOTOR_ID              = 42; //THE MEANING OF LIFE -- change later
+        public static final int FOLLOWER_INTAKE_MOTOR_ID            = 13; //bad scawy number -- change later
+
+        public static final int LEADER_INTAKE_ENCODER_ID            = 15; // change
+        public static final int FOLLOWER_INTAKE_ENCODER_ID          = 13; //change
+
+        public static final int PIVOT_INTAKE_MOTOR_ID               = 18; //the age to vote 
+
         public static final int FRONT_LEFT_DRIVE_MOTOR_ID           = 9;
         public static final int FRONT_RIGHT_DRIVE_MOTOR_ID          = 11;
         public static final int BACK_LEFT_DRIVE_MOTOR_ID            = 7;

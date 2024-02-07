@@ -101,6 +101,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
         frontRight.setDesiredState(swerveModuleStates[1], 1);
         backLeft.setDesiredState(swerveModuleStates[2], 2);
         backRight.setDesiredState(swerveModuleStates[3], 3);
+        //sentir
 
         targetSwerveStatePublisher.set(optimizedTargetStates);
     }
@@ -169,7 +170,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
     }
 
     /**
-     * Updates the field relative position of the robot.
+     * Updates the field relative position of the robot and it sentirs
      */
     public void updateOdometry() {
         odometry.update(RobotGyro.getRotation2d(), new SwerveModulePosition[]{frontLeft.getPosition(), frontRight.getPosition(), backLeft.getPosition(), backRight.getPosition()});

@@ -26,19 +26,17 @@ public class IntakeSubsytem extends SubsystemBase{
 
 
     public IntakeSubsytem(){
-        leaderMotor = new CANSparkMax(PortConstants.LEADER_INTAKE_MOTOR_ID, MotorType.kBrushless);
-        followerMotor = new CANSparkMax(PortConstants.FOLLOWER_INTAKE_MOTOR_ID, MotorType.kBrushless);
-        followerMotor.setInverted(true);
+        leaderMotor = new CANSparkMax(PortConstants.TOP_INTAKE, MotorType.kBrushless);
+        followerMotor = new CANSparkMax(PortConstants.BOTTOM_INTAKE, MotorType.kBrushless);
+        //followerMotor.setInverted(true); might be needed
         followerMotor.follow(leaderMotor);
         
-        leaderEncoder = leaderMotor.getEncoder();
-        followerEncoder = followerMotor.getEncoder();
         
 
         pivotMotor = new CANSparkMax(PortConstants.PIVOT_INTAKE_MOTOR_ID, MotorType.kBrushless);
         pivotEncoder = pivotMotor.getEncoder();
 
-        intakeLimitSwitch = new DigitalInput(PortConstants.INTAKE_LIMIT_SWITCH_CHANNEL);
+        intakeLimitSwitch = new DigitalInput(PortConstants.INTAKE_LIMIT_SWITCH_PORT);
 
         pivotPIDController = pivotMotor.getPIDController();
         //tune these later
@@ -65,8 +63,8 @@ public class IntakeSubsytem extends SubsystemBase{
         pivotMotor.set(pivotSpeed);
     }
 
-    public void setPivotEncodePosition(double position){
-        pivotEncoder.setPosition(position);
+    public void setPivotEncodePosition(double EncoderPosition){
+        pivotEncoder.setPosition(EncoderPosition);
     }
 
     public double getPivotEncoder(){

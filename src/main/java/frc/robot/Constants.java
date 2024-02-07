@@ -1,9 +1,13 @@
 package frc.robot;
 
 public final class Constants {
+    public static class NetworkTablesConstants {
+        public static final String MAIN_TABLE_NAME = "robot";
+    }
     public static class OperatorConstants {
         public static final int RIGHT_JOYSTICK_PORT = 0;
         public static final int NINTENDO_PRO_CONTROLLER = 1;
+        public static final int PS5_CONTROLLER = 3;
         public static class ControllerConstants {
         }
     }
@@ -13,21 +17,20 @@ public final class Constants {
      * USED:
      * 0  (RIO)
      * 1  (COD)
-     * 2  (DRI)
+     * 2  (ROT)
      * 3  (COD)
      * 4  (DRI)
      * 5  (ROT)
      * 6  (COD)
-     * 7  (ROT)
-     * 8  (DRI)
+     * 7  (DRI)
+     * 8  (ROT)
      * 9  (DRI)
      * 10 (ROT)
-     * 11 (ROT)
+     * 11 (DRI)
      * 12 (COD)
      */
     public static class PortConstants {
 
-        //SHOOTER IDs
         public static final int SHOOTER_FOLLOWER_MOTOR_ID           = 42; //THE MEANING OF LIFE :) FAKE ID, CHANGE LATER!
         public static final int SHOOTER_LEADER_MOTOR_ID             = 64; //OMG ITS A MINECRAFT STACK LIMIT :) FAKE ID, CHANGE LATER!
         public static final int SHOOTER_FLAP_MOTOR_ID               = 23; //FAKE ID, CHANGE LATER!
@@ -37,21 +40,20 @@ public final class Constants {
         public static final int SHOOTER_PIVOT_LIMIT_SWITCH          = 49; //WE GOTTA GO WEST, GO WEST, GO WEST, FAKE ID CHANGE LATER!
         public static final int SHOOTER_FLAP_LIMIT_SWITCH           = 50; //FAKE ID, CHANGE LATER!
 
-        //DRIVETRAIN IDs
-        public static final int FRONT_LEFT_DRIVE_MOTOR_ID           = 2;
-        public static final int FRONT_RIGHT_DRIVE_MOTOR_ID          = 4;
-        public static final int BACK_LEFT_DRIVE_MOTOR_ID            = 9;
-        public static final int BACK_RIGHT_DRIVE_MOTOR_ID           = 8;
-        public static final int FRONT_LEFT_ROTATION_MOTOR_ID        = 10;
-        public static final int FRONT_RIGHT_ROTATION_MOTOR_ID       = 5;
-        public static final int BACK_LEFT_ROTATION_MOTOR_ID         = 11;
-        public static final int BACK_RIGHT_ROTATION_MOTOR_ID        = 7;
+        public static final int FRONT_LEFT_DRIVE_MOTOR_ID           = 9;
+        public static final int FRONT_RIGHT_DRIVE_MOTOR_ID          = 11;
+        public static final int BACK_LEFT_DRIVE_MOTOR_ID            = 7;
+        public static final int BACK_RIGHT_DRIVE_MOTOR_ID           = 4;
+
+        public static final int FRONT_LEFT_ROTATION_MOTOR_ID        = 8;
+        public static final int FRONT_RIGHT_ROTATION_MOTOR_ID       = 2;
+        public static final int BACK_LEFT_ROTATION_MOTOR_ID         = 5;
+        public static final int BACK_RIGHT_ROTATION_MOTOR_ID        = 10;
+
         public static final int FRONT_LEFT_ROTATION_CANCODER_ID     = 12;
         public static final int FRONT_RIGHT_ROTATION_CANCODER_ID    = 3;
         public static final int BACK_LEFT_ROTATION_CANCODER_ID      = 6;
         public static final int BACK_RIGHT_ROTATION_CANCODER_ID     = 1;
-        
-
     }
 
     public static class DriveConstants {
@@ -60,13 +62,6 @@ public final class Constants {
         public static final double TRAJ_THETA_CONTROLLER_KP = 0;
         public static final double TRAJ_MAX_ANG_VELO = 0;
         public static final double TRAJ_MAX_ANG_ACCEL = 0;
-
-        public static class CANcoderOffsets {
-            public static final double FRONT_LEFT_OFFSET    = -0.404296875;     // ID 12
-            public static final double FRONT_RIGHT_OFFSET   = 0.0859375;        // ID 3
-            public static final double BACK_LEFT_OFFSET     = 0.029296875;      // ID 6
-            public static final double BACK_RIGHT_OFFSET    = 0.171142578125;   // ID 1
-        }
     }
 
     public static class RobotConstants {

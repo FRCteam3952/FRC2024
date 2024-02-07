@@ -5,13 +5,11 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 /**
  * A wrapper around {@link CommandXboxController}. Our left joystick is not working right now though, so I'm just going to use the right side one for now.
  */
-public class XboxController extends AbstractJoystick {
+public class XboxController extends AbstractController<CommandXboxController> {
     public static final double IGNORE_DELTA = 0.08;
 
-    public final CommandXboxController controller;
-
     public XboxController(CommandXboxController controller) {
-        this.controller = controller;
+        super(controller);
     }
 
     /**
@@ -28,30 +26,24 @@ public class XboxController extends AbstractJoystick {
         }
     }
 
+    @Override
     public double getRightHorizontalMovement() {
         return correctDeadzone(controller.getRightX());
     }
 
+    @Override
     public double getRightVerticalMovement() {
         return correctDeadzone(controller.getRightY());
     }
 
+    @Override
     public double getLeftHorizontalMovement() {
         return correctDeadzone(controller.getLeftX());
     }
 
+    @Override
     public double getLeftVerticalMovement() {
         return correctDeadzone(controller.getLeftY());
-    }
-
-    @Override
-    public double getHorizontalMovement() {
-        return this.getRightHorizontalMovement();
-    }
-
-    @Override
-    public double getVerticalMovement() {
-        return this.getRightVerticalMovement();
     }
 
     @Override
@@ -64,6 +56,7 @@ public class XboxController extends AbstractJoystick {
         return controller.getHID().getRawButtonReleased(button);
     }
 
+    @Override
     public boolean getRawButtonPressedWrapper(int button) {
         return controller.getHID().getRawButtonPressed(button);
     }

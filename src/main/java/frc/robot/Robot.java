@@ -4,10 +4,15 @@
 
 package frc.robot;
 
+import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 
 
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.wpilog.WPILOGReader;
+import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 public class Robot extends LoggedRobot {
     public Robot() {
@@ -18,13 +23,33 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void robotInit() {
+        // this.initializeAdvantageKit();
+
         this.robotContainer = new RobotContainer();
         this.robotContainer.onRobotInit();
+    }
+
+    private void initializeAdvantageKit() {
+        // https://github.com/Mechanical-Advantage/AdvantageKit/blob/main/docs/INSTALLATION.md#robot-configuration
+        Logger.recordMetadata("3952", "Crescendo_Robot");
+
+        if(isReal()) {
+            Logger.addDataReceiver(new WPILOGWriter("/home/lvuser/logs/"));
+            Logger.addDataReceiver(new NT4Publisher());
+        } else {
+            setUseTiming(false);
+            String logPath = LogFileUtil.findReplayLog();
+            Logger.setReplaySource(new WPILOGReader(logPath));
+            Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
+        }
+
+        Logger.start();
     }
 
     @Override
     public void robotPeriodic() {
         CommandScheduler.getInstance().run();
+        this.robotContainer.onTeleopPeriodic();
     }
 
     @Override

@@ -3,6 +3,7 @@ package frc.robot.util;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.*;
+import frc.robot.Constants.NetworkTablesConstants;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 
 import java.util.HashMap;
@@ -13,8 +14,10 @@ public class NetworkTablesUtil {
     private static final Map<String, GenericPublisher> publishers = new HashMap<>();
     private static final Map<String, GenericSubscriber> subscribers = new HashMap<>();
 
+    public static final NetworkTable MAIN_ROBOT_TABLE = INSTANCE.getTable(NetworkTablesConstants.MAIN_TABLE_NAME);
+
     /**
-     * Gets the NetworkTables Instance being used by the program
+     * Gets the NetworkTablesConstants Instance being used by the program
      *
      * @return {@link NetworkTableInstance} used
      */
@@ -23,7 +26,7 @@ public class NetworkTablesUtil {
     }
 
     /**
-     * Returns the table reference from NetworkTables
+     * Returns the table reference from NetworkTablesConstants
      *
      * @param tableName The name of the table
      * @return {@link NetworkTable} corresponding
@@ -94,7 +97,7 @@ public class NetworkTablesUtil {
      */
     public static Pose2d getJetsonPoseMeters() {
         NetworkTable table = INSTANCE.getTable("jetson");
-        double[] jetsonPoseXYZ = TroyMathUtil.inchesArrayToMetersArray(table.getEntry("pose").getDoubleArray(new double[]{0.0, 0.0, 0.0})); // X, Y, Z
+        double[] jetsonPoseXYZ = RobotMathUtil.inchesArrayToMetersArray(table.getEntry("pose").getDoubleArray(new double[]{0.0, 0.0, 0.0})); // X, Y, Z
         return new Pose2d(jetsonPoseXYZ[2], jetsonPoseXYZ[0], RobotGyro.getRotation2d());
     }
 
@@ -109,7 +112,7 @@ public class NetworkTablesUtil {
     }
 
     /**
-     * Returns the entry reference from NetworkTables
+     * Returns the entry reference from NetworkTablesConstants
      *
      * @param tableName Name of the table
      * @param entryName Name of the entry

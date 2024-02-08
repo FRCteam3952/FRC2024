@@ -11,22 +11,14 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 import com.revrobotics.CANSparkBase.ControlType;
 
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Flags;
 import frc.robot.util.RobotMathUtil;
 
 public class SwerveModule {
-    private static final double MODULE_MAX_ANGULAR_VELOCITY = DriveTrainSubsystem.MAX_ANGULAR_SPEED * 2;
-    private static final double MODULE_MAX_ANGULAR_ACCELERATION = Math.PI * 2; // radians per second squared
-
-    private static final double MODULE_MAX_VOLTAGE_OUTPUT = 6;
-    private static final double MODULE_MIN_VOLTAGE_OUTPUT = -6;
 
     private static final double SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG = 120;
 
@@ -40,16 +32,8 @@ public class SwerveModule {
 
     private final String name;
 
-    // Gains are for example purposes only - must be determined for your own robot!
     private final SparkPIDController drivePIDController;
     private final SparkPIDController turnPIDController;
-    // Gains are for example purposes only - must be determined for your own robot!
-    
-    private final ProfiledPIDController turningPIDController = new ProfiledPIDController(3, 0, 0,
-            new TrapezoidProfile.Constraints(MODULE_MAX_ANGULAR_VELOCITY, MODULE_MAX_ANGULAR_ACCELERATION));
-
-    // Gains are for example purposes only - must be determined for your own robot!
-    private final SimpleMotorFeedforward turnFeedforward = new SimpleMotorFeedforward(0.4, 0);
 
     /**
      * Constructs a SwerveModule with a drive motor, turning motor, drive encoder and turning encoder.
@@ -115,23 +99,6 @@ public class SwerveModule {
 
         //System.out.println(this.name + " inverts drive: " + this.driveMotor.getInverted() + " turn: " + this.turnMotor.getInverted());
         // System.out.println(this.name + " abs pos " + RobotMathUtil.roundNearestHundredth(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble()));
-        // Set the distance per pulse for the drive encoder. We can simply use the
-        // distance traveled for one rotation of the wheel divided by the encoder
-        // resolution.
-        // driveEncoder.setDistancePerPulse(2 * Math.PI * WHEEL_RADIUS / ENCODER_RESOLUTION); // EXPERIMENT LATER.
-
-        // Set the distance (in this case, angle) in radians per pulse for the turning encoder.
-        // This is the angle through an entire rotation (2 * pi) divided by the
-        // encoder resolution.
-
-        // WE NEED RADIANS I THINK
-        // MAGIC NUMBER FROM DOCUMENTATION COMMENT ON METHOD COPY-PASTED. THIS SHOULD NOT BE TOUCHED UNLESS MASSIVE BREAK.
-        // turningEncoder.configFeedbackCoefficient(0.087890625 * Math.PI / 180, "rad");
-        // turningEncoder.setDistancePerPulse(2 * Math.PI / ENCODER_RESOLUTION); // template code, ignore.
-
-        // Limit the PID Controller's input range between -pi and pi and set the input
-        // to be continuous.
-        turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
     public void resetRelativeEncodersToAbsoluteValue() {
@@ -231,8 +198,6 @@ public class SwerveModule {
     public void stop() {
         setVoltages(0, 0);
     }
-
-    private double previousTurnVoltage = 0;
 
     public void rotateToAbsoluteZero() {
         SwerveModuleState zeroedState = new SwerveModuleState();
@@ -344,34 +309,6 @@ public class SwerveModule {
         if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_TURN_MOTORS && Flags.DriveTrain.TURN_PID_CONTROL) {
             turnPIDController.setReference(optimizedDesiredState.angle.getRadians(), ControlType.kPosition);
         }
-
-        /*
-        // Calculate the turning motor output from the turning PID controller.
-        final double turnOutput = turningPIDController.calculate(this.getTurningAbsEncoderPositionConverted(), optimizedDesiredState.angle.getRadians());
-
-        final double turnFeedforward = this.turnFeedforward.calculate(turningPIDController.getSetpoint().velocity);
-
-        final double finalTurnOutput = (turnOutput + turnFeedforward);
-        
-        //System.out.print(this.name + " velocity: " + TroyMathUtil.roundNearestHundredth(turningEncoder.getVelocity().getValueAsDouble()) + " target speed: " + TroyMathUtil.roundNearestHundredth(state.speedMetersPerSecond));
-        // System.out.print(this.name + " turning pos: " + TroyMathUtil.roundNearestHundredth(this.getTurningAbsEncoderPositionConverted() /* * 180 / Math.PI) + " target: " + TroyMathUtil.roundNearestHundredth(optimizedDesiredState.angle.getRadians()));
-        // System.out.print(" rel enc: " + TroyMathUtil.roundNearestHundredth(this.turningEncoder.getPosition()));
-        /*
-        if(Math.abs(this.getTurningAbsEncoderPositionConverted()) > 0.02 && Math.abs(this.turningEncoder.getPosition()) > 0.02) {
-            double err = TroyMathUtil.roundNearestHundredth((this.turningEncoder.getPosition() % (2 * Math.PI)) - (this.getTurningAbsEncoderPositionConverted() % (2 * Math.PI)));
-            if(Math.abs(err) > 0.03) {
-                System.out.print("Deviation detected between Absolute and Relative encoder values. Recalibrate?");
-            }
-        }
-        System.out.println();*/
-        /*
-        System.out.println(this.name + " turn output: " + RobotMathUtil.roundNearestHundredth(finalTurnOutput));
-
-        previousTurnVoltage = finalTurnOutput;
-
-        if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_TURN_MOTORS && Flags.DriveTrain.TURN_PID_CONTROL) {
-            turnMotor.setVoltage(MathUtil.clamp(finalTurnOutput, MODULE_MIN_VOLTAGE_OUTPUT, MODULE_MAX_VOLTAGE_OUTPUT));
-        }*/
     }
 
     public void directDrive(double speed) {

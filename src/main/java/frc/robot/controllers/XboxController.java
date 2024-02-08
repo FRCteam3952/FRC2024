@@ -1,15 +1,17 @@
 package frc.robot.controllers;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
  * A wrapper around {@link CommandXboxController}. Our left joystick is not working right now though, so I'm just going to use the right side one for now.
  */
-public class XboxController extends AbstractController<CommandXboxController> {
+public class XboxController extends AbstractController{
     public static final double IGNORE_DELTA = 0.08;
 
+    private final CommandXboxController controller;
     public XboxController(CommandXboxController controller) {
-        super(controller);
+        this.controller = controller;
     }
 
     /**
@@ -59,5 +61,30 @@ public class XboxController extends AbstractController<CommandXboxController> {
     @Override
     public boolean getRawButtonPressedWrapper(int button) {
         return controller.getHID().getRawButtonPressed(button);
+    }
+
+    @Override
+    public Trigger button(int button) {
+        return this.controller.button(button);
+    }
+
+    @Override
+    public Trigger upperButton() {
+        return this.controller.x();
+    }
+
+    @Override
+    public Trigger leftButton() {
+        return this.controller.y();
+    }
+
+    @Override
+    public Trigger rightButton() {
+        return this.controller.a();
+    }
+
+    @Override
+    public Trigger lowerButton() {
+        return this.controller.b();
     }
 }

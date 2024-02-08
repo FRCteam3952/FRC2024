@@ -1,8 +1,5 @@
 package frc.robot.commands;
 
-import java.util.Arrays;
-
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Flags;
 import frc.robot.controllers.AbstractController;
@@ -13,10 +10,6 @@ import frc.robot.util.RobotMathUtil;
 public class TestDriveCommand extends Command {
     private final DriveTrainSubsystem driveTrain;
     private final AbstractController joystick;
-
-    private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(2);
-    private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(2);
-    private final SlewRateLimiter rotLimiter = new SlewRateLimiter(2);
 
     public static final double MAX_SPEED_METERS_PER_SEC = Flags.DriveTrain.LOWER_MAX_SPEED ? 3 : 5;
 

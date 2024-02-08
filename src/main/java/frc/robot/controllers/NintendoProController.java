@@ -1,17 +1,19 @@
 package frc.robot.controllers;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
  * A wrapper around {@link CommandXboxController} but for the Nintendo Pro Controller.
  * <p>
  * This class is necessary because the Nintendo Pro Controller has different deadzones than the XBox controller, as well as not reaching all values from [-1, 1] on joysticks.
  */
-public class NintendoProController extends AbstractController<CommandXboxController> {
+public class NintendoProController extends AbstractController {
     public static final double IGNORE_DELTA = 0.15;
 
+    private final CommandXboxController controller;
     public NintendoProController(CommandXboxController controller) {
-        super(controller);
+        this.controller = controller;
     }
 
     /**
@@ -83,5 +85,30 @@ public class NintendoProController extends AbstractController<CommandXboxControl
     @Override
     public boolean getRawButtonPressedWrapper(int button) {
         return controller.getHID().getRawButtonPressed(button);
+    }
+
+    @Override
+    public Trigger button(int button) {
+        return this.controller.button(button);
+    }
+
+    @Override
+    public Trigger upperButton() {
+        return this.controller.x();
+    }
+
+    @Override
+    public Trigger leftButton() {
+        return this.controller.y();
+    }
+
+    @Override
+    public Trigger rightButton() {
+        return this.controller.a();
+    }
+
+    @Override
+    public Trigger lowerButton() {
+        return this.controller.b();
     }
 }

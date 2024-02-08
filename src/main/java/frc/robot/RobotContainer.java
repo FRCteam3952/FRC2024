@@ -38,7 +38,7 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
-        this.primaryController.controller.button(4).onTrue(this.driveTrain.rotateToAbsoluteZeroCommand());
+        this.primaryController.upperButton().onTrue(this.driveTrain.rotateToAbsoluteZeroCommand());
     }
 
     public void onRobotInit() {

@@ -31,14 +31,14 @@ public final class Constants {
      */
     public static class PortConstants {
 
-        public static final int SHOOTER_FOLLOWER_MOTOR_ID           = 42; //THE MEANING OF LIFE :) FAKE ID, CHANGE LATER!
-        public static final int SHOOTER_LEADER_MOTOR_ID             = 64; //OMG ITS A MINECRAFT STACK LIMIT :) FAKE ID, CHANGE LATER!
-        public static final int SHOOTER_FLAP_MOTOR_ID               = 23; //FAKE ID, CHANGE LATER!
-        public static final int SHOOTER_PIVOT_MOTOR_ID              = 54; //FAKE ID, CHANGE LATER!
-        public static final int SHOOTER_FOLLOWER_ENCODER_ID         = 63; //FAKE ID, CHANGE LATER!
-        public static final int SHOOTER_LEADER_ENCODER_ID           = 34; //FAKE ID, CHANGE LATER! 
-        public static final int SHOOTER_PIVOT_LIMIT_SWITCH          = 49; //WE GOTTA GO WEST, GO WEST, GO WEST, FAKE ID CHANGE LATER!
-        public static final int SHOOTER_FLAP_LIMIT_SWITCH           = 50; //FAKE ID, CHANGE LATER!
+        public static final int SHOOTER_FOLLOWER_MOTOR_ID           = 42; //THE MEANING OF LIFE :) FAKE ID, CHANGE LATER! 
+        public static final int SHOOTER_LEADER_MOTOR_ID             = 64; //THESE ARE ALL FAKE IDs
+        public static final int SHOOTER_FLAP_MOTOR_ID               = 23; 
+        public static final int SHOOTER_PIVOT_MOTOR_ID              = 54;
+        public static final int SHOOTER_FOLLOWER_ENCODER_ID         = 63; 
+        public static final int SHOOTER_LEADER_ENCODER_ID           = 34; 
+        public static final int SHOOTER_PIVOT_LIMIT_SWITCH          = 49; 
+        public static final int SHOOTER_FLAP_LIMIT_SWITCH           = 50; 
 
         public static final int FRONT_LEFT_DRIVE_MOTOR_ID           = 9;
         public static final int FRONT_RIGHT_DRIVE_MOTOR_ID          = 11;

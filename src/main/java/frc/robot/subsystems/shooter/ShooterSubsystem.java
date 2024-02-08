@@ -5,26 +5,29 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PortConstants;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkPIDController;
 
 // Shoutout to Avni whose code I reverse engineered - Fox in a box(awesome sause)
 
  public class ShooterSubsystem extends SubsystemBase{
-// this function should intialize things and set them to something
     //make the motor variables
-    private CANSparkMax followerMotor;
-    private CANSparkMax leaderMotor;
-    private CANSparkMax pivotMotor;
-    private CANSparkMax flapMotor;
-
+    private final CANSparkMax followerMotor;
+    private final CANSparkMax leaderMotor;
+    private final CANSparkMax pivotMotor;
+    private final CANSparkMax flapMotor;
     //make the motor encoder variables
-    private RelativeEncoder followerEncoder;
-    private RelativeEncoder leaderEncoder;
-    private RelativeEncoder pivotEncoder;
-    private RelativeEncoder flapEncoder;
-
+    private final RelativeEncoder followerEncoder; //Don't know what to do with this, but its there
+    private final RelativeEncoder leaderEncoder;
+    private final RelativeEncoder pivotEncoder;
+    private final RelativeEncoder flapEncoder;
     //make the limit switch variables
-    private DigitalInput pivotLimitSwitch;
-    private DigitalInput flapLimitSwitch;
+    private final DigitalInput pivotLimitSwitch;
+    private final DigitalInput flapLimitSwitch;
+    //PID stuff
+    private static SparkPIDController pivotPidController;
+    private static SparkPIDController flapPidController;
+    private static SparkPIDController leaderPidController;
+    
 
 
     public ShooterSubsystem(){
@@ -38,24 +41,44 @@ import com.revrobotics.RelativeEncoder;
         leaderEncoder = leaderMotor.getEncoder();
         pivotEncoder = pivotMotor.getEncoder();
         flapEncoder = flapMotor.getEncoder();
-
+        //makes followMotor follow leaderMotor
         followerMotor.follow(leaderMotor);
-
         //intialize limit switch
         pivotLimitSwitch = new DigitalInput(PortConstants.SHOOTER_PIVOT_LIMIT_SWITCH);
         flapLimitSwitch = new DigitalInput(PortConstants.SHOOTER_PIVOT_LIMIT_SWITCH);
+
+        //intialize PIDs
+        pivotPidController = pivotMotor.getPIDController();
+        flapPidController = flapMotor.getPIDController();
+        leaderPidController = leaderMotor.getPIDController();
+
+        //intializen PID values to 0
+        pivotPidController.setP(0);
+        pivotPidController.setI(0);
+        pivotPidController.setD(0);
+        pivotPidController.setFF(0);
+
+        flapPidController.setP(0);
+        flapPidController.setI(0);
+        flapPidController.setD(0);
+        flapPidController.setFF(0);
+
+        leaderPidController.setP(0);
+        leaderPidController.setI(0);
+        leaderPidController.setD(0);
+        leaderPidController.setFF(0);
+    
         }
 
-
-        // Setting the speed of the motors I have no idea how to set the speed. So...
-        public void setLeaderMotorSpeed(double speed){
-            leaderMotor.set(speed); 
+        // Setting the speed of the motors
+        public void setLeaderMotorSpeed(double RPM){
+            leaderMotor.set(RPM); 
         }
-        public void setPivotMotorSpeed(double pivotSpeed){
-            pivotMotor.set(pivotSpeed);
+        public void setPivotMotorSpeed(double degrees){
+            pivotMotor.set(degrees);
         }
-        public void setFlapMotorSpeed(double flapSpeed){
-            flapMotor.set(flapSpeed);
+        public void setFlapMotorSpeed(double degrees){
+            flapMotor.set(degrees);
         }
 
         // Getting
@@ -71,6 +94,12 @@ import com.revrobotics.RelativeEncoder;
         public boolean getFlapLimitSwitch(){
             return flapLimitSwitch.get();
         }
+        public double getPivotVelocity(){
+            return pivotEncoder.getVelocity();
+        }
+        public double getFlapVelocity(){
+            return flapEncoder.getVelocity();
+        }
 
         // Setting 
         public void setPivotPosition(double position){
@@ -78,6 +107,24 @@ import com.revrobotics.RelativeEncoder;
         }
         public void setFlapPosition(double position){
             flapEncoder.setPosition(position);
+        }
+        public void setPivotPid(double degree){
+            pivotPidController.setP(degree);
+            pivotPidController.setI(degree);
+            pivotPidController.setD(degree);
+            pivotPidController.setFF(degree);
+        }
+        public void setFlapPid(double degree){
+            flapPidController.setP(degree);
+            flapPidController.setI(degree);
+            flapPidController.setD(degree);
+            flapPidController.setFF(degree);
+        }
+        public void setMotorPid(double RPM){
+            leaderPidController.setP(RPM);
+            leaderPidController.setI(RPM);
+            leaderPidController.setD(RPM);
+            leaderPidController.setFF(RPM);
         }
         // Resetting 
         public void resetPivot(){

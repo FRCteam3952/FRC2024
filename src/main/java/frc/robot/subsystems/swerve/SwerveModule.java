@@ -6,13 +6,11 @@ package frc.robot.subsystems.swerve;
 
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.REVLibError;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 import com.revrobotics.CANSparkBase.ControlType;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -71,6 +69,12 @@ public class SwerveModule {
         driveMotor.setInverted(invertDriveMotor);
         turnMotor.setInverted(invertTurnMotor);
 
+        this.driveMotor.setSmartCurrentLimit(20);
+        this.driveMotor.setSecondaryCurrentLimit(100);
+
+        this.turnMotor.setSmartCurrentLimit(20);
+        this.turnMotor.setSecondaryCurrentLimit(100);
+
         // Circumference / Gear Ratio (L2 of MK4i). This evaluates to ~1.86 inches/rotation, which is close to experimental values.
         // We are therefore using the calculated value. (Thanks Ivan)
         // Since everything else is in meters, convert to meters.
@@ -110,7 +114,7 @@ public class SwerveModule {
 
 
         //System.out.println(this.name + " inverts drive: " + this.driveMotor.getInverted() + " turn: " + this.turnMotor.getInverted());
-        System.out.println(this.name + " abs pos " + RobotMathUtil.roundNearestHundredth(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble()));
+        // System.out.println(this.name + " abs pos " + RobotMathUtil.roundNearestHundredth(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble()));
         // Set the distance per pulse for the drive encoder. We can simply use the
         // distance traveled for one rotation of the wheel divided by the encoder
         // resolution.
@@ -160,6 +164,11 @@ public class SwerveModule {
         return this.turnAbsoluteEncoder.getVelocity().getValueAsDouble() * 360 * Math.PI / 180;
     }
 
+    public double getAbsoluteAbsolutePositionConverted() {
+        // ORIGINAL UNITS: rotations. Converted to radians.
+        return this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble() * 2 * Math.PI;
+    }
+
     /**
      * Gets the velocity of the drive encoder.
      * @return The velocity of the drive encoder, in meters/sec
@@ -183,6 +192,10 @@ public class SwerveModule {
      */
     public SwerveModuleState getAbsoluteModuleState() {
         return new SwerveModuleState(driveEncoder.getVelocity(), new Rotation2d(this.getTurningAbsEncoderPositionConverted()));
+    }
+
+    public SwerveModuleState getAbsoluteAbsoluteModuleState() {
+        return new SwerveModuleState(driveEncoder.getVelocity(), new Rotation2d(this.getAbsoluteAbsolutePositionConverted()));
     }
 
     /**
@@ -221,12 +234,14 @@ public class SwerveModule {
 
     private double previousTurnVoltage = 0;
 
-    /**
-     * DOESNT WORK
-     */
     public void rotateToAbsoluteZero() {
         SwerveModuleState zeroedState = new SwerveModuleState();
         this.setDesiredStateNoOptimize(zeroedState);
+    }
+
+    public void rotateToAbsoluteZero(int debugIdx) {
+        SwerveModuleState zeroedState = new SwerveModuleState();
+        this.setDesiredStateNoOptimize(zeroedState, debugIdx);
     }
 
     /**
@@ -290,7 +305,7 @@ public class SwerveModule {
 
         if(Math.abs(desiredState.speedMetersPerSecond) < 0.01 && Math.abs(this.getRelativeTurnVelocity()) < 0.01) {
             this.resetRelativeEncodersToAbsoluteValue();
-            System.out.println("resetting encoders");
+            // System.out.println("resetting encoders");
         }
     }
 
@@ -302,7 +317,7 @@ public class SwerveModule {
 
         if(Math.abs(desiredState.speedMetersPerSecond) < 0.01 && Math.abs(this.getRelativeTurnVelocity()) < 0.01) {
             this.resetRelativeEncodersToAbsoluteValue();
-            System.out.println("resetting encoders");
+            // System.out.println("resetting encoders");
         }
     }
 
@@ -325,7 +340,7 @@ public class SwerveModule {
      * @param optimizedDesiredState The desired module state. Should already be optimized (i.e. this method will NOT optimize them for you.)
      */
     private void setRotationDesiredState(SwerveModuleState optimizedDesiredState) {
-        System.out.println("turn encoder at: " + RobotMathUtil.roundNearestHundredth(this.turnEncoder.getPosition()) + ", abs val: " + RobotMathUtil.roundNearestHundredth(this.getTurningAbsEncoderPositionConverted()));
+        // System.out.println("turn encoder at: " + RobotMathUtil.roundNearestHundredth(this.turnEncoder.getPosition()) + ", abs val: " + RobotMathUtil.roundNearestHundredth(this.getTurningAbsEncoderPositionConverted()));
         if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_TURN_MOTORS && Flags.DriveTrain.TURN_PID_CONTROL) {
             turnPIDController.setReference(optimizedDesiredState.angle.getRadians(), ControlType.kPosition);
         }

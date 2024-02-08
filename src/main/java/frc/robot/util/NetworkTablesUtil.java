@@ -3,6 +3,9 @@ package frc.robot.util;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.*;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.robot.Constants.NetworkTablesConstants;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 
@@ -105,10 +108,18 @@ public class NetworkTablesUtil {
         return getEntry("jetson", "has_pose").getBoolean(false);
     }
 
-
+    /**
+     * Gets whether the robot is on the blue alliance, according to the Driver Station.
+     * @return True if on blue, false if on red. If alliance is not present, will default to true.
+     */
     public static boolean getIfOnBlueTeam() {
-        NetworkTable table = INSTANCE.getTable("FMSInfo");
-        return !table.getEntry("IsRedAlliance").getBoolean(true);
+        var alliance = DriverStation.getAlliance();
+        if(alliance.isPresent()) {
+            return alliance.get().equals(Alliance.Blue);
+        }
+        System.out.println("Alliance not present!");
+        DriverStation.reportError("Alliance not present!", false);
+        return true;
     }
 
     /**

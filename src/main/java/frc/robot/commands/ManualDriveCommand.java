@@ -37,7 +37,7 @@ public class ManualDriveCommand extends Command {
         double rotSpeed = this.rotLimiter.calculate(-this.joystick.getRightHorizontalMovement());
         // System.out.println("forward speed: " + ySpeed + ", x speed: " + xSpeed);
         // System.out.println("y: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftVerticalMovement()) + ", x: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftHorizontalMovement()));
-        this.driveTrain.directDrive(ySpeed, xSpeed, rotSpeed, true);
+        this.driveTrain.drive(ySpeed, xSpeed, rotSpeed, true);
     }
 
     // Called once the command ends or is interrupted.

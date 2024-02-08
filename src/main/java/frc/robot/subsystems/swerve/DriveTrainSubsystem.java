@@ -4,6 +4,11 @@
 
 package frc.robot.subsystems.swerve;
 
+/*
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.ReplanningConfig;
+*/
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -16,10 +21,14 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.RobotConstants;
+import frc.robot.Flags.DriveTrain;
 import frc.robot.commands.ManualDriveCommand;
 import frc.robot.Flags;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
@@ -47,7 +56,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             PortConstants.FRONT_LEFT_ROTATION_MOTOR_ID,
             PortConstants.FRONT_LEFT_ROTATION_CANCODER_ID,
             "fL_12",
-            true,
+            false,
             true
     );
     private final SwerveModule frontRight = new SwerveModule(
@@ -55,7 +64,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             PortConstants.FRONT_RIGHT_ROTATION_MOTOR_ID,
             PortConstants.FRONT_RIGHT_ROTATION_CANCODER_ID,
             "fR_03",
-            true,
+            false,
             true
     );
     private final SwerveModule backLeft = new SwerveModule(
@@ -63,7 +72,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             PortConstants.BACK_LEFT_ROTATION_MOTOR_ID,
             PortConstants.BACK_LEFT_ROTATION_CANCODER_ID,
             "bL_06",
-            true,
+            false,
             true
     );
     private final SwerveModule backRight = new SwerveModule(
@@ -71,32 +80,79 @@ public class DriveTrainSubsystem extends SubsystemBase {
             PortConstants.BACK_RIGHT_ROTATION_MOTOR_ID,
             PortConstants.BACK_RIGHT_ROTATION_CANCODER_ID,
             "bR_01",
-            true,
+            false,
             true
     );
 
-    private final SwerveModule[] swerveModules = {frontLeft, frontRight, backLeft, backRight};
+    public final SwerveModule[] swerveModules = {frontLeft, frontRight, backLeft, backRight};
 
     private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(frontLeftLocation, frontRightLocation, backLeftLocation, backRightLocation);
 
-    private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, RobotGyro.getRotation2d(), new SwerveModulePosition[] {
-                    frontLeft.getAbsoluteModulePosition(),
-                    frontRight.getAbsoluteModulePosition(),
-                    backLeft.getAbsoluteModulePosition(),
-                    backRight.getAbsoluteModulePosition()
-    }, new Pose2d());
+    private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, RobotGyro.getRotation2d(), this.getAbsoluteModulePositions(), new Pose2d());
+
+    public SwerveModulePosition[] getAbsoluteModulePositions() {
+        return new SwerveModulePosition[] {
+            frontLeft.getAbsoluteModulePosition(),
+            frontRight.getAbsoluteModulePosition(),
+            backLeft.getAbsoluteModulePosition(),
+            backRight.getAbsoluteModulePosition()
+        };
+    }
 
     public Pose2d getPose() {
         return this.poseEstimator.getEstimatedPosition();
     }
 
+    public void setPose(Pose2d pose) {
+        poseEstimator.resetPosition(RobotGyro.getRotation2d(), this.getAbsoluteModulePositions(), pose);
+    }
+
+    public ChassisSpeeds getRobotRelativeChassisSpeeds() {
+        return kinematics.toChassisSpeeds(frontLeft.getAbsoluteModuleState(),
+            frontRight.getAbsoluteModuleState(),
+            backLeft.getAbsoluteModuleState(),
+            backRight.getAbsoluteModuleState());
+    }
+
     public DriveTrainSubsystem() {
         RobotGyro.resetGyroAngle();
+
+        /*
+        AutoBuilder.configureHolonomic(
+            this::getPose,
+            this::setPose,
+            this::getRobotRelativeChassisSpeeds,
+            (chassisSpeeds) -> this.consumeRawModuleStates(kinematics.toSwerveModuleStates(chassisSpeeds)),
+            new HolonomicPathFollowerConfig(3, Math.PI, new ReplanningConfig()),
+            () -> !NetworkTablesUtil.getIfOnBlueTeam(),
+            this
+        );*/
+    }
+
+    public Command rotateToAbsoluteZeroCommand() {
+        return new RunCommand(() -> {
+            frontLeft.rotateToAbsoluteZero(0);
+            frontRight.rotateToAbsoluteZero(1);
+            backLeft.rotateToAbsoluteZero(2);
+            backRight.rotateToAbsoluteZero(3);
+        }, this).until(() -> { // Until all modules have a heading of <= 0.03 rad
+            for(SwerveModule module : swerveModules) {
+                if(Math.abs(module.getAbsoluteModulePosition().angle.getRadians()) > 0.05) {
+                    return false;
+                }
+            }
+            return true;
+        }).withTimeout(1).andThen(() -> {
+            for(SwerveModule module : swerveModules) {
+                module.resetRelativeEncodersToAbsoluteValue();
+            }
+        });
     }
 
     //prints joystick movement 
     StructArrayPublisher<SwerveModuleState> targetSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("TargetStates", SwerveModuleState.struct).publish();
     StructArrayPublisher<SwerveModuleState> realSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("ActualStates", SwerveModuleState.struct).publish();
+    StructArrayPublisher<SwerveModuleState> absoluteAbsoluteSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("AbsoluteAbsolute", SwerveModuleState.struct).publish();
 
     StructArrayPublisher<SwerveModuleState> relativeSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("RelativeStates", SwerveModuleState.struct).publish();
     //makes object to publish robot position relative to field
@@ -113,7 +169,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
      * @param rotSpeed      Angular rate of the robot.
      * @param fieldRelative Whether the provided x and y speeds are relative to the field.
      */
-    public void directDrive(double forwardSpeed, double sidewaysSpeed, double rotSpeed, boolean fieldRelative) {
+    public void drive(double forwardSpeed, double sidewaysSpeed, double rotSpeed, boolean fieldRelative) {
         if(Flags.DriveTrain.ENABLED) {
             // System.out.println("targets: x: " + xSpeed + " y: " + ySpeed + " rot: " + rot);
             // System.out.println("Gyro angle: " + RobotGyro.getRotation2d().getDegrees());
@@ -145,21 +201,21 @@ public class DriveTrainSubsystem extends SubsystemBase {
         }
     }
 
-    public void directDrive(double speed) { // INCHES: 10 rot ~= 18.25, ~ 9 rot ~= 15.75
+    public void directDriveSpeed(double speed) { // INCHES: 10 rot ~= 18.25, ~ 9 rot ~= 15.75
         frontLeft.directDrive(speed);
         frontRight.directDrive(speed);
         backLeft.directDrive(speed);
         backRight.directDrive(speed);
     }
 
-    public void directTurn(double speed) {
+    public void directTurnSpeed(double speed) {
         frontLeft.directTurn(speed);
         frontRight.directTurn(speed);
         backLeft.directTurn(speed);
         backRight.directTurn(speed);
     }
 
-    public void driveVoltage(double volts) {
+    public void directDriveVoltage(double volts) {
         frontLeft.setVoltages(volts, 0);
         frontRight.setVoltages(volts, 0);
         backLeft.setVoltages(volts, 0);
@@ -191,6 +247,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
     public void periodic() {
         //publishes each wheel information to network table for debugging
         realSwerveStatePublisher.set(new SwerveModuleState[]{frontLeft.getAbsoluteModuleState(), frontRight.getAbsoluteModuleState(), backLeft.getAbsoluteModuleState(), backRight.getAbsoluteModuleState()});
+        absoluteAbsoluteSwerveStatePublisher.set(new SwerveModuleState[]{frontLeft.getAbsoluteAbsoluteModuleState(), frontRight.getAbsoluteAbsoluteModuleState(), backLeft.getAbsoluteAbsoluteModuleState(), backRight.getAbsoluteAbsoluteModuleState()});
         relativeSwerveStatePublisher.set(new SwerveModuleState[]{frontLeft.getRelativeModuleState(), frontRight.getRelativeModuleState(), backLeft.getRelativeModuleState(), backRight.getRelativeModuleState()});
         //posts robot position to network table
         posePositionPublisher.set(this.getPose());
@@ -206,6 +263,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
         }
 
         this.updateOdometry();
+        // System.out.println(this.getPose());
     }
 
     public Command generateTrajectoryFollowerCommand(Trajectory trajectory, boolean stopOnEnd) {
@@ -220,7 +278,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             this
         ).andThen(() -> {
             if (stopOnEnd) {
-                directDrive(0, 0, 0, false);
+                drive(0, 0, 0, false);
             }
         });
     }

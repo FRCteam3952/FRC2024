@@ -1,10 +1,14 @@
 package frc.robot.commands;
 
+import java.util.Arrays;
+
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Flags;
 import frc.robot.controllers.AbstractController;
 import frc.robot.subsystems.swerve.DriveTrainSubsystem;
+import frc.robot.subsystems.swerve.SwerveModule;
+import frc.robot.util.RobotMathUtil;
 
 public class TestDriveCommand extends Command {
     private final DriveTrainSubsystem driveTrain;
@@ -29,8 +33,12 @@ public class TestDriveCommand extends Command {
 
     @Override
     public void execute() {
-        this.driveTrain.directDrive(this.joystick.getLeftVerticalMovement());
-        this.driveTrain.directTurn(this.joystick.getRightHorizontalMovement());
+        this.driveTrain.directDriveSpeed(this.joystick.getLeftVerticalMovement());
+        this.driveTrain.directTurnSpeed(this.joystick.getRightHorizontalMovement());
+
+        for(SwerveModule module : this.driveTrain.swerveModules) {
+            System.out.println("name: " + module.getName() + ", abs: " + RobotMathUtil.roundNearestHundredth(module.getTurningAbsEncoderPositionConverted()) + ", rel: " + RobotMathUtil.roundNearestHundredth(module.getRelativeTurnRotations()));
+        }
     }
 
     // Called once the command ends or is interrupted.

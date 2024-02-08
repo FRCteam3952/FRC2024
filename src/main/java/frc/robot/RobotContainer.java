@@ -38,12 +38,7 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
-        /*
-        this.nintendoProController.controller.button(4).whileTrue(new InstantCommand(() -> {
-            System.out.println("GO ZERO");
-            this.driveTrain.rotateModulesToAbsoluteZero();
-            System.out.println("DONE");
-        }, this.driveTrain));*/
+        this.primaryController.controller.button(4).onTrue(this.driveTrain.rotateToAbsoluteZeroCommand());
     }
 
     public void onRobotInit() {

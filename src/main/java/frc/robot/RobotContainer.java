@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
 import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -39,6 +40,7 @@ public class RobotContainer {
 
     private void configureBindings() {
         this.primaryController.upperButton().onTrue(this.driveTrain.rotateToAbsoluteZeroCommand());
+        this.primaryController.leftButton().onTrue(Commands.runOnce(() -> RobotGyro.resetGyroAngle()));
     }
 
     public void onRobotInit() {

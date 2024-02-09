@@ -1,17 +1,14 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Flags;
 import frc.robot.controllers.AbstractController;
 import frc.robot.subsystems.swerve.DriveTrainSubsystem;
 import frc.robot.subsystems.swerve.SwerveModule;
-import frc.robot.util.RobotMathUtil;
+import frc.robot.util.Util;
 
 public class TestDriveCommand extends Command {
     private final DriveTrainSubsystem driveTrain;
     private final AbstractController joystick;
-
-    public static final double MAX_SPEED_METERS_PER_SEC = Flags.DriveTrain.LOWER_MAX_SPEED ? 3 : 5;
 
     public TestDriveCommand(DriveTrainSubsystem driveTrain, AbstractController joystick) {
         this.driveTrain = driveTrain;
@@ -30,7 +27,7 @@ public class TestDriveCommand extends Command {
         this.driveTrain.directTurnSpeed(this.joystick.getRightHorizontalMovement());
 
         for(SwerveModule module : this.driveTrain.swerveModules) {
-            System.out.println("name: " + module.getName() + ", abs: " + RobotMathUtil.roundNearestHundredth(module.getTurningAbsEncoderPositionConverted()) + ", rel: " + RobotMathUtil.roundNearestHundredth(module.getRelativeTurnRotations()));
+            System.out.println("name: " + module.getName() + ", abs abs: " + Util.nearestHundredth(module.getAbsoluteAbsolutePositionConverted()) + ", abs: " + Util.nearestHundredth(module.getTurningAbsEncoderPositionConverted()) + ", rel: " + Util.nearestHundredth(module.getRelativeTurnRotations()));
         }
     }
 

@@ -94,21 +94,21 @@ public class NintendoProController extends AbstractController {
 
     @Override
     public Trigger upperButton() {
-        return this.controller.x();
+        return this.button(4);
     }
 
     @Override
     public Trigger leftButton() {
-        return this.controller.y();
+        return this.button(3);
     }
 
     @Override
     public Trigger rightButton() {
-        return this.controller.a();
+        return this.button(2);
     }
 
     @Override
     public Trigger lowerButton() {
-        return this.controller.b();
+        return this.button(1);
     }
 }

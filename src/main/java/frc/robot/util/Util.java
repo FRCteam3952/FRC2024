@@ -1,13 +1,32 @@
 package frc.robot.util;
 
+import edu.wpi.first.math.geometry.CoordinateAxis;
+import edu.wpi.first.math.geometry.CoordinateSystem;
 import edu.wpi.first.math.util.Units;
 
 /**
- * Does Math stuff for us
+ * Does stuff for us
  */
-public final class RobotMathUtil {
-    private RobotMathUtil() {
-        throw new UnsupportedOperationException("RobotMathUtil is a utility class and should not be instantiated!");
+public final class Util {
+    private Util() {
+        throw new UnsupportedOperationException("Util is a utility class and should not be instantiated!");
+    }
+
+    public static final CoordinateSystem APRILTAGS_COORD_SYSTEM = new CoordinateSystem(CoordinateAxis.E(), CoordinateAxis.U(), CoordinateAxis.S());
+
+    /**
+     * Bring a degree angle to a value between [0, 360)
+     * @param angleDeg an angle in degrees
+     * @return an equivalent angle, between [0, 360)
+     */
+    public static double bringAngleWithinUnitCircle(double angleDeg) {
+        while(angleDeg < 0) {
+            angleDeg += 360;
+        }
+        while(angleDeg >= 360) {
+            angleDeg -= 360;
+        }
+        return angleDeg;
     }
 
     /**
@@ -118,7 +137,7 @@ public final class RobotMathUtil {
         return rotatedPoint;
     }
 
-    public static double roundNearestHundredth(double d) {
+    public static double nearestHundredth(double d) {
         return Math.floor(d * 100) / 100d;
     }
 

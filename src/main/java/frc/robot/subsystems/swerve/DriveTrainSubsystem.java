@@ -31,7 +31,7 @@ import frc.robot.Flags;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.Constants.PortConstants;
 import frc.robot.util.NetworkTablesUtil;
-import frc.robot.util.RobotMathUtil;
+import frc.robot.util.Util;
 
 /**
  * Represents a swerve drive style drivetrain.
@@ -180,7 +180,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
                     break;
                 }
             }
-            if(shouldOptimize || !Flags.DriveTrain.SMART_SWERVE_MODULE_OPTIMIZATION) {
+            if(shouldOptimize || !Flags.DriveTrain.SPEED_BASED_SWERVE_MODULE_OPTIMIZATION) {
                 // System.out.println("Optimizing");
                 frontLeft.setDesiredState(swerveModuleStates[0], 0);
                 frontRight.setDesiredState(swerveModuleStates[1], 1);

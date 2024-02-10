@@ -6,22 +6,59 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  * An abstract class for the joystick wrappers. Contains the common methods that we wrap around.
  */
 public abstract class AbstractController {
+    /**
+     * Gets the horizontal movement of the right-side joystick of the controller.
+     * @return The horizontal movement of the right-side joystick. Positive value means the stick was moved to the right.
+     */
     public abstract double getRightHorizontalMovement();
     
+    /**
+     * Gets the vertical movement of the right-side joystick of the controller.
+     * @return The vertical movement of the right-side joystick. Positive value means the stick was moved up.
+     */
     public abstract double getRightVerticalMovement();
 
+    /**
+     * Gets the horizontal movement of the left-side joystick of the controller.
+     * @return The horizontal movement of the left-side joystick. Positive value means the stick was moved right.
+     */
     public abstract double getLeftHorizontalMovement();
     
+    /**
+     * Gets the vertical movement of the left-side joystick of the controller.
+     * @return The vertical movement of the left-side joystick. Positive value means the stick was moved up.
+     */
     public abstract double getLeftVerticalMovement();
 
+    /**
+     * This method should not be used due to the lack of button number standardization in WPILIB, and it is preferable to use a wrapper that returns a {@link Trigger} for better usage of command-based functionality.
+     * <p>
+     * If a method like this is still desired, use a wrapper method instead so that buttons are applicable to different controller implementations.
+     * @param button The raw button number (check Driver Station)
+     * @return Whether the button at a raw button index is being held down.
+     */
     public abstract boolean getRawButtonWrapper(int button);
 
+    /**
+     * This method should not be used due to the lack of button number standardization in WPILIB, and it is preferable to use a wrapper that returns a {@link Trigger} for better usage of command-based functionality.
+     * <p>
+     * If a method like this is still desired, use a wrapper method instead so that buttons are applicable to different controller implementations.
+     * @param button The raw button number (check Driver Station)
+     * @return Whether the button at a raw button index was newly released in the last tick (i.e. you want to check for a button release without constantly triggering when the button isn't pressed).
+     */
     public abstract boolean getRawButtonReleasedWrapper(int button);
 
+    /**
+     * This method should not be used due to the lack of button number standardization in WPILIB, and it is preferable to use a wrapper that returns a {@link Trigger} for better usage of command-based functionality.
+     * <p>
+     * If a method like this is still desired, use a wrapper method instead so that buttons are applicable to different controller implementations.
+     * @param button The raw button number (check Driver Station)
+     * @return Whether the button at a raw button index was newly pressed in the last tick (i.e. you want to check for a button press without constantly triggering when the button is pressed).
+     */
     public abstract boolean getRawButtonPressedWrapper(int button);
 
     /**
-     * This method should not be used, and it is preferable to use one of the wrappers so that buttons are applicable to different controller implementations since WPILIB doesn't abstract much of this for us.
+     * This method should not be used due to the lack of button number standardization in WPILIB, and it is preferable to use one of the wrappers so that buttons are applicable to different controller implementations.
      * @param button The raw button number (check Driver Station)
      * @return A bindable {@link Trigger} for the requested button ID.
      */

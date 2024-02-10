@@ -87,6 +87,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, RobotGyro.getRotation2d(), this.getAbsoluteModulePositions(), new Pose2d());
 
+    /**
+     * Get the absolute positions of all swerve modules, using the CANCoder's *relative* mode for the module heading. Arranged as FL, FR, BL, BR
+     * @return The position of all swerve modules, with module heading determined by the CANCoder's relative mode.
+     */
     public SwerveModulePosition[] getAbsoluteModulePositions() {
         return new SwerveModulePosition[] {
             frontLeft.getAbsoluteModulePosition(),
@@ -96,19 +100,33 @@ public class DriveTrainSubsystem extends SubsystemBase {
         };
     }
 
+    /**
+     * The robot's current estimated pose, as estimated by the pose estimator using motor rotations and vision measurements.
+     * @return The current pose of the robot.
+     */
     public Pose2d getPose() {
         return this.poseEstimator.getEstimatedPosition();
     }
 
+    /**
+     * Set the robot's current pose
+     * @param pose The desired current code
+     */
     public void setPose(Pose2d pose) {
         poseEstimator.resetPosition(RobotGyro.getRotation2d(), this.getAbsoluteModulePositions(), pose);
     }
 
+    /**
+     * Get the current chassis speeds of the robot, relative to the robot.
+     * @return The current chassis speeds of the robot, relative to the robot.
+     */
     public ChassisSpeeds getRobotRelativeChassisSpeeds() {
-        return kinematics.toChassisSpeeds(frontLeft.getAbsoluteModuleState(),
+        return kinematics.toChassisSpeeds(
+            frontLeft.getAbsoluteModuleState(),
             frontRight.getAbsoluteModuleState(),
             backLeft.getAbsoluteModuleState(),
-            backRight.getAbsoluteModuleState());
+            backRight.getAbsoluteModuleState()
+        );
     }
 
     public DriveTrainSubsystem() {
@@ -126,6 +144,11 @@ public class DriveTrainSubsystem extends SubsystemBase {
         );*/
     }
 
+    /**
+     * Get a {@link Command} to rotate all modules to absolute zero. This command will time itself out if incomplete after 1 second. Regardless of completion, all non-absolutely-absolute encoders (see {@link SwerveModule#resetEncodersToAbsolutelyAbsoluteValue()}) are set to the absolutely-absolute encoder's value.
+     * @return A {@link Command} to rotate all modules to absolute zero.
+     * @see {@link SwerveModule#resetEncodersToAbsolutelyAbsoluteValue()}
+     */
     public Command rotateToAbsoluteZeroCommand() {
         return new RunCommand(() -> {
             frontLeft.rotateToAbsoluteZero(0);
@@ -141,7 +164,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             return true;
         }).withTimeout(1).andThen(() -> {
             for(SwerveModule module : swerveModules) {
-                module.resetRelativeEncodersToAbsoluteValue();
+                module.resetEncodersToAbsolutelyAbsoluteValue();
             }
         });
     }
@@ -198,6 +221,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
         }
     }
 
+    /**
+     * Set all drive motor speeds to a specified value without any PID control.
+     * @param speed The desired speed, [-1, 1]
+     */
     public void directDriveSpeed(double speed) { // INCHES: 10 rot ~= 18.25, ~ 9 rot ~= 15.75
         frontLeft.directDrive(speed);
         frontRight.directDrive(speed);
@@ -205,6 +232,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
         backRight.directDrive(speed);
     }
 
+    /**
+     * Set all turn motor speeds to a specified value without any PID control.
+     * @param speed The desired speed, [-1, 1]
+     */
     public void directTurnSpeed(double speed) {
         frontLeft.directTurn(speed);
         frontRight.directTurn(speed);
@@ -212,6 +243,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
         backRight.directTurn(speed);
     }
 
+    /**
+     * Set all drive motor voltages to a specified value without any PID control.
+     * @param speed The desired voltage output
+     */
     public void directDriveVoltage(double volts) {
         frontLeft.setVoltages(volts, 0);
         frontRight.setVoltages(volts, 0);
@@ -219,6 +254,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
         backRight.setVoltages(volts, 0);
     }
 
+    /**
+     * Consumes a set of raw {@link SwerveModuleState}s, setting the modules to target those states.
+     * @param states An array of 4 desired states, in the order FL, FR, BL, BR.
+     */
     public void consumeRawModuleStates(SwerveModuleState[] states) {
         frontLeft.setDesiredState(states[0]);
         frontRight.setDesiredState(states[1]);
@@ -226,13 +265,9 @@ public class DriveTrainSubsystem extends SubsystemBase {
         backRight.setDesiredState(states[3]);
     }
 
-    public void rotateModulesToAbsoluteZero() {
-        frontLeft.rotateToAbsoluteZero();
-        frontRight.rotateToAbsoluteZero();
-        backLeft.rotateToAbsoluteZero();
-        backRight.rotateToAbsoluteZero();
-    }
-
+    /**
+     * Stops all motors, driving or turning, by sending a target voltage of 0.
+     */
     public void stop() {
         this.frontLeft.stop();
         this.frontRight.stop();
@@ -263,6 +298,12 @@ public class DriveTrainSubsystem extends SubsystemBase {
         // System.out.println(this.getPose());
     }
 
+    /**
+     * Generates a command to follow a given trajectory, then stops at the end if desired.
+     * @param trajectory The desired trajectory to follow.
+     * @param stopOnEnd Whether to set speeds to 0 at the end.
+     * @return
+     */
     public Command generateTrajectoryFollowerCommand(Trajectory trajectory, boolean stopOnEnd) {
         return new SwerveControllerCommand(
             trajectory,
@@ -281,13 +322,15 @@ public class DriveTrainSubsystem extends SubsystemBase {
     }
 
     /**
-     * Updates the field relative position of the robot.
+     * Updates the field relative position of the robot using module state readouts.
      */
-    //constantly updates odometry
     public void updateOdometry() {
         this.poseEstimator.update(RobotGyro.getRotation2d(), new SwerveModulePosition[]{frontLeft.getAbsoluteModulePosition(), frontRight.getAbsoluteModulePosition(), backLeft.getAbsoluteModulePosition(), backRight.getAbsoluteModulePosition()});
     }
 
+    /**
+     * Updates the field relative position of the robot using vision measurements.
+     */
     public void updateOdometryWithVision() {
         // this.poseEstimator.addVisionMeasurement();
     }

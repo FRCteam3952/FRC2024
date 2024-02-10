@@ -23,7 +23,7 @@ public class NintendoProController extends AbstractController {
      * @param maxValNeg The maximum (farthest from 0) value possible for rawVal < 0. This value should be NEGATIVE.
      * @return A value, deadzoned to 0 if within {@link NintendoProController#IGNORE_DELTA IGNORE_DELTA}. If value is not deadzoned, positive values will be scaled such that maxValPos will become a value of 1, and negative values scaled similarly with maxValNeg
      */
-    private static double deadzoneAndScaleRawVals(double rawVal, double maxValPos, double maxValNeg) {
+    private static double correctDeadzone(double rawVal, double maxValPos, double maxValNeg) {
         double absVal = Math.abs(rawVal);
         if(absVal < IGNORE_DELTA) {
             return 0;
@@ -35,21 +35,21 @@ public class NintendoProController extends AbstractController {
     }
 
     private double getControllerLeftX() {
-        return deadzoneAndScaleRawVals(controller.getRawAxis(0), 0.67, -0.89);
+        return correctDeadzone(controller.getRawAxis(0), 0.67, -0.89);
     }
 
     private double getControllerLeftY() {
         // NOTE: INVERTED. KEEP INVERTED
-        return -deadzoneAndScaleRawVals(-controller.getRawAxis(1), 0.74, -0.84);
+        return -correctDeadzone(-controller.getRawAxis(1), 0.74, -0.84);
     }
 
     private double getControllerRightX() {
-        return deadzoneAndScaleRawVals(controller.getRawAxis(2), 0.74, -0.76);
+        return correctDeadzone(controller.getRawAxis(2), 0.74, -0.76);
     }
 
     private double getControllerRightY() {
         // NOTE: INVERTED. KEEP INVERTED
-        return -deadzoneAndScaleRawVals(-controller.getRawAxis(3), 0.8, -0.76);
+        return -correctDeadzone(-controller.getRawAxis(3), 0.8, -0.76);
     }
 
     @Override

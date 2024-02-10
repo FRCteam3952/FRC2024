@@ -137,10 +137,19 @@ public final class Util {
         return rotatedPoint;
     }
 
+    /**
+     * Rounds a double to the nearest hundredth.
+     * @param d The value to round.
+     * @return The parameter, rounded to the nearest hundredth place.
+     */
     public static double nearestHundredth(double d) {
         return Math.floor(d * 100) / 100d;
     }
-
+    /**
+     * Square a value but keep the sign of the value. Ex: squareKeepSign(-1) = -1
+     * @param d The input value
+     * @return The input value squared, but keeping the same sign.
+     */
     public static double squareKeepSign(double d) {
         return d * d * Math.signum(d);
     }

@@ -30,6 +30,11 @@ public final class Constants {
      * 12 (COD)
      */
     public static class PortConstants {
+        public static final int TOP_INTAKE                          = 42; //THE MEANING OF LIFE -- change later
+        public static final int BOTTOM_INTAKE                       = 13; //bad scawy number -- change later
+        public static final int PIVOT_INTAKE_MOTOR_ID               = 18; //the age to vote - change
+        
+
         public static final int FRONT_LEFT_DRIVE_MOTOR_ID           = 9;
         public static final int FRONT_RIGHT_DRIVE_MOTOR_ID          = 11;
         public static final int BACK_LEFT_DRIVE_MOTOR_ID            = 7;
@@ -44,6 +49,10 @@ public final class Constants {
         public static final int FRONT_RIGHT_ROTATION_CANCODER_ID    = 3;
         public static final int BACK_LEFT_ROTATION_CANCODER_ID      = 6;
         public static final int BACK_RIGHT_ROTATION_CANCODER_ID     = 1;
+
+
+        //PWM
+        public static final int INTAKE_LIMIT_SWITCH_PORT            = 0; //change this cero 
     }
 
     public static class DriveConstants {

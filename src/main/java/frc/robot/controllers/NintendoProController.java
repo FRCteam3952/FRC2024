@@ -111,4 +111,29 @@ public class NintendoProController extends AbstractController {
     public Trigger lowerButton() {
         return this.button(1);
     }
+
+    @Override
+    public int getPOV() {
+        return this.controller.getHID().getPOV();
+    }
+
+    @Override
+    public Trigger leftShoulderButton() {
+        return this.button(5);
+    }
+
+    @Override
+    public Trigger rightShoulderButton() {
+        return this.button(6);
+    }
+
+    @Override
+    public Trigger leftShoulderTrigger() {
+        return this.button(7);
+    }
+
+    @Override
+    public Trigger rightShoulderTrigger() {
+        return this.button(8);
+    }
 }

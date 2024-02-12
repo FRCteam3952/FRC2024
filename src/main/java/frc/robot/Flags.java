@@ -8,7 +8,7 @@ package frc.robot;
  */
 public final class Flags {
     public static class DriveTrain {
-        public static final boolean ENABLED = true;
+        public static final boolean ENABLED = false;
 
         public static final boolean ENABLE_DRIVE_MOTORS = true;
         public static final boolean ENABLE_TURN_MOTORS = true;
@@ -22,5 +22,13 @@ public final class Flags {
         public static final boolean SPEED_BASED_SWERVE_MODULE_OPTIMIZATION = false;
 
         public static final boolean USE_TEST_DRIVE_COMMAND = false;
+    }
+
+    public static class Intake {
+        public static final boolean ENABLED = true;
+
+        public static final boolean PIVOT_PID_CONTROL = true;
+
+        public static final boolean USE_TEST_INTAKE_COMMAND = false;
     }
 }

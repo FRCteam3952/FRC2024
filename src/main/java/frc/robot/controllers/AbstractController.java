@@ -1,5 +1,6 @@
 package frc.robot.controllers;
 
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
@@ -31,7 +32,7 @@ public abstract class AbstractController {
     public abstract double getLeftVerticalMovement();
 
     /**
-     * This method should not be used due to the lack of button number standardization in WPILIB, and it is preferable to use a wrapper that returns a {@link Trigger} for better usage of command-based functionality.
+     * This method should not be used due to the lack of button number standardization in WPILIB, and it is preferable to use a wrapper that returns a {@link Trigger} for better usage of command-based functionality (or call {@link Trigger#getAsBoolean()}).
      * <p>
      * If a method like this is still desired, use a wrapper method instead so that buttons are applicable to different controller implementations.
      * @param button The raw button number (check Driver Station)
@@ -40,7 +41,7 @@ public abstract class AbstractController {
     public abstract boolean getRawButtonWrapper(int button);
 
     /**
-     * This method should not be used due to the lack of button number standardization in WPILIB, and it is preferable to use a wrapper that returns a {@link Trigger} for better usage of command-based functionality.
+     * This method should not be used due to the lack of button number standardization in WPILIB, and it is preferable to use a wrapper that returns a {@link Trigger} for better usage of command-based functionality (or call {@link Trigger#getAsBoolean()}).
      * <p>
      * If a method like this is still desired, use a wrapper method instead so that buttons are applicable to different controller implementations.
      * @param button The raw button number (check Driver Station)
@@ -49,7 +50,7 @@ public abstract class AbstractController {
     public abstract boolean getRawButtonReleasedWrapper(int button);
 
     /**
-     * This method should not be used due to the lack of button number standardization in WPILIB, and it is preferable to use a wrapper that returns a {@link Trigger} for better usage of command-based functionality.
+     * This method should not be used due to the lack of button number standardization in WPILIB, and it is preferable to use a wrapper that returns a {@link Trigger} for better usage of command-based functionality (or call {@link Trigger#getAsBoolean()}).
      * <p>
      * If a method like this is still desired, use a wrapper method instead so that buttons are applicable to different controller implementations.
      * @param button The raw button number (check Driver Station)
@@ -87,4 +88,33 @@ public abstract class AbstractController {
      * @return A bindable {@link Trigger} for the button at the bottom of the diamond on the right side of the controller.
      */
     public abstract Trigger lowerButton();
+
+    /**
+     * Get the POV value.
+     * @return The POV value. -1 if not pressed, else 0 for up and increasing clockwise.
+     * @see GenericHID#getPOV()
+     */
+    public abstract int getPOV();
+
+    /**
+     * While holding the controller, the buttons on the far side of the controller. Gets the far button on the left side that is higher up. (bumper?)
+     * @return The upper button on the far side on the left.
+     */
+    public abstract Trigger leftShoulderButton();
+    /**
+     * While holding the controller, the buttons on the far side of the controller. Gets the far button on the right side that is higher up. (bumper?)
+     * @return The upper button on the far side on the right.
+     */
+    public abstract Trigger rightShoulderButton();
+
+    /**
+     * While holding the controller, the buttons on the far side of the controller. Gets the far button on the left side that is lower.
+     * @return The upper button on the far side on the left.
+     */
+    public abstract Trigger leftShoulderTrigger();
+    /**
+     * While holding the controller, the buttons on the far side of the controller. Gets the far button on the right side that is lower.
+     * @return The upper button on the far side on the right.
+     */
+    public abstract Trigger rightShoulderTrigger();
 }

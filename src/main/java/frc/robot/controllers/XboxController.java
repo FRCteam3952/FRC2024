@@ -87,4 +87,29 @@ public class XboxController extends AbstractController{
     public Trigger lowerButton() {
         return this.controller.b();
     }
+
+    @Override
+    public int getPOV() {
+        return this.controller.getHID().getPOV();
+    }
+
+    @Override
+    public Trigger leftShoulderButton() {
+        return this.controller.leftBumper();
+    }
+
+    @Override
+    public Trigger rightShoulderButton() {
+        return this.controller.rightBumper();
+    }
+
+    @Override
+    public Trigger leftShoulderTrigger() {
+        return this.controller.leftTrigger();
+    }
+
+    @Override
+    public Trigger rightShoulderTrigger() {
+        return this.controller.rightTrigger();
+    }
 }

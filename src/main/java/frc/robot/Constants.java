@@ -31,12 +31,10 @@ public final class Constants {
      */
     public static class PortConstants {
 
-        public static final int SHOOTER_FOLLOWER_MOTOR_ID           = 42; //THE MEANING OF LIFE :) FAKE ID, CHANGE LATER! 
-        public static final int SHOOTER_LEADER_MOTOR_ID             = 64; //THESE ARE ALL FAKE IDs
+        public static final int SHOOTER_TOP_MOTOR_ID                = 42; //THE MEANING OF LIFE :) FAKE ID, CHANGE LATER! 
+        public static final int SHOOTER_BOTTOM_MOTOR_ID             = 64; //THESE ARE ALL FAKE IDs
         public static final int SHOOTER_FLAP_MOTOR_ID               = 23; 
         public static final int SHOOTER_PIVOT_MOTOR_ID              = 54;
-        public static final int SHOOTER_FOLLOWER_ENCODER_ID         = 63; 
-        public static final int SHOOTER_LEADER_ENCODER_ID           = 34; 
         public static final int SHOOTER_PIVOT_LIMIT_SWITCH          = 49; 
         public static final int SHOOTER_FLAP_LIMIT_SWITCH           = 50; 
 

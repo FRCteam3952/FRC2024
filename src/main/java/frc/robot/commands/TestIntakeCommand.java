@@ -1,8 +1,9 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants.OperatorConstants.ControllerConstants;
 import frc.robot.subsystems.intake.IntakeSubsytem;
-import frc.robot.util.Util;
+import frc.robot.util.ControlHandler;
 import frc.robot.controllers.AbstractController;
 
 public class TestIntakeCommand extends Command {
@@ -22,9 +23,9 @@ public class TestIntakeCommand extends Command {
 
     @Override
     public void execute() {
-        if(joystick.rightButton().getAsBoolean()) {
+        if (ControlHandler.get(joystick, ControllerConstants.RUN_INTAKE).getAsBoolean()) {
             this.intake.setIntakeSpeed(0.6, 0.4);
-        } else if(joystick.lowerButton().getAsBoolean()) {
+        } else if (ControlHandler.get(joystick, ControllerConstants.REVERSE_INTAKE).getAsBoolean()) {
             this.intake.setIntakeSpeed(-0.2, -0.2);
         } else {
             this.intake.setIntakeSpeed(0, 0);

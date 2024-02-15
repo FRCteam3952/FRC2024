@@ -2,27 +2,30 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.controllers.AbstractController;
-import frc.robot.util.ButtonType;
+import frc.robot.util.TriggerType;
 
 public final class Constants {
     public static class NetworkTablesConstants {
         public static final String MAIN_TABLE_NAME = "robot";
     }
     public static class OperatorConstants {
-        public static final int RIGHT_JOYSTICK_PORT = 0;
-        public static final int NINTENDO_PRO_CONTROLLER = 1;
+        public static final int RIGHT_JOYSTICK_PORT = 0; public static final int NINTENDO_PRO_CONTROLLER = 1;
         public static final int PS5_CONTROLLER = 3;
         public static class ControllerConstants {
-            ButtonType INTAKE_BUTTON = ButtonType.UPPER;
+            TriggerType RUN_INTAKE = TriggerType.RIGHT_BUTTON;
         }
     }
 
-    public static Trigger map(AbstractController controller, ButtonType type) {
+    public static Trigger map(AbstractController controller, TriggerType type) {
         return switch (type) {
-            case UPPER -> controller.upperButton();
-            case LEFT -> controller.leftButton();
-            case RIGHT -> controller.rightButton();
-            case LOWER -> controller.lowerButton();
+            case UPPER_BUTTON -> controller.upperButton();
+            case LEFT_BUTTON -> controller.leftButton();
+            case RIGHT_BUTTON -> controller.rightButton();
+            case LOWER_BUTTON -> controller.lowerButton();
+            case LEFT_SHOULDER_BUTTON -> controller.leftShoulderButton();
+            case RIGHT_SHOULDER_BUTTON -> controller.rightShoulderButton();
+            case LEFT_SHOULDER_TRIGGER -> controller.leftShoulderTrigger();
+            case RIGHT_SHOULDER_TRIGGER -> controller.rightShoulderTrigger();
         };
     }
 

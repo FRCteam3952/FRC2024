@@ -1,0 +1,12 @@
+package frc.robot.util;
+
+public enum TriggerType {
+    UPPER_BUTTON,
+    LEFT_BUTTON,
+    RIGHT_BUTTON,
+    LOWER_BUTTON,
+    LEFT_SHOULDER_BUTTON,
+    RIGHT_SHOULDER_BUTTON,
+    LEFT_SHOULDER_TRIGGER,
+    RIGHT_SHOULDER_TRIGGER
+}

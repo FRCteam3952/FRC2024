@@ -1,8 +1,6 @@
 package frc.robot;
 
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.controllers.AbstractController;
-import frc.robot.util.TriggerType;
+import frc.robot.util.ControlHandler.TriggerType;
 
 public final class Constants {
     public static class NetworkTablesConstants {
@@ -14,19 +12,6 @@ public final class Constants {
         public static class ControllerConstants {
             TriggerType RUN_INTAKE = TriggerType.RIGHT_BUTTON;
         }
-    }
-
-    public static Trigger map(AbstractController controller, TriggerType type) {
-        return switch (type) {
-            case UPPER_BUTTON -> controller.upperButton();
-            case LEFT_BUTTON -> controller.leftButton();
-            case RIGHT_BUTTON -> controller.rightButton();
-            case LOWER_BUTTON -> controller.lowerButton();
-            case LEFT_SHOULDER_BUTTON -> controller.leftShoulderButton();
-            case RIGHT_SHOULDER_BUTTON -> controller.rightShoulderButton();
-            case LEFT_SHOULDER_TRIGGER -> controller.leftShoulderTrigger();
-            case RIGHT_SHOULDER_TRIGGER -> controller.rightShoulderTrigger();
-        };
     }
 
     /**

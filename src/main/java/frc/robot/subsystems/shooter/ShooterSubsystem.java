@@ -25,9 +25,9 @@ import com.revrobotics.CANSparkBase.ControlType;
     private final DigitalInput pivotLimitSwitch;
     private final DigitalInput flapLimitSwitch;
     //PID stuff
-    private static SparkPIDController pivotPidController;
-    private static SparkPIDController flapPidController;
-    private static SparkPIDController bottomPidController;
+    private final SparkPIDController pivotPidController;
+    private final SparkPIDController flapPidController;
+    private final SparkPIDController bottomPidController;
     
 
 
@@ -70,59 +70,59 @@ import com.revrobotics.CANSparkBase.ControlType;
         bottomPidController.setFF(0);
     }
 
-        // Setting the speed of the motors
-        public void setBottomMotorSpeed(double rpm){
-            bottomMotor.set(rpm); 
+    // Setting the speed of the motors
+    public void setBottomMotorSpeed(double rpm){
+        bottomMotor.set(rpm); 
     }
-        public void setPivotMotorSpeed(double degrees){
-            pivotMotor.set(degrees);
+    public void setPivotMotorSpeed(double degrees){
+        pivotMotor.set(degrees);
     }
-        public void setFlapMotorSpeed(double degrees){
-            flapMotor.set(degrees);
-    }
-
-        // Getting
-        public double getPivotPosition(){
-            return pivotEncoder.getPosition();
-    }
-        public double getFlapPosition(){
-            return flapEncoder.getPosition();
-    }
-        public boolean getPivotLimitSwitch(){
-            return pivotLimitSwitch.get();
-    }
-        public boolean getFlapLimitSwitch(){
-            return flapLimitSwitch.get();
-    }
-        public double getPivotVelocity(){
-            return pivotEncoder.getVelocity();
-    }
-        public double getFlapVelocity(){
-            return flapEncoder.getVelocity();
+    public void setFlapMotorSpeed(double degrees){
+        flapMotor.set(degrees);
     }
 
-        // Setting 
-        public void setPivotPosition(double position){
-            pivotEncoder.setPosition(position);
+    // Getting
+    public double getPivotPosition(){
+        return pivotEncoder.getPosition();
     }
-        public void setFlapPosition(double position){
-            flapEncoder.setPosition(position);
+    public double getFlapPosition(){
+        return flapEncoder.getPosition();
     }
-        public void setPivotPid(double degree){
-            pivotPidController.setReference(degree, ControlType.kPosition);
+    public boolean getPivotLimitSwitch(){
+        return pivotLimitSwitch.get();
     }
-        public void setFlapPid(double degree){
-            flapPidController.setReference(degree, ControlType.kPosition);
+    public boolean getFlapLimitSwitch(){
+        return flapLimitSwitch.get();
     }
-        public void setMotorPid(double rpm){
-            bottomPidController.setReference(rpm, ControlType.kPosition);
+    public double getPivotVelocity(){
+        return pivotEncoder.getVelocity();
     }
-        // Resetting 
-        public void resetPivot(){
-            pivotEncoder.setPosition(0.0);
+    public double getFlapVelocity(){
+        return flapEncoder.getVelocity();
     }
-        public void resetFlap(){
-            flapEncoder.setPosition(0.0);
+
+    // Setting 
+    public void setPivotPosition(double position){
+        pivotEncoder.setPosition(position);
+    }
+    public void setFlapPosition(double position){
+        flapEncoder.setPosition(position);
+    }
+    public void setPivotPid(double degree){
+        pivotPidController.setReference(degree, ControlType.kPosition);
+    }
+    public void setFlapPid(double degree){
+        flapPidController.setReference(degree, ControlType.kPosition);
+    }
+    public void setMotorPid(double rpm){
+        bottomPidController.setReference(rpm, ControlType.kPosition);
+    }
+    // Resetting 
+    public void resetPivot(){
+        pivotEncoder.setPosition(0.0);
+    }
+    public void resetFlap(){
+        flapEncoder.setPosition(0.0);
     }
  }
 

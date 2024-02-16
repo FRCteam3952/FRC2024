@@ -1,5 +1,7 @@
 package frc.robot;
 
+import frc.robot.util.ControlHandler.TriggerType;
+
 public final class Constants {
     public static class NetworkTablesConstants {
         public static final String MAIN_TABLE_NAME = "robot";
@@ -9,6 +11,8 @@ public final class Constants {
         public static final int NINTENDO_PRO_CONTROLLER = 1;
         public static final int PS5_CONTROLLER = 3;
         public static class ControllerConstants {
+            public static final TriggerType RUN_INTAKE = TriggerType.RIGHT_BUTTON;
+            public static final TriggerType REVERSE_INTAKE = TriggerType.LOWER_BUTTON;
         }
     }
 

@@ -102,20 +102,20 @@ import com.revrobotics.CANSparkBase.ControlType;
     }
 
     // Setting 
-    public void setPivotPosition(double position){
+    public void setPivotEncoderPosition(double position){
         pivotEncoder.setPosition(position);
     }
-    public void setFlapPosition(double position){
+    public void setFlapEncoderPosition(double position){
         flapEncoder.setPosition(position);
     }
-    public void setPivotPid(double degree){
+    public void setPivotTargetPosition(double degree){
         pivotPidController.setReference(degree, ControlType.kPosition);
     }
-    public void setFlapPid(double degree){
+    public void setFlapTargetPosition(double degree){
         flapPidController.setReference(degree, ControlType.kPosition);
     }
-    public void setMotorPid(double rpm){
-        bottomPidController.setReference(rpm, ControlType.kPosition);
+    public void setMotorRpm(double rpm){
+        bottomPidController.setReference(rpm, ControlType.kVelocity);
     }
     // Resetting 
     public void resetPivot(){

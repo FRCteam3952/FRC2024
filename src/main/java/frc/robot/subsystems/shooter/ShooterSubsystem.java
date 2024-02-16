@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PortConstants;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
+import com.revrobotics.CANSparkBase.ControlType;
 
 // Shoutout to Avni whose code I reverse engineered - Fox in a box(awesome sause)
 
@@ -108,22 +109,13 @@ import com.revrobotics.SparkPIDController;
             flapEncoder.setPosition(position);
     }
         public void setPivotPid(double degree){
-            pivotPidController.setP(degree);
-            pivotPidController.setI(degree);
-            pivotPidController.setD(degree);
-            pivotPidController.setFF(degree);
+            pivotPidController.setReference(degree, ControlType.kPosition);
     }
         public void setFlapPid(double degree){
-            flapPidController.setP(degree);
-            flapPidController.setI(degree);
-            flapPidController.setD(degree);
-            flapPidController.setFF(degree);
+            flapPidController.setReference(degree, ControlType.kPosition);
     }
         public void setMotorPid(double rpm){
-            bottomPidController.setP(rpm);
-            bottomPidController.setI(rpm);
-            bottomPidController.setD(rpm);
-            bottomPidController.setFF(rpm);
+            bottomPidController.setReference(rpm, ControlType.kPosition);
     }
         // Resetting 
         public void resetPivot(){

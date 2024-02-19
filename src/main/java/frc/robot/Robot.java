@@ -49,7 +49,7 @@ public class Robot extends LoggedRobot {
     @Override
     public void robotPeriodic() {
         CommandScheduler.getInstance().run();
-        this.robotContainer.onTeleopPeriodic();
+        this.robotContainer.onRobotPeriodic();
     }
 
     @Override
@@ -76,6 +76,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void teleopPeriodic() {
+        this.robotContainer.onTeleopPeriodic();
     }
 
     @Override

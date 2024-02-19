@@ -1,5 +1,7 @@
 package frc.robot;
 
+import frc.robot.util.ControlHandler.TriggerType;
+
 public final class Constants {
     public static class NetworkTablesConstants {
         public static final String MAIN_TABLE_NAME = "robot";
@@ -9,11 +11,13 @@ public final class Constants {
         public static final int NINTENDO_PRO_CONTROLLER = 1;
         public static final int PS5_CONTROLLER = 3;
         public static class ControllerConstants {
+            public static final TriggerType RUN_INTAKE = TriggerType.RIGHT_BUTTON;
+            public static final TriggerType REVERSE_INTAKE = TriggerType.LOWER_BUTTON;
         }
     }
 
     /**
-     * Key: RIO = RoboRio, COD = CANCoder, DRI = Drive Motor, ROT = Rotation Motor
+     * Key: RIO = RoboRio, COD = CANCoder, DRI = Drive Motor, ROT = Rotation Motor, INT = Intake-related, 
      * USED:
      * 0  (RIO)
      * 1  (COD)
@@ -28,15 +32,21 @@ public final class Constants {
      * 10 (ROT)
      * 11 (DRI)
      * 12 (COD)
+     * 13 (INT)
+     * 14 (INT)
+     * 15 (INT)
      */
     public static class PortConstants {
-
         public static final int SHOOTER_TOP_MOTOR_ID                = 42; //THE MEANING OF LIFE :) FAKE ID, CHANGE LATER! 
         public static final int SHOOTER_BOTTOM_MOTOR_ID             = 64; //THESE ARE ALL FAKE IDs
         public static final int SHOOTER_FLAP_MOTOR_ID               = 23; 
         public static final int SHOOTER_PIVOT_MOTOR_ID              = 54;
         public static final int SHOOTER_PIVOT_LIMIT_SWITCH          = 49; 
         public static final int SHOOTER_FLAP_LIMIT_SWITCH           = 50; 
+        // CAN
+        public static final int TOP_INTAKE_MOTOR_ID                 = 14; //THE MEANING OF LIFE -- change later
+        public static final int BOTTOM_INTAKE_MOTOR_ID              = 15; //bad scawy number -- change later
+        public static final int INTAKE_PIVOT_MOTOR_ID               = 13; //the age to vote - change
 
         public static final int FRONT_LEFT_DRIVE_MOTOR_ID           = 9;
         public static final int FRONT_RIGHT_DRIVE_MOTOR_ID          = 11;
@@ -52,6 +62,11 @@ public final class Constants {
         public static final int FRONT_RIGHT_ROTATION_CANCODER_ID    = 3;
         public static final int BACK_LEFT_ROTATION_CANCODER_ID      = 6;
         public static final int BACK_RIGHT_ROTATION_CANCODER_ID     = 1;
+
+
+        // DIO
+        public static final int INTAKE_DOWN_LIMIT_SWITCH_PORT       = 1;
+        public static final int INTAKE_UP_LIMIT_SWITCH_PORT         = 3;
     }
 
     public static class DriveConstants {

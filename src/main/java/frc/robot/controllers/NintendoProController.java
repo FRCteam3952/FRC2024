@@ -1,17 +1,19 @@
 package frc.robot.controllers;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
  * A wrapper around {@link CommandXboxController} but for the Nintendo Pro Controller.
  * <p>
  * This class is necessary because the Nintendo Pro Controller has different deadzones than the XBox controller, as well as not reaching all values from [-1, 1] on joysticks.
  */
-public class NintendoProController extends AbstractController<CommandXboxController> {
+public class NintendoProController extends AbstractController {
     public static final double IGNORE_DELTA = 0.15;
 
+    private final CommandXboxController controller;
     public NintendoProController(CommandXboxController controller) {
-        super(controller);
+        this.controller = controller;
     }
 
     /**
@@ -21,7 +23,7 @@ public class NintendoProController extends AbstractController<CommandXboxControl
      * @param maxValNeg The maximum (farthest from 0) value possible for rawVal < 0. This value should be NEGATIVE.
      * @return A value, deadzoned to 0 if within {@link NintendoProController#IGNORE_DELTA IGNORE_DELTA}. If value is not deadzoned, positive values will be scaled such that maxValPos will become a value of 1, and negative values scaled similarly with maxValNeg
      */
-    private static double deadzoneAndScaleRawVals(double rawVal, double maxValPos, double maxValNeg) {
+    private static double correctDeadzone(double rawVal, double maxValPos, double maxValNeg) {
         double absVal = Math.abs(rawVal);
         if(absVal < IGNORE_DELTA) {
             return 0;
@@ -33,21 +35,21 @@ public class NintendoProController extends AbstractController<CommandXboxControl
     }
 
     private double getControllerLeftX() {
-        return deadzoneAndScaleRawVals(controller.getRawAxis(0), 0.67, -0.89);
+        return correctDeadzone(controller.getRawAxis(0), 0.67, -0.89);
     }
 
     private double getControllerLeftY() {
         // NOTE: INVERTED. KEEP INVERTED
-        return -deadzoneAndScaleRawVals(-controller.getRawAxis(1), 0.74, -0.84);
+        return -correctDeadzone(-controller.getRawAxis(1), 0.74, -0.84);
     }
 
     private double getControllerRightX() {
-        return deadzoneAndScaleRawVals(controller.getRawAxis(2), 0.74, -0.76);
+        return correctDeadzone(controller.getRawAxis(2), 0.74, -0.76);
     }
 
     private double getControllerRightY() {
         // NOTE: INVERTED. KEEP INVERTED
-        return -deadzoneAndScaleRawVals(-controller.getRawAxis(3), 0.8, -0.76);
+        return -correctDeadzone(-controller.getRawAxis(3), 0.8, -0.76);
     }
 
     @Override
@@ -83,5 +85,55 @@ public class NintendoProController extends AbstractController<CommandXboxControl
     @Override
     public boolean getRawButtonPressedWrapper(int button) {
         return controller.getHID().getRawButtonPressed(button);
+    }
+
+    @Override
+    public Trigger button(int button) {
+        return this.controller.button(button);
+    }
+
+    @Override
+    public Trigger upperButton() {
+        return this.button(4);
+    }
+
+    @Override
+    public Trigger leftButton() {
+        return this.button(3);
+    }
+
+    @Override
+    public Trigger rightButton() {
+        return this.button(2);
+    }
+
+    @Override
+    public Trigger lowerButton() {
+        return this.button(1);
+    }
+
+    @Override
+    public int getPOV() {
+        return this.controller.getHID().getPOV();
+    }
+
+    @Override
+    public Trigger leftShoulderButton() {
+        return this.button(5);
+    }
+
+    @Override
+    public Trigger rightShoulderButton() {
+        return this.button(6);
+    }
+
+    @Override
+    public Trigger leftShoulderTrigger() {
+        return this.button(7);
+    }
+
+    @Override
+    public Trigger rightShoulderTrigger() {
+        return this.button(8);
     }
 }

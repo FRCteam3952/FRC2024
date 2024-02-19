@@ -6,30 +6,47 @@ package frc.robot.subsystems.swerve;
 
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.REVLibError;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 import com.revrobotics.CANSparkBase.ControlType;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Flags;
-import frc.robot.util.RobotMathUtil;
+import frc.robot.util.Util;
 
+import static frc.robot.util.Util.*;
+
+/**
+ * There are three existing readouts for the module's rotational position.
+ * 
+ * <p>
+ * The first is the integrated encoder on the motor controller (CANSparkMax), which uses integration of velocity to determine position.
+ * <p>
+ * The second is the CANcoder, which offers a physically measured value for the position.
+ * The CANcoder has two output modes:
+ * 
+ * <ul>
+ *     <li> one mode which only measures from [-PI, PI] or from [0, 2 * PI] (i.e. there exists a discontinuity where the values will loop around to remain within a unit circle),
+ *     <li> and a second mode which does not contain any discontinuity.
+ * </ul>
+ * 
+ * The non-discontinuous mode's value can be set in code (the discontinuous cannot), but this should be avoided unless resetting to the value of the discontinuous output.
+ * <p>
+ * The CANcoder mode containing the discontinuity should always be considered the most accurate reference, and is the one we use when initializing everything on robot code startup.
+ * <p>
+ * The CANcoder mode without the discontinuity is still considered accurate, though should be reset on robot code startup since its value is only properly reset by firmware when power-cycled.
+ * <p>
+ * For the purposes of a standardized way to reference these three encoders, the motor controller's encoder will be referred to as the "relative encoder" (as that is the type name of the object returned by REV's libraries),
+ * the CANcoder's continuous (non-looping) encoder will be referred to as the "absolute encoder" (since its value is still considered absolute as long as it isn't erroneously changed in code),
+ * and the CANcoder's discontinuous encoder will be referred to as the "absolutely-absolute encoder".
+ * <p>
+ * The drive motors do not follow this naming scheme as they only have a relative encoder.
+ */
 public class SwerveModule {
-    private static final double MODULE_MAX_ANGULAR_VELOCITY = DriveTrainSubsystem.MAX_ANGULAR_SPEED * 2;
-    private static final double MODULE_MAX_ANGULAR_ACCELERATION = Math.PI * 2; // radians per second squared
-
-    private static final double MODULE_MAX_VOLTAGE_OUTPUT = 6;
-    private static final double MODULE_MIN_VOLTAGE_OUTPUT = -6;
-
     private static final double SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG = 120;
 
     private final CANSparkMax driveMotor;
@@ -42,23 +59,16 @@ public class SwerveModule {
 
     private final String name;
 
-    // Gains are for example purposes only - must be determined for your own robot!
     private final SparkPIDController drivePIDController;
     private final SparkPIDController turnPIDController;
-    // Gains are for example purposes only - must be determined for your own robot!
-    
-    private final ProfiledPIDController turningPIDController = new ProfiledPIDController(3, 0, 0,
-            new TrapezoidProfile.Constraints(MODULE_MAX_ANGULAR_VELOCITY, MODULE_MAX_ANGULAR_ACCELERATION));
-
-    // Gains are for example purposes only - must be determined for your own robot!
-    private final SimpleMotorFeedforward turnFeedforward = new SimpleMotorFeedforward(0.4, 0);
 
     /**
-     * Constructs a SwerveModule with a drive motor, turning motor, drive encoder and turning encoder.
-     *
-     * @param driveMotorCANID      CAN ID for the drive motor.
-     * @param turningMotorCANID    CAN ID for the turning motor.
-     * @param turningEncoderCANID DIO input for the turning encoder channel A
+     * @param driveMotorCANID       CAN ID for the drive motor.
+     * @param turningMotorCANID     CAN ID for the turning motor.
+     * @param turningEncoderCANID   CAN ID for the turning absolute encoder.
+     * @param name                  The name of this module.
+     * @param invertDriveMotor      Whether to invert the drive motor. This should be the same across all modules.
+     * @param invertTurnMotor       Whether to invert the turn motor. This should be the same across all modules.
      */
     public SwerveModule(int driveMotorCANID, int turningMotorCANID, int turningEncoderCANID, String name, boolean invertDriveMotor, boolean invertTurnMotor) {
         driveMotor = new CANSparkMax(driveMotorCANID, MotorType.kBrushless);
@@ -71,6 +81,12 @@ public class SwerveModule {
         driveMotor.setInverted(invertDriveMotor);
         turnMotor.setInverted(invertTurnMotor);
 
+        // this.driveMotor.setSmartCurrentLimit(30);
+        // this.driveMotor.setSecondaryCurrentLimit(100);
+
+        // this.turnMotor.setSmartCurrentLimit(30);
+        // this.turnMotor.setSecondaryCurrentLimit(100);
+
         // Circumference / Gear Ratio (L2 of MK4i). This evaluates to ~1.86 inches/rotation, which is close to experimental values.
         // We are therefore using the calculated value. (Thanks Ivan)
         // Since everything else is in meters, convert to meters.
@@ -82,17 +98,24 @@ public class SwerveModule {
 
         this.driveEncoder.setPosition(0);
         // this.turnEncoder.setPosition(0);
-        this.turnAbsoluteEncoder.setPosition(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
 
-        this.turnEncoder.setPosition(this.getTurningAbsEncoderPositionConverted());
+        System.out.println(name + " is at abs-abs " + this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble() + ", abs " + this.turnAbsoluteEncoder.getPosition().getValueAsDouble());
+        this.turnAbsoluteEncoder.setPosition(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
+        System.out.println("magnet health of " + name + " is " + this.turnAbsoluteEncoder.getMagnetHealth().getValue());
+
+        if(this.turnAbsoluteEncoder.getFault_BadMagnet().getValue().booleanValue()) {
+            System.out.println(name + " has a bad magnet");
+        }
+
+        this.turnEncoder.setPosition(this.getTurnAbsolutelyAbsolutePosition());
 
         this.driveMotor.enableVoltageCompensation(10);
         this.drivePIDController = this.driveMotor.getPIDController();
 
-        this.drivePIDController.setP(0.3);
+        this.drivePIDController.setP(0.34);
         this.drivePIDController.setI(0);
         this.drivePIDController.setD(0);
-        this.drivePIDController.setFF(0);
+        this.drivePIDController.setFF(0.2);
         this.drivePIDController.setOutputRange(-1, 1);
 
         this.turnMotor.enableVoltageCompensation(10);
@@ -102,108 +125,139 @@ public class SwerveModule {
         this.turnPIDController.setPositionPIDWrappingMinInput(-Math.PI);
         this.turnPIDController.setPositionPIDWrappingMaxInput(Math.PI);
 
-        this.turnPIDController.setP(0.35);
+        this.turnPIDController.setP(0.3);
         this.turnPIDController.setI(0);
         this.turnPIDController.setD(0);
-        this.turnPIDController.setFF(0.02);
+        this.turnPIDController.setFF(0);
         this.turnPIDController.setOutputRange(-1, 1);
 
 
         //System.out.println(this.name + " inverts drive: " + this.driveMotor.getInverted() + " turn: " + this.turnMotor.getInverted());
-        System.out.println(this.name + " abs pos " + RobotMathUtil.roundNearestHundredth(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble()));
-        // Set the distance per pulse for the drive encoder. We can simply use the
-        // distance traveled for one rotation of the wheel divided by the encoder
-        // resolution.
-        // driveEncoder.setDistancePerPulse(2 * Math.PI * WHEEL_RADIUS / ENCODER_RESOLUTION); // EXPERIMENT LATER.
-
-        // Set the distance (in this case, angle) in radians per pulse for the turning encoder.
-        // This is the angle through an entire rotation (2 * pi) divided by the
-        // encoder resolution.
-
-        // WE NEED RADIANS I THINK
-        // MAGIC NUMBER FROM DOCUMENTATION COMMENT ON METHOD COPY-PASTED. THIS SHOULD NOT BE TOUCHED UNLESS MASSIVE BREAK.
-        // turningEncoder.configFeedbackCoefficient(0.087890625 * Math.PI / 180, "rad");
-        // turningEncoder.setDistancePerPulse(2 * Math.PI / ENCODER_RESOLUTION); // template code, ignore.
-
-        // Limit the PID Controller's input range between -pi and pi and set the input
-        // to be continuous.
-        turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
+        // System.out.println(this.name + " abs pos " + RobotMathUtil.roundNearestHundredth(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble()));
+        System.out.println(this.driveMotor.getAppliedOutput());
     }
 
-    public void resetRelativeEncodersToAbsoluteValue() {
-        this.turnEncoder.setPosition(this.getTurningAbsEncoderPositionConverted());
+    public double getDriveAmperage() {
+        return this.driveMotor.getOutputCurrent();
     }
 
+    /**
+     * Sets all non-absolutely-absolute encoders to the absolutely-absolute CANcoder value.
+     * 
+     * @see SwerveModule
+     */
+    public void resetEncodersToAbsoluteValue() {
+        // this.turnAbsoluteEncoder.setPosition(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
+        // this.turnEncoder.setPosition(this.getTurnAbsolutelyAbsolutePosition());
+    }
+
+    /**
+     * @return The name of this module.
+     */
     public String getName() {
         return this.name;
     }
 
-    public double getDriveRotations() {
+    /**
+     * @return The number of meters the drive motor has traveled from the starting position.
+     */
+    public double getDrivePosition() {
         return this.driveEncoder.getPosition();
     }
 
     /**
-     * Get the Absolute Encoder's position, converted to a usable value (in radians)
-     * @return The absolute encoder's position in radians.
+     * @return The absolute encoder's position in radians
+     * @see SwerveModule
      */
-    public double getTurningAbsEncoderPositionConverted() {
+    public double getTurnAbsEncoderPosition() {
         // ORIGINAL UNITS: rotations. Converted to radians.
         return this.turnAbsoluteEncoder.getPosition().getValueAsDouble() * 360 * Math.PI / 180;
     }
 
     /**
-     * Get the Absolute Encoder's velocity, converted to a usable value (in radians/sec)
      * @return The absolute encoder's velocity in radians per second.
+     * @see SwerveModule
      */
-    public double getTurningAbsEncoderVelocityConverted() {
+    public double getTurnAbsEncoderVelocity() {
         // ORIGINAL UNITS: rotations per second. Converted to radians per second.
         return this.turnAbsoluteEncoder.getVelocity().getValueAsDouble() * 360 * Math.PI / 180;
     }
 
     /**
-     * Gets the velocity of the drive encoder.
-     * @return The velocity of the drive encoder, in meters/sec
+     * This value is exact if the CANcoder is tuned properly in Phoenix Tuner X. Use this value for all further calibration.
+     * @return The absolutely-absolute position of the CANcoder in radians.
+     * @see SwerveModule
+     */
+    public double getTurnAbsolutelyAbsolutePosition() {
+        // ORIGINAL UNITS: rotations. Converted to radians.
+        return this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble() * 2 * Math.PI;
+    }
+
+    /**
+     * @return The velocity of the drive encoder, in m/sec.
      */
     public double getDriveVelocity() {
         return this.driveEncoder.getVelocity();
     }
 
-    public double getRelativeTurnRotations() {
+    /**
+     * @return The relative encoder's position in radians.
+     * @see SwerveModule
+     */
+    public double getTurnRelativePosition() {
         return this.turnEncoder.getPosition();
     }
 
-    public double getRelativeTurnVelocity() {
+    /**
+     * @return The relative encoder's velocity in radians/sec.
+     */
+    public double getTurnRelativeVelocity() {
         return this.turnEncoder.getVelocity();
     }
 
     /**
-     * Returns the current state of the module.
-     *
-     * @return The current state of the module.
+     * Uses the absolute encoder position.
+     * @return The current state of the module using the absolute encoder's position.
      */
     public SwerveModuleState getAbsoluteModuleState() {
-        return new SwerveModuleState(driveEncoder.getVelocity(), new Rotation2d(this.getTurningAbsEncoderPositionConverted()));
+        return new SwerveModuleState(driveEncoder.getVelocity(), new Rotation2d(this.getTurnAbsEncoderPosition()));
     }
 
     /**
-     * Returns the current position of the module.
-     *
-     * @return The current position of the module.
+     * Uses the absolutely-absolute encoder position.
+     * @return The current state of the module using the absolutely-absolute encoder's position.
      */
-    public SwerveModulePosition getAbsoluteModulePosition() {
-        return new SwerveModulePosition(driveEncoder.getPosition(), new Rotation2d(this.getTurningAbsEncoderPositionConverted()));
+    public SwerveModuleState getAbsoluteAbsoluteModuleState() {
+        return new SwerveModuleState(driveEncoder.getVelocity(), new Rotation2d(this.getTurnAbsolutelyAbsolutePosition()));
     }
 
+    /**
+     * Uses the absolute encoder position.
+     * @return The current position of the module using the absolute encoder's position.
+     */
+    public SwerveModulePosition getAbsoluteModulePosition() {
+        return new SwerveModulePosition(driveEncoder.getPosition(), new Rotation2d(this.getTurnAbsEncoderPosition()));
+    }
+
+    /**
+     * Uses the relative encoder position.
+     * @return The current state of the module using the relative encoder's position.
+     */
     public SwerveModuleState getRelativeModuleState() {
         return new SwerveModuleState(driveEncoder.getVelocity(), new Rotation2d(this.turnEncoder.getPosition()));
     }
 
+    /**
+     * Uses the relative encoder position.
+     * @return The current position of the module using the relative encoder's position.
+     */
     public SwerveModulePosition getRelativeModulePosition() {
         return new SwerveModulePosition(driveEncoder.getPosition(), new Rotation2d(this.turnEncoder.getPosition()));
     }
 
     /**
      * Directly set the voltage outputs of the motors.
+     * 
      * @param driveVoltage Voltage of drive motor
      * @param turnVoltage Voltage of turn motor
      */
@@ -219,14 +273,22 @@ public class SwerveModule {
         setVoltages(0, 0);
     }
 
-    private double previousTurnVoltage = 0;
-
     /**
-     * DOESNT WORK
+     * Sets the module's target state to absolute zero.
      */
     public void rotateToAbsoluteZero() {
         SwerveModuleState zeroedState = new SwerveModuleState();
         this.setDesiredStateNoOptimize(zeroedState);
+    }
+
+    /**
+     * Sets the module's target state to absolute zero. This method accepts a debug index.
+     * @param debugIdx The debug index of the array.
+     * @see DriveTrainSubsystem#optimizedTargetStates
+     */
+    public void rotateToAbsoluteZero(int debugIdx) {
+        SwerveModuleState zeroedState = new SwerveModuleState();
+        this.setDesiredStateNoOptimize(zeroedState, debugIdx);
     }
 
     /**
@@ -272,43 +334,71 @@ public class SwerveModule {
      * @param desiredState Desired state with speed and angle.
      */
     public void setDesiredState(SwerveModuleState desiredState) {
-        // Optimize the reference state to avoid spinning further than 90 degrees
-        SwerveModuleState state = optimize(desiredState, new Rotation2d(this.getTurningAbsEncoderPositionConverted()));
+        SwerveModuleState state;
+        if(Flags.DriveTrain.SWERVE_MODULE_OPTIMIZATION) {
+            state = optimize(desiredState, new Rotation2d(this.getTurnAbsEncoderPosition()));
+        } else {
+            state = desiredState;
+        }
 
         this.setDesiredStateNoOptimize(state);
     }
 
+    /**
+     * Sets the desired state for the model. This method accepts a debug index.
+     * @param desiredState Desired state with speed and angle.
+     * @param debugIdx The debug index of the array.
+     * @see DriveTrainSubsystem#optimizedTargetStates
+     */
     public void setDesiredState(SwerveModuleState desiredState, int debugIdx) {
-        SwerveModuleState state = optimize(desiredState, new Rotation2d(this.getTurningAbsEncoderPositionConverted()));
+        SwerveModuleState state;
+        if(Flags.DriveTrain.SWERVE_MODULE_OPTIMIZATION) {
+            state = optimize(desiredState, new Rotation2d(this.getTurnAbsEncoderPosition()));
+        } else {
+            state = desiredState;
+        }
 
         this.setDesiredStateNoOptimize(state, debugIdx);
     }
 
+    /**
+     * Sets the desired state without optimizing for efficiency.
+     * @param desiredState Desired state with speed and angle.
+     * @see SwerveModule#optimize(SwerveModuleState, Rotation2d)
+     */
     public void setDesiredStateNoOptimize(SwerveModuleState desiredState) {
         this.setDriveDesiredState(desiredState);
         this.setRotationDesiredState(desiredState);
 
-        if(Math.abs(desiredState.speedMetersPerSecond) < 0.01 && Math.abs(this.getRelativeTurnVelocity()) < 0.01) {
-            this.resetRelativeEncodersToAbsoluteValue();
-            System.out.println("resetting encoders");
+        if(Math.abs(desiredState.speedMetersPerSecond) < 0.01 && Math.abs(this.getTurnRelativeVelocity()) < 0.01) {
+            this.resetEncodersToAbsoluteValue();
+            // System.out.println("resetting encoders");
         }
     }
 
+    /**
+     * Sets the desired state without optimizing for efficiency. This method accepts a debug index
+     * @param desiredState Desired state with speed and angle.
+     * @param debugIdx The debug index of the array.
+     * @see SwerveModule#optimize(SwerveModuleState, Rotation2d)
+     * @see DriveTrainSubsystem#optimizedTargetStates
+     */
     public void setDesiredStateNoOptimize(SwerveModuleState desiredState, int debugIdx) {
         this.setDriveDesiredState(desiredState);
         this.setRotationDesiredState(desiredState);
 
         DriveTrainSubsystem.optimizedTargetStates[debugIdx] = desiredState;
 
-        if(Math.abs(desiredState.speedMetersPerSecond) < 0.01 && Math.abs(this.getRelativeTurnVelocity()) < 0.01) {
-            this.resetRelativeEncodersToAbsoluteValue();
-            System.out.println("resetting encoders");
+        if(Math.abs(desiredState.speedMetersPerSecond) < 0.01 && Math.abs(this.getTurnRelativeVelocity()) < 0.01) {
+            this.resetEncodersToAbsoluteValue();
+            // System.out.println("resetting encoders");
         }
     }
 
     /**
-     * Sets the drive motors to follow a desired state.
-     * @param optimizedDesiredState The desired module state. Should already be optimized (i.e. this method will NOT optimize them for you.)
+     * Sets the drive motors to follow a desired state. The state will NOT be optimized.
+     * @param optimizedDesiredState The desired module state.
+     * @see SwerveModule#setDesiredState(SwerveModuleState)
      */
     private void setDriveDesiredState(SwerveModuleState optimizedDesiredState) {
         // Calculate the drive output from the drive PID controller.
@@ -316,55 +406,42 @@ public class SwerveModule {
             drivePIDController.setReference(optimizedDesiredState.speedMetersPerSecond, ControlType.kVelocity);
         }
         
-        // System.out.println(this.name + " velocity: " + RobotMathUtil.roundNearestHundredth(driveEncoder.getVelocity()) + " target speed: " + RobotMathUtil.roundNearestHundredth(optimizedDesiredState.speedMetersPerSecond));
+        double vel = driveEncoder.getVelocity(), tar = optimizedDesiredState.speedMetersPerSecond;
+        double ratio = 0;
+        if(Math.abs(tar) > 0.01) {
+            ratio = vel / tar;
+        }
+        // System.out.println(this.name + " velocity: " + Util.nearestHundredth(driveEncoder.getVelocity()) + " target speed: " + Util.nearestHundredth(optimizedDesiredState.speedMetersPerSecond) + ", ratio: " + nearestHundredth(ratio));
         // System.out.println(this.name + ", position: " + this.driveEncoder.getPosition());
     }
 
     /**
-     * Sets the rotation motors to follow a desired state.
-     * @param optimizedDesiredState The desired module state. Should already be optimized (i.e. this method will NOT optimize them for you.)
+     * Sets the rotation motors to follow a desired state. The state will NOT be optimized.
+     * @param optimizedDesiredState The desired module state.
+     * @see SwerveModule#setDesiredState(SwerveModuleState)
      */
     private void setRotationDesiredState(SwerveModuleState optimizedDesiredState) {
-        System.out.println("turn encoder at: " + RobotMathUtil.roundNearestHundredth(this.turnEncoder.getPosition()) + ", abs val: " + RobotMathUtil.roundNearestHundredth(this.getTurningAbsEncoderPositionConverted()));
+        // System.out.println("turn encoder at: " + RobotMathUtil.roundNearestHundredth(this.turnEncoder.getPosition()) + ", abs val: " + RobotMathUtil.roundNearestHundredth(this.getTurningAbsEncoderPositionConverted()));
         if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_TURN_MOTORS && Flags.DriveTrain.TURN_PID_CONTROL) {
             turnPIDController.setReference(optimizedDesiredState.angle.getRadians(), ControlType.kPosition);
         }
-
-        /*
-        // Calculate the turning motor output from the turning PID controller.
-        final double turnOutput = turningPIDController.calculate(this.getTurningAbsEncoderPositionConverted(), optimizedDesiredState.angle.getRadians());
-
-        final double turnFeedforward = this.turnFeedforward.calculate(turningPIDController.getSetpoint().velocity);
-
-        final double finalTurnOutput = (turnOutput + turnFeedforward);
-        
-        //System.out.print(this.name + " velocity: " + TroyMathUtil.roundNearestHundredth(turningEncoder.getVelocity().getValueAsDouble()) + " target speed: " + TroyMathUtil.roundNearestHundredth(state.speedMetersPerSecond));
-        // System.out.print(this.name + " turning pos: " + TroyMathUtil.roundNearestHundredth(this.getTurningAbsEncoderPositionConverted() /* * 180 / Math.PI) + " target: " + TroyMathUtil.roundNearestHundredth(optimizedDesiredState.angle.getRadians()));
-        // System.out.print(" rel enc: " + TroyMathUtil.roundNearestHundredth(this.turningEncoder.getPosition()));
-        /*
-        if(Math.abs(this.getTurningAbsEncoderPositionConverted()) > 0.02 && Math.abs(this.turningEncoder.getPosition()) > 0.02) {
-            double err = TroyMathUtil.roundNearestHundredth((this.turningEncoder.getPosition() % (2 * Math.PI)) - (this.getTurningAbsEncoderPositionConverted() % (2 * Math.PI)));
-            if(Math.abs(err) > 0.03) {
-                System.out.print("Deviation detected between Absolute and Relative encoder values. Recalibrate?");
-            }
-        }
-        System.out.println();*/
-        /*
-        System.out.println(this.name + " turn output: " + RobotMathUtil.roundNearestHundredth(finalTurnOutput));
-
-        previousTurnVoltage = finalTurnOutput;
-
-        if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_TURN_MOTORS && Flags.DriveTrain.TURN_PID_CONTROL) {
-            turnMotor.setVoltage(MathUtil.clamp(finalTurnOutput, MODULE_MIN_VOLTAGE_OUTPUT, MODULE_MAX_VOLTAGE_OUTPUT));
-        }*/
+        // System.out.println("target: " + roundNearestHundredth(bringAngleWithinUnitCircle(optimizedDesiredState.angle.getDegrees())) + ", rel: " + roundNearestHundredth(bringAngleWithinUnitCircle(this.getRelativeTurnRotations() * 180 / Math.PI)) + ", abs: " + roundNearestHundredth(bringAngleWithinUnitCircle(this.getTurningAbsEncoderPositionConverted() * 180 / Math.PI)));
     }
 
+    /**
+     * Sends a direct speed to the drive motor.
+     * @param speed The desired speed, [-1, 1]
+     */
     public void directDrive(double speed) {
         if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_DRIVE_MOTORS) {
             this.driveMotor.set(speed);
         }
     }
 
+    /**
+     * Sends a direct speed to the turn motor.
+     * @param speed The desired speed, [-1, 1]
+     */
     public void directTurn(double speed) {
         if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_TURN_MOTORS) {
             this.turnMotor.set(speed);

@@ -1,15 +1,17 @@
 package frc.robot.controllers;
 
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
  * A wrapper around {@link CommandPS5Controller}. Our left joystick is not working right now though, so I'm just going to use the right side one for now.
  */
-public class PS5Controller extends AbstractController<CommandPS5Controller> {
+public class PS5Controller extends AbstractController {
     public static final double IGNORE_DELTA = 0.08;
 
+    private final CommandPS5Controller controller;
     public PS5Controller(CommandPS5Controller controller) {
-        super(controller);
+        this.controller = controller;
     }
 
     private static double deadzone(double val) {
@@ -52,5 +54,55 @@ public class PS5Controller extends AbstractController<CommandPS5Controller> {
     @Override
     public boolean getRawButtonPressedWrapper(int button) {
         return controller.getHID().getRawButtonPressed(button);
+    }
+
+    @Override
+    public Trigger button(int button) {
+        return this.controller.button(button);
+    }
+
+    @Override
+    public Trigger upperButton() {
+        return this.controller.triangle();
+    }
+
+    @Override
+    public Trigger leftButton() {
+        return this.controller.square();
+    }
+
+    @Override
+    public Trigger rightButton() {
+        return this.controller.circle();
+    }
+
+    @Override
+    public Trigger lowerButton() {
+        return this.controller.cross();
+    }
+
+    @Override
+    public int getPOV() {
+        return this.controller.getHID().getPOV();
+    }
+
+    @Override
+    public Trigger leftShoulderButton() {
+        return this.controller.L2();
+    }
+
+    @Override
+    public Trigger rightShoulderButton() {
+        return this.controller.R2();
+    }
+
+    @Override
+    public Trigger leftShoulderTrigger() {
+        return this.controller.L1();
+    }
+
+    @Override
+    public Trigger rightShoulderTrigger() {
+        return this.controller.R1();
     }
 }

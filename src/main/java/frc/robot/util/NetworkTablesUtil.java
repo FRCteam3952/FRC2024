@@ -1,11 +1,17 @@
 package frc.robot.util;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Quaternion;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.networktables.*;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.robot.Constants.NetworkTablesConstants;
-import frc.robot.subsystems.staticsubsystems.RobotGyro;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -96,19 +102,51 @@ public class NetworkTablesUtil {
      * @return A {@link Translation2d} representing the robot's pose ([x, y, radians])
      */
     public static Pose2d getJetsonPoseMeters() {
+        if(!jetsonHasPose()) {
+            return new Pose2d();
+        }
+
         NetworkTable table = INSTANCE.getTable("jetson");
-        double[] jetsonPoseXYZ = RobotMathUtil.inchesArrayToMetersArray(table.getEntry("pose").getDoubleArray(new double[]{0.0, 0.0, 0.0})); // X, Y, Z
-        return new Pose2d(jetsonPoseXYZ[2], jetsonPoseXYZ[0], RobotGyro.getRotation2d());
+        double[] readTags = table.getEntry("apriltags_pose").getDoubleArray(new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}); // The jetson outputs a list with 7 elements: (x, y, z) of tag followed by Quaternion (x, y, z, w)
+        if(readTags.length % 7 != 0) {
+            System.out.println("Error: bad tag array");
+            return new Pose2d();
+        }
+
+        ArrayList<Pose3d> poses = new ArrayList<>(readTags.length / 7);
+        for(int i = 0; i < readTags.length; i += 7) {
+            Translation3d pose = new Translation3d(readTags[i + 0], readTags[i + 1], readTags[i + 2]);
+            Quaternion q = new Quaternion(readTags[i + 3], readTags[i + 4], readTags[i + 5], readTags[i + 6]);
+            Pose3d tagPose = new Pose3d(pose, new Rotation3d(q));
+
+            if(checkRequestedPoseValues(tagPose)) {
+                poses.add(tagPose);
+            }
+        }
+
+        return null; // AWAITING IMPLEMENTATION.
+    }
+
+    private static boolean checkRequestedPoseValues(Pose3d pose) {
+        return true;
     }
 
     public static boolean jetsonHasPose() {
         return getEntry("jetson", "has_pose").getBoolean(false);
     }
 
-
+    /**
+     * Gets whether the robot is on the blue alliance, according to the Driver Station.
+     * @return True if on blue, false if on red. If alliance is not present, will default to true.
+     */
     public static boolean getIfOnBlueTeam() {
-        NetworkTable table = INSTANCE.getTable("FMSInfo");
-        return !table.getEntry("IsRedAlliance").getBoolean(true);
+        var alliance = DriverStation.getAlliance();
+        if(alliance.isPresent()) {
+            return alliance.get().equals(Alliance.Blue);
+        }
+        System.out.println("Alliance not present!");
+        DriverStation.reportError("Alliance not present!", false);
+        return true;
     }
 
     /**

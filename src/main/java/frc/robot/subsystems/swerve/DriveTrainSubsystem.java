@@ -41,6 +41,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
     public static final double MAX_ANGULAR_SPEED = Math.PI; // 1/2 rotation per second
     private static final double SMART_OPTIMIZATION_THRESH_M_PER_SEC = 2;
 
+    private static final boolean INVERT_DRIVE_MOTORS = false;
 
     // Location of each swerve drive, relative to motor center. +X -> moving to front of robot, +Y -> moving to left of robot. IMPORTANT.
     private final Translation2d frontLeftLocation = new Translation2d(RobotConstants.LEG_LENGTHS_M, RobotConstants.LEG_LENGTHS_M);
@@ -53,7 +54,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             PortConstants.FRONT_LEFT_ROTATION_MOTOR_ID,
             PortConstants.FRONT_LEFT_ROTATION_CANCODER_ID,
             "fL_12",
-            false,
+            INVERT_DRIVE_MOTORS,
             true
     );
     private final SwerveModule frontRight = new SwerveModule(
@@ -61,7 +62,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             PortConstants.FRONT_RIGHT_ROTATION_MOTOR_ID,
             PortConstants.FRONT_RIGHT_ROTATION_CANCODER_ID,
             "fR_03",
-            false,
+            INVERT_DRIVE_MOTORS,
             true
     );
     private final SwerveModule backLeft = new SwerveModule(
@@ -69,7 +70,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             PortConstants.BACK_LEFT_ROTATION_MOTOR_ID,
             PortConstants.BACK_LEFT_ROTATION_CANCODER_ID,
             "bL_06",
-            false,
+            INVERT_DRIVE_MOTORS,
             true
     );
     private final SwerveModule backRight = new SwerveModule(
@@ -77,7 +78,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             PortConstants.BACK_RIGHT_ROTATION_MOTOR_ID,
             PortConstants.BACK_RIGHT_ROTATION_CANCODER_ID,
             "bR_01",
-            false,
+            INVERT_DRIVE_MOTORS,
             true
     );
 
@@ -145,9 +146,9 @@ public class DriveTrainSubsystem extends SubsystemBase {
     }
 
     /**
-     * Get a {@link Command} to rotate all modules to absolute zero. This command will time itself out if incomplete after 1 second. Regardless of completion, all non-absolutely-absolute encoders (see {@link SwerveModule#resetEncodersToAbsolutelyAbsoluteValue()}) are set to the absolutely-absolute encoder's value.
+     * Get a {@link Command} to rotate all modules to absolute zero. This command will time itself out if incomplete after 1 second. Regardless of completion, all non-absolutely-absolute encoders (see {@link SwerveModule#resetEncodersToAbsoluteValue()}) are set to the absolutely-absolute encoder's value.
      * @return A {@link Command} to rotate all modules to absolute zero.
-     * @see {@link SwerveModule#resetEncodersToAbsolutelyAbsoluteValue()}
+     * @see {@link SwerveModule#resetEncodersToAbsoluteValue()}
      */
     public Command rotateToAbsoluteZeroCommand() {
         return new RunCommand(() -> {
@@ -157,29 +158,29 @@ public class DriveTrainSubsystem extends SubsystemBase {
             backRight.rotateToAbsoluteZero(3);
         }, this).until(() -> { // Until all modules have a heading of <= 0.03 rad
             for(SwerveModule module : swerveModules) {
-                if(Math.abs(module.getAbsoluteModulePosition().angle.getRadians()) > 0.05) {
+                if(Math.abs(module.getAbsoluteModulePosition().angle.getRadians()) > 0.04) {
                     return false;
                 }
             }
             return true;
-        }).withTimeout(1).andThen(() -> {
-            for(SwerveModule module : swerveModules) {
-                module.resetEncodersToAbsolutelyAbsoluteValue();
+        }).withTimeout(1).andThen(() -> { // or it takes more than one second
+            for(SwerveModule module : swerveModules) { // then we want to set all of them to the absolutely-absolute value (not zero, since we might not actually be at zero)
+                module.resetEncodersToAbsoluteValue();
             }
         });
     }
 
-    //prints joystick movement 
+    // uploads the intended, estimated, and actual states of the robot.
     StructArrayPublisher<SwerveModuleState> targetSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("TargetStates", SwerveModuleState.struct).publish();
     StructArrayPublisher<SwerveModuleState> realSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("ActualStates", SwerveModuleState.struct).publish();
     StructArrayPublisher<SwerveModuleState> absoluteAbsoluteSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("AbsoluteAbsolute", SwerveModuleState.struct).publish();
 
     StructArrayPublisher<SwerveModuleState> relativeSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("RelativeStates", SwerveModuleState.struct).publish();
-    //makes object to publish robot position relative to field
+    // publish robot position relative to field
     StructPublisher<Pose2d> posePositionPublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructTopic("estimatedOdometryPosition", Pose2d.struct).publish();
     StructPublisher<Rotation2d> robotRotationPublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructTopic("rotation", Rotation2d.struct).publish();
 
-    static SwerveModuleState[] optimizedTargetStates = new SwerveModuleState[4];
+    static SwerveModuleState[] optimizedTargetStates = new SwerveModuleState[4]; // for debugging purposes
 
     /**
      * Method to drive the robot using joystick info.

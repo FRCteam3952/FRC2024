@@ -13,7 +13,7 @@ import frc.robot.Flags;
 import frc.robot.Constants.PortConstants;
 import frc.robot.util.NetworkTablesUtil;
 
-public class IntakeSubsytem extends SubsystemBase { // 5.643 = 90deg
+public class IntakeSubsytem extends SubsystemBase {
     private static final double LEADER_CURRENT_SPIKE_THRESH = 17.5;
     private static final double FOLLOWER_CURRENT_SPIKE_THRESH = 15;
 
@@ -28,31 +28,39 @@ public class IntakeSubsytem extends SubsystemBase { // 5.643 = 90deg
     private final RelativeEncoder pivotEncoder;
     private final SparkPIDController pivotPIDController;
 
-    private final DigitalInput pivotLimitSwitch;
+    private final DigitalInput pivotDownLimitSwitch;
+    private final DigitalInput pivotUpLimitSwitch;
 
     public IntakeSubsytem() {
-        leaderMotor = new CANSparkMax(PortConstants.TOP_INTAKE, MotorType.kBrushless);
-        followerMotor = new CANSparkMax(PortConstants.BOTTOM_INTAKE, MotorType.kBrushless);
+        leaderMotor = new CANSparkMax(PortConstants.TOP_INTAKE_MOTOR_ID, MotorType.kBrushless);
+        followerMotor = new CANSparkMax(PortConstants.BOTTOM_INTAKE_MOTOR_ID, MotorType.kBrushless);
 
-        this.pivotLimitSwitch = new DigitalInput(PortConstants.INTAKE_LIMIT_SWITCH_PORT);
+        this.pivotDownLimitSwitch = new DigitalInput(PortConstants.INTAKE_DOWN_LIMIT_SWITCH_PORT);
+        this.pivotUpLimitSwitch = new DigitalInput(PortConstants.INTAKE_UP_LIMIT_SWITCH_PORT);
         
         leaderMotor.setInverted(true);
         followerMotor.setInverted(true);
         // followerMotor.follow(leaderMotor, false);
 
-        pivotMotor = new CANSparkMax(PortConstants.PIVOT_INTAKE_MOTOR_ID, MotorType.kBrushless);
+        pivotMotor = new CANSparkMax(PortConstants.INTAKE_PIVOT_MOTOR_ID, MotorType.kBrushless);
         pivotEncoder = pivotMotor.getEncoder();
 
         pivotMotor.enableVoltageCompensation(10);
         // pivotMotor.setSmartCurrentLimit(20);
         // pivotMotor.setSecondaryCurrentLimit(100);
 
-        pivotEncoder.setPositionConversionFactor(90 / 5.643 * 1.0465);
+        // this.leaderMotor.setSmartCurrentLimit(20);
+        // this.followerMotor.setSmartCurrentLimit(20); // These are NEO550s - DO NOT CHANGE THESE VALUES ABOVE 20.
+
+        // this.leaderMotor.setSecondaryCurrentLimit(60);
+        // this.followerMotor.setSecondaryCurrentLimit(60);
+
+        pivotEncoder.setPositionConversionFactor(1); // 90deg = 20rot
         pivotEncoder.setPosition(0);
 
         pivotPIDController = pivotMotor.getPIDController();
 
-        pivotPIDController.setP(0.0015, 0); // DOWN
+        pivotPIDController.setP(0, 0); // DOWN
         pivotPIDController.setI(0, 0);
         pivotPIDController.setD(0, 0);
         pivotPIDController.setFF(0, 0);
@@ -60,7 +68,7 @@ public class IntakeSubsytem extends SubsystemBase { // 5.643 = 90deg
         pivotPIDController.setOutputRange(-1, 1, 0);
 
         
-        pivotPIDController.setP(0.005, 1); // UP
+        pivotPIDController.setP(0, 1); // UP
         pivotPIDController.setI(0, 1);
         pivotPIDController.setD(0, 1);
         pivotPIDController.setFF(0, 1);
@@ -86,7 +94,7 @@ public class IntakeSubsytem extends SubsystemBase { // 5.643 = 90deg
     }
 
     public void setPivotSpeed(double pivotSpeed) {
-        if(Flags.Intake.ENABLED) {
+        if(Flags.Intake.ENABLED && Flags.Intake.PIVOT_ENABLED) {
             pivotMotor.set(pivotSpeed);
         }
     }
@@ -115,8 +123,12 @@ public class IntakeSubsytem extends SubsystemBase { // 5.643 = 90deg
         return pivotMotor.getOutputCurrent();
     }
 
-    public boolean isPivotLimitPressed() {
-        return !this.pivotLimitSwitch.get();
+    public boolean isPivotDownLimitPressed() {
+        return !this.pivotDownLimitSwitch.get();
+    }
+
+    public boolean isPivotUpLimitPressed() {
+        return this.pivotUpLimitSwitch.get();
     }
 
     /**
@@ -124,7 +136,7 @@ public class IntakeSubsytem extends SubsystemBase { // 5.643 = 90deg
      * @param degrees The target setpoint, with -90 being the down position and 0 being the up position.
      */
     public void pivotToAngle(double degrees) {
-        if(Flags.Intake.ENABLED && Flags.Intake.PIVOT_PID_CONTROL) {
+        if(Flags.Intake.ENABLED && Flags.Intake.PIVOT_ENABLED && Flags.Intake.PIVOT_PID_CONTROL) {
             if(degrees - this.getPivotPosition() < 0) {
                 System.out.println("going down");
                 pivotPIDController.setReference(degrees, ControlType.kPosition, 0, 0.6);
@@ -145,8 +157,10 @@ public class IntakeSubsytem extends SubsystemBase { // 5.643 = 90deg
 
     @Override
     public void periodic() {
-        if(this.isPivotLimitPressed()) {
+        if(this.isPivotDownLimitPressed()) {
             this.setPivotEncoderPosition(-90);
+        } else if(this.isPivotUpLimitPressed()) {
+            this.setPivotEncoderPosition(0);
         }
 
         leaderCurrentPublisher.set(this.getLeaderMotorCurrent());

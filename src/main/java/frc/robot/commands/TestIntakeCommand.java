@@ -23,7 +23,7 @@ public class TestIntakeCommand extends Command {
     @Override
     public void execute() {
         if(joystick.rightButton().getAsBoolean()) {
-            this.intake.setIntakeSpeed(0.6, 0.4);
+            this.intake.setIntakeSpeed(1, 0.8);
         } else if(joystick.lowerButton().getAsBoolean()) {
             this.intake.setIntakeSpeed(-0.2, -0.2);
         } else {
@@ -39,7 +39,7 @@ public class TestIntakeCommand extends Command {
 
     // Called once the command ends or is interrupted.
     @Override
-    public void end(boolean interrupted) {
+     public void end(boolean interrupted) {
 
     }
 

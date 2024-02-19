@@ -38,7 +38,7 @@ public class IntakeCommand extends Command {
 
         // this.intake.setPivotSpeed(-joystick.getRightVerticalMovement());
 
-        System.out.println("intake position: " + Util.nearestHundredth(intake.getPivotPosition()));
+        // System.out.println("intake position: " + Util.nearestHundredth(intake.getPivotPosition()));
 
         // System.out.println("lower intake current: " + this.intake.getFollowerMotorCurrent() + ", top current: " + this.intake.getLeaderMotorCurrent());
     }

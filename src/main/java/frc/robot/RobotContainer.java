@@ -16,6 +16,7 @@ import frc.robot.controllers.FlightJoystick;
 import frc.robot.controllers.NintendoProController;
 import frc.robot.controllers.PS5Controller;
 import frc.robot.subsystems.swerve.DriveTrainSubsystem;
+import frc.robot.subsystems.PowerHandler;
 import frc.robot.subsystems.intake.IntakeSubsytem;
 import frc.robot.subsystems.staticsubsystems.LimeLight;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
@@ -24,16 +25,30 @@ import frc.robot.util.NetworkTablesUtil;
 import frc.robot.Constants.NetworkTablesConstants;
 
 public class RobotContainer {
-    private final DriveTrainSubsystem driveTrain = new DriveTrainSubsystem();
-    private final IntakeSubsytem intake = new IntakeSubsytem();
+    private final DriveTrainSubsystem driveTrain;
+    private final IntakeSubsytem intake;
 
-    public final FlightJoystick driverController = new FlightJoystick(new CommandJoystick(OperatorConstants.RIGHT_JOYSTICK_PORT));
-    public final NintendoProController nintendoProController = new NintendoProController(new CommandXboxController(OperatorConstants.NINTENDO_PRO_CONTROLLER));
-    public final PS5Controller ps5Controller = new PS5Controller(new CommandPS5Controller(OperatorConstants.PS5_CONTROLLER));
+    private final FlightJoystick driverController = new FlightJoystick(new CommandJoystick(OperatorConstants.RIGHT_JOYSTICK_PORT));
+    private final NintendoProController nintendoProController = new NintendoProController(new CommandXboxController(OperatorConstants.NINTENDO_PRO_CONTROLLER));
+    private final PS5Controller ps5Controller = new PS5Controller(new CommandPS5Controller(OperatorConstants.PS5_CONTROLLER));
 
-    public final AbstractController primaryController = this.nintendoProController;
+    private final PowerHandler powerHandler = new PowerHandler();
+
+    public final AbstractController primaryController = Flags.Operator.USING_NINTENDO_SWITCH_CONTROLLER ? this.nintendoProController : this.ps5Controller;
 
     public RobotContainer() {
+        if(Flags.DriveTrain.IS_ATTACHED) {
+            this.driveTrain = new DriveTrainSubsystem();
+        } else {
+            this.driveTrain = null;
+        }
+
+        if(Flags.Intake.IS_ATTACHED) {
+            this.intake = new IntakeSubsytem();
+        } else {
+            this.intake = null;
+        }
+
         configureBindings();
 
         // Initialize static subsystems (this is a Java thing don't worry about it just copy it so that static blocks run on startup)
@@ -42,7 +57,9 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
-        this.primaryController.upperButton().onTrue(this.driveTrain.rotateToAbsoluteZeroCommand());
+        if(Flags.DriveTrain.IS_ATTACHED) {
+            this.primaryController.upperButton().onTrue(this.driveTrain.rotateToAbsoluteZeroCommand());
+        }
         this.primaryController.leftButton().onTrue(Commands.runOnce(() -> RobotGyro.resetGyroAngle()));
     }
 
@@ -88,19 +105,24 @@ public class RobotContainer {
     }
 
     public void onTeleopInit() {
-        if(Flags.DriveTrain.USE_TEST_DRIVE_COMMAND) {
-            this.driveTrain.setDefaultCommand(new TestDriveCommand(this.driveTrain, this.primaryController));
-        } else {
-            this.driveTrain.setDefaultCommand(new ManualDriveCommand(this.driveTrain, this.primaryController));
+        if(Flags.DriveTrain.IS_ATTACHED) {
+            if(Flags.DriveTrain.USE_TEST_DRIVE_COMMAND) {
+                this.driveTrain.setDefaultCommand(new TestDriveCommand(this.driveTrain, this.primaryController));
+            } else {
+                this.driveTrain.setDefaultCommand(new ManualDriveCommand(this.driveTrain, this.primaryController));
+            }
         }
 
-        if(Flags.Intake.USE_TEST_INTAKE_COMMAND) {
-            this.intake.setDefaultCommand(new TestIntakeCommand(this.intake, this.primaryController));
-        } else {
-            this.intake.setDefaultCommand(new IntakeCommand(this.intake, this.primaryController));
+        if(Flags.Intake.IS_ATTACHED) {
+            if(Flags.Intake.USE_TEST_INTAKE_COMMAND) {
+                this.intake.setDefaultCommand(new TestIntakeCommand(this.intake, this.primaryController));
+            } else {
+                this.intake.setDefaultCommand(new IntakeCommand(this.intake, this.primaryController));
+            }
         }
     }
 
     public void onTeleopPeriodic() {
+        this.powerHandler.updateNT();
     }
 }

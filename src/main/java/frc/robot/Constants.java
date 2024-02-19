@@ -13,7 +13,7 @@ public final class Constants {
     }
 
     /**
-     * Key: RIO = RoboRio, COD = CANCoder, DRI = Drive Motor, ROT = Rotation Motor
+     * Key: RIO = RoboRio, COD = CANCoder, DRI = Drive Motor, ROT = Rotation Motor, INT = Intake-related, 
      * USED:
      * 0  (RIO)
      * 1  (COD)
@@ -28,12 +28,15 @@ public final class Constants {
      * 10 (ROT)
      * 11 (DRI)
      * 12 (COD)
+     * 13 (INT)
+     * 14 (INT)
+     * 15 (INT)
      */
     public static class PortConstants {
         // CAN
-        public static final int TOP_INTAKE                          = 12; //THE MEANING OF LIFE -- change later
-        public static final int BOTTOM_INTAKE                       = 13; //bad scawy number -- change later
-        public static final int PIVOT_INTAKE_MOTOR_ID               = 6; //the age to vote - change
+        public static final int TOP_INTAKE_MOTOR_ID                 = 14; //THE MEANING OF LIFE -- change later
+        public static final int BOTTOM_INTAKE_MOTOR_ID              = 15; //bad scawy number -- change later
+        public static final int INTAKE_PIVOT_MOTOR_ID               = 13; //the age to vote - change
         
 
         public static final int FRONT_LEFT_DRIVE_MOTOR_ID           = 9;
@@ -53,7 +56,8 @@ public final class Constants {
 
 
         // DIO
-        public static final int INTAKE_LIMIT_SWITCH_PORT            = 1; //change this cero 
+        public static final int INTAKE_DOWN_LIMIT_SWITCH_PORT       = 1;
+        public static final int INTAKE_UP_LIMIT_SWITCH_PORT         = 3;
     }
 
     public static class DriveConstants {

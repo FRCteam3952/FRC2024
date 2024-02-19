@@ -81,11 +81,11 @@ public class SwerveModule {
         driveMotor.setInverted(invertDriveMotor);
         turnMotor.setInverted(invertTurnMotor);
 
-        this.driveMotor.setSmartCurrentLimit(20);
-        this.driveMotor.setSecondaryCurrentLimit(100);
+        // this.driveMotor.setSmartCurrentLimit(30);
+        // this.driveMotor.setSecondaryCurrentLimit(100);
 
-        this.turnMotor.setSmartCurrentLimit(20);
-        this.turnMotor.setSecondaryCurrentLimit(100);
+        // this.turnMotor.setSmartCurrentLimit(30);
+        // this.turnMotor.setSecondaryCurrentLimit(100);
 
         // Circumference / Gear Ratio (L2 of MK4i). This evaluates to ~1.86 inches/rotation, which is close to experimental values.
         // We are therefore using the calculated value. (Thanks Ivan)
@@ -98,7 +98,14 @@ public class SwerveModule {
 
         this.driveEncoder.setPosition(0);
         // this.turnEncoder.setPosition(0);
+
+        System.out.println(name + " is at abs-abs " + this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble() + ", abs " + this.turnAbsoluteEncoder.getPosition().getValueAsDouble());
         this.turnAbsoluteEncoder.setPosition(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
+        System.out.println("magnet health of " + name + " is " + this.turnAbsoluteEncoder.getMagnetHealth().getValue());
+
+        if(this.turnAbsoluteEncoder.getFault_BadMagnet().getValue().booleanValue()) {
+            System.out.println(name + " has a bad magnet");
+        }
 
         this.turnEncoder.setPosition(this.getTurnAbsolutelyAbsolutePosition());
 
@@ -134,8 +141,8 @@ public class SwerveModule {
      * 
      * @see SwerveModule
      */
-    public void resetEncodersToAbsolutelyAbsoluteValue() {
-        this.turnAbsoluteEncoder.setPosition(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
+    public void resetEncodersToAbsoluteValue() {
+        // this.turnAbsoluteEncoder.setPosition(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
         this.turnEncoder.setPosition(this.getTurnAbsolutelyAbsolutePosition());
     }
 
@@ -359,7 +366,7 @@ public class SwerveModule {
         this.setRotationDesiredState(desiredState);
 
         if(Math.abs(desiredState.speedMetersPerSecond) < 0.01 && Math.abs(this.getTurnRelativeVelocity()) < 0.01) {
-            this.resetEncodersToAbsolutelyAbsoluteValue();
+            this.resetEncodersToAbsoluteValue();
             // System.out.println("resetting encoders");
         }
     }
@@ -378,7 +385,7 @@ public class SwerveModule {
         DriveTrainSubsystem.optimizedTargetStates[debugIdx] = desiredState;
 
         if(Math.abs(desiredState.speedMetersPerSecond) < 0.01 && Math.abs(this.getTurnRelativeVelocity()) < 0.01) {
-            this.resetEncodersToAbsolutelyAbsoluteValue();
+            this.resetEncodersToAbsoluteValue();
             // System.out.println("resetting encoders");
         }
     }
@@ -399,7 +406,7 @@ public class SwerveModule {
         if(Math.abs(tar) > 0.01) {
             ratio = vel / tar;
         }
-        System.out.println(this.name + " velocity: " + Util.nearestHundredth(driveEncoder.getVelocity()) + " target speed: " + Util.nearestHundredth(optimizedDesiredState.speedMetersPerSecond) + ", ratio: " + nearestHundredth(ratio));
+        // System.out.println(this.name + " velocity: " + Util.nearestHundredth(driveEncoder.getVelocity()) + " target speed: " + Util.nearestHundredth(optimizedDesiredState.speedMetersPerSecond) + ", ratio: " + nearestHundredth(ratio));
         // System.out.println(this.name + ", position: " + this.driveEncoder.getPosition());
     }
 

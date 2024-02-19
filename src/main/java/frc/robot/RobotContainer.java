@@ -21,6 +21,7 @@ import frc.robot.subsystems.intake.IntakeSubsytem;
 import frc.robot.subsystems.staticsubsystems.LimeLight;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.util.GyroPoseEstimator;
 import frc.robot.util.NetworkTablesUtil;
 import frc.robot.Constants.NetworkTablesConstants;
 
@@ -36,6 +37,7 @@ public class RobotContainer {
 
     public final AbstractController primaryController = Flags.Operator.USING_NINTENDO_SWITCH_CONTROLLER ? this.nintendoProController : this.ps5Controller;
 
+    private final GyroPoseEstimator gyroPoseEstimator = new GyroPoseEstimator();
     public RobotContainer() {
         if(Flags.DriveTrain.IS_ATTACHED) {
             this.driveTrain = new DriveTrainSubsystem();
@@ -124,5 +126,9 @@ public class RobotContainer {
 
     public void onTeleopPeriodic() {
         this.powerHandler.updateNT();
+    }
+
+    public void onRobotPeriodic() {
+        this.gyroPoseEstimator.update();
     }
 }

@@ -61,6 +61,18 @@ public final class RobotGyro {
         return gyro.getYComplementaryAngle() + angleAdjust;
     }
 
+    public static double getAccelX() {
+        return gyro.getAccelX();
+    }
+
+    public static double getAccelY() {
+        return gyro.getAccelY();
+    }
+
+    public static double getAccelZ() {
+        return gyro.getAccelZ();
+    }
+
     /**
      * Reset the gyro such that the current heading is equal to 0.
      */

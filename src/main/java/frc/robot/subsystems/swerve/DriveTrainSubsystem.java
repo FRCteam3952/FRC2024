@@ -246,7 +246,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     /**
      * Set all drive motor voltages to a specified value without any PID control.
-     * @param speed The desired voltage output
+     * @param volts The desired voltage output
      */
     public void directDriveVoltage(double volts) {
         frontLeft.setVoltages(volts, 0);

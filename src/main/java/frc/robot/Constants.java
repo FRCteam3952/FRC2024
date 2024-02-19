@@ -37,11 +37,16 @@ public final class Constants {
      * 15 (INT)
      */
     public static class PortConstants {
+        public static final int SHOOTER_TOP_MOTOR_ID                = 42; //THE MEANING OF LIFE :) FAKE ID, CHANGE LATER! 
+        public static final int SHOOTER_BOTTOM_MOTOR_ID             = 64; //THESE ARE ALL FAKE IDs
+        public static final int SHOOTER_FLAP_MOTOR_ID               = 23; 
+        public static final int SHOOTER_PIVOT_MOTOR_ID              = 54;
+        public static final int SHOOTER_PIVOT_LIMIT_SWITCH          = 49; 
+        public static final int SHOOTER_FLAP_LIMIT_SWITCH           = 50; 
         // CAN
         public static final int TOP_INTAKE_MOTOR_ID                 = 14; //THE MEANING OF LIFE -- change later
         public static final int BOTTOM_INTAKE_MOTOR_ID              = 15; //bad scawy number -- change later
         public static final int INTAKE_PIVOT_MOTOR_ID               = 13; //the age to vote - change
-        
 
         public static final int FRONT_LEFT_DRIVE_MOTOR_ID           = 9;
         public static final int FRONT_RIGHT_DRIVE_MOTOR_ID          = 11;

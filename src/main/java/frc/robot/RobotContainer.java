@@ -72,7 +72,7 @@ public class RobotContainer {
     private static void printFlagsClass() {
         try {
             Class<Flags> clazz = Flags.class;
-            var flagsTable = NetworkTablesUtil.MAIN_ROBOT_TABLE.getSubTable(NetworkTablesConstants.MAIN_TABLE_NAME).getSubTable("Flags");
+            var flagsTable = NetworkTablesUtil.MAIN_ROBOT_TABLE.getSubTable("Flags");
 
             for(Field field : clazz.getDeclaredFields()) {
                 if(Modifier.isStatic(field.getModifiers())) {

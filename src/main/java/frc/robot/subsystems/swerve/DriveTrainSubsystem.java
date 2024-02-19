@@ -17,7 +17,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.*;
 import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;  
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -182,6 +183,11 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     static SwerveModuleState[] optimizedTargetStates = new SwerveModuleState[4]; // for debugging purposes
 
+    DoublePublisher fLAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("fl_amp").publish();
+    DoublePublisher fRAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("fr_amp").publish();
+    DoublePublisher bLAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("bl_amp").publish();
+    DoublePublisher bRAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("br_amp").publish();
+
     /**
      * Method to drive the robot using joystick info.
      *
@@ -297,6 +303,11 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
         this.updateOdometry();
         // System.out.println(this.getPose());
+
+        fLAmp.set(frontLeft.getDriveAmperage());
+        fRAmp.set(frontRight.getDriveAmperage());
+        bLAmp.set(backLeft.getDriveAmperage());
+        bRAmp.set(backRight.getDriveAmperage());
     }
 
     /**

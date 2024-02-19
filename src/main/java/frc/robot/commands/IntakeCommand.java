@@ -23,7 +23,7 @@ public class IntakeCommand extends Command {
     @Override
     public void execute() {
         if(joystick.rightButton().getAsBoolean()) {
-            this.intake.setIntakeSpeed(0.6, 0.4);
+            this.intake.setIntakeSpeed(1, 1);
         } else if(joystick.lowerButton().getAsBoolean()) {
             this.intake.setIntakeSpeed(-0.2, -0.2);
         } else {

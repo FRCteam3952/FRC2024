@@ -134,6 +134,11 @@ public class SwerveModule {
 
         //System.out.println(this.name + " inverts drive: " + this.driveMotor.getInverted() + " turn: " + this.turnMotor.getInverted());
         // System.out.println(this.name + " abs pos " + RobotMathUtil.roundNearestHundredth(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble()));
+        System.out.println(this.driveMotor.getAppliedOutput());
+    }
+
+    public double getDriveAmperage() {
+        return this.driveMotor.getOutputCurrent();
     }
 
     /**
@@ -143,7 +148,7 @@ public class SwerveModule {
      */
     public void resetEncodersToAbsoluteValue() {
         // this.turnAbsoluteEncoder.setPosition(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
-        this.turnEncoder.setPosition(this.getTurnAbsolutelyAbsolutePosition());
+        // this.turnEncoder.setPosition(this.getTurnAbsolutelyAbsolutePosition());
     }
 
     /**

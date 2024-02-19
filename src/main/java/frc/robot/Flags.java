@@ -21,7 +21,7 @@ public final class Flags {
         /**
          * Whether the drive train is physically attached and existing. If false, no motor controllers are initialized since they are assumed to be nonexistent.
          */
-        public static final boolean IS_ATTACHED = true;
+        public static final boolean IS_ATTACHED = false;
 
         /**
          * Whether the drive train should be allowed to send power to motor controllers. If false, motors will not be set to any power and PID requests will not be sent.
@@ -54,7 +54,7 @@ public final class Flags {
         /**
          * Whether to enable optimizing swerve module rotations.
          */
-        public static final boolean SWERVE_MODULE_OPTIMIZATION = false;
+        public static final boolean SWERVE_MODULE_OPTIMIZATION = true;
         /**
          * Whether to only optimize swerve modules if the speeds are below a certain value.
          */

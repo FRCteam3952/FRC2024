@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.lang.reflect.Field;
+
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import frc.robot.util.NetworkTablesUtil;
@@ -12,6 +14,16 @@ public class PowerHandler {
 
     public PowerHandler() {
         this.pdp = new PowerDistribution();
+
+        this.pdp.clearStickyFaults();
+
+        var f = pdp.getStickyFaults();
+        System.out.println("PDP FAULTS: ");
+        try {
+            for(Field field : f.getClass().getDeclaredFields()) {
+                System.out.println(field.getName() + ": " + field.getBoolean(f));
+            }
+        } catch (Exception e) {};
     }
 
     public double getVoltage() {

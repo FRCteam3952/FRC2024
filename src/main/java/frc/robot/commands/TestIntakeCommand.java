@@ -24,7 +24,7 @@ public class TestIntakeCommand extends Command {
     @Override
     public void execute() {
         if (ControlHandler.get(joystick, ControllerConstants.RUN_INTAKE).getAsBoolean()) {
-            this.intake.setIntakeSpeed(1, 0.8);
+            this.intake.setIntakeSpeed(1, 1);
         } else if (ControlHandler.get(joystick, ControllerConstants.REVERSE_INTAKE).getAsBoolean()) {
             this.intake.setIntakeSpeed(-0.2, -0.2);
         } else {

@@ -9,25 +9,31 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.ManualDriveCommand;
+import frc.robot.commands.TestConveyorCommand;
 import frc.robot.commands.TestDriveCommand;
 import frc.robot.commands.TestIntakeCommand;
+import frc.robot.commands.TestShooterCommand;
 import frc.robot.controllers.AbstractController;
 import frc.robot.controllers.FlightJoystick;
 import frc.robot.controllers.NintendoProController;
 import frc.robot.controllers.PS5Controller;
 import frc.robot.subsystems.swerve.DriveTrainSubsystem;
 import frc.robot.subsystems.PowerHandler;
+import frc.robot.subsystems.conveyor.ConveyorSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsytem;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.staticsubsystems.LimeLight;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.util.GyroPoseEstimator;
 import frc.robot.util.NetworkTablesUtil;
-import frc.robot.Constants.NetworkTablesConstants;
+import frc.robot.util.Util;
 
 public class RobotContainer {
     private final DriveTrainSubsystem driveTrain;
     private final IntakeSubsytem intake;
+    private final ShooterSubsystem shooter;
+    private final ConveyorSubsystem conveyor;
 
     private final FlightJoystick driverController = new FlightJoystick(new CommandJoystick(OperatorConstants.RIGHT_JOYSTICK_PORT));
     private final NintendoProController nintendoProController = new NintendoProController(new CommandXboxController(OperatorConstants.NINTENDO_PRO_CONTROLLER));
@@ -38,7 +44,14 @@ public class RobotContainer {
     public final AbstractController primaryController = Flags.Operator.USING_NINTENDO_SWITCH_CONTROLLER ? this.nintendoProController : this.ps5Controller;
 
     private final GyroPoseEstimator gyroPoseEstimator = new GyroPoseEstimator();
+
     public RobotContainer() {
+        this.driveTrain = Util.createIfFlagElseNull(DriveTrainSubsystem::new, Flags.DriveTrain.IS_ATTACHED);
+        this.intake     = Util.createIfFlagElseNull(IntakeSubsytem::new, Flags.Intake.IS_ATTACHED);
+        this.shooter    = Util.createIfFlagElseNull(ShooterSubsystem::new, Flags.Shooter.IS_ATTACHED);
+        this.conveyor   = Util.createIfFlagElseNull(ConveyorSubsystem::new, Flags.Conveyor.IS_ATTACHED);
+
+        /*
         if(Flags.DriveTrain.IS_ATTACHED) {
             this.driveTrain = new DriveTrainSubsystem();
         } else {
@@ -50,6 +63,18 @@ public class RobotContainer {
         } else {
             this.intake = null;
         }
+
+        if(Flags.Shooter.IS_ATTACHED) {
+            this.shooter = new ShooterSubsystem();
+        } else {
+            this.shooter = null;
+        }
+
+        if(Flags.Conveyor.IS_ATTACHED) {
+            this.conveyor = new ConveyorSubsystem();
+        } else {
+            this.conveyor = null;
+        }*/
 
         configureBindings();
 
@@ -120,6 +145,18 @@ public class RobotContainer {
                 this.intake.setDefaultCommand(new TestIntakeCommand(this.intake, this.primaryController));
             } else {
                 this.intake.setDefaultCommand(new IntakeCommand(this.intake, this.primaryController));
+            }
+        }
+
+        if(Flags.Shooter.IS_ATTACHED) {
+            if(Flags.Shooter.USE_TEST_SHOOTER_COMMAND) {
+                this.shooter.setDefaultCommand(new TestShooterCommand(this.shooter, this.primaryController));
+            }
+        }
+
+        if(Flags.Conveyor.IS_ATTACHED) {
+            if(Flags.Conveyor.USE_TEST_CONVEYOR_COMMAND) {
+                this.conveyor.setDefaultCommand(new TestConveyorCommand(this.conveyor, this.primaryController));
             }
         }
     }

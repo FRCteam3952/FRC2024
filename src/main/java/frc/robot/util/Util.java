@@ -1,5 +1,7 @@
 package frc.robot.util;
 
+import java.util.function.Supplier;
+
 import edu.wpi.first.math.geometry.CoordinateAxis;
 import edu.wpi.first.math.geometry.CoordinateSystem;
 import edu.wpi.first.math.util.Units;
@@ -152,5 +154,18 @@ public final class Util {
      */
     public static double squareKeepSign(double d) {
         return d * d * Math.signum(d);
+    }
+
+    /**
+     * If a given flag is true, runs the supplier. Otherwise returns null.
+     * @param objSupplier A supplier (should be a constructor call) for a class.
+     * @param flag If true, runs the supplier. Otherwise the supplier is not run and null is returned.
+     * @return The return value of the supplier if flag is true, else null.
+     */
+    public static <T> T createIfFlagElseNull(Supplier<T> objSupplier, boolean flag) {
+        if(flag) {
+            return objSupplier.get();
+        }
+        return null;
     }
 }

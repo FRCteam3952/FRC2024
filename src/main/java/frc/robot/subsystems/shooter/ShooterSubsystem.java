@@ -3,6 +3,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Flags;
 import frc.robot.Constants.PortConstants;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
@@ -14,19 +15,18 @@ import com.revrobotics.CANSparkBase.ControlType;
     //make the motor variables
     private final CANSparkMax topMotor;
     private final CANSparkMax bottomMotor;
-    private final CANSparkMax pivotMotor;
-    private final CANSparkMax flapMotor;
+    // private final CANSparkMax pivotMotor;
+    // private final CANSparkMax flapMotor;
     //make the motor encoder variables
-    private final RelativeEncoder topEncoder; //Don't know what to do with this, but its there
-    private final RelativeEncoder bottomEncoder;
-    private final RelativeEncoder pivotEncoder;
-    private final RelativeEncoder flapEncoder;
+    // private final RelativeEncoder pivotEncoder;
+    // private final RelativeEncoder flapEncoder;
+    private final RelativeEncoder bottomShooterEncoder;
     //make the limit switch variables
-    private final DigitalInput pivotLimitSwitch;
-    private final DigitalInput flapLimitSwitch;
+    // private final DigitalInput pivotLimitSwitch;
+    // private final DigitalInput flapLimitSwitch;
     //PID stuff
-    private final SparkPIDController pivotPidController;
-    private final SparkPIDController flapPidController;
+    // private final SparkPIDController pivotPidController;
+    // private final SparkPIDController flapPidController;
     private final SparkPIDController bottomPidController;
     
 
@@ -35,24 +35,24 @@ import com.revrobotics.CANSparkBase.ControlType;
         // intialize motors
         topMotor = new CANSparkMax(PortConstants.SHOOTER_TOP_MOTOR_ID, MotorType.kBrushless);
         bottomMotor = new CANSparkMax(PortConstants.SHOOTER_BOTTOM_MOTOR_ID, MotorType.kBrushless);
-        pivotMotor = new CANSparkMax(PortConstants.SHOOTER_PIVOT_MOTOR_ID, MotorType.kBrushless);
-        flapMotor = new CANSparkMax(PortConstants.SHOOTER_FLAP_MOTOR_ID, MotorType.kBrushless);
+        // pivotMotor = new CANSparkMax(PortConstants.SHOOTER_PIVOT_MOTOR_ID, MotorType.kBrushless);
+        // flapMotor = new CANSparkMax(PortConstants.SHOOTER_FLAP_MOTOR_ID, MotorType.kBrushless);
         // intialize encoders
-        topEncoder = topMotor.getEncoder();
-        bottomEncoder = bottomMotor.getEncoder();
-        pivotEncoder = pivotMotor.getEncoder();
-        flapEncoder = flapMotor.getEncoder();
+        // pivotEncoder = pivotMotor.getEncoder();
+        // flapEncoder = flapMotor.getEncoder();
         //makes topMotor follow bottomMotor
-        topMotor.follow(bottomMotor);
+        bottomShooterEncoder = bottomMotor.getEncoder();
+        topMotor.follow(bottomMotor, true);
         //intialize limit switch
-        pivotLimitSwitch = new DigitalInput(PortConstants.SHOOTER_PIVOT_LIMIT_SWITCH);
-        flapLimitSwitch = new DigitalInput(PortConstants.SHOOTER_PIVOT_LIMIT_SWITCH);
+        // pivotLimitSwitch = new DigitalInput(PortConstants.SHOOTER_PIVOT_LIMIT_SWITCH);
+        // flapLimitSwitch = new DigitalInput(PortConstants.SHOOTER_PIVOT_LIMIT_SWITCH);
 
         //intialize PIDs
-        pivotPidController = pivotMotor.getPIDController();
-        flapPidController = flapMotor.getPIDController();
+        // pivotPidController = pivotMotor.getPIDController();
+        // flapPidController = flapMotor.getPIDController();
         bottomPidController = bottomMotor.getPIDController();
-
+        
+        /*
         //intializen PID values to 0
         pivotPidController.setP(0);
         pivotPidController.setI(0);
@@ -62,7 +62,7 @@ import com.revrobotics.CANSparkBase.ControlType;
         flapPidController.setP(0);
         flapPidController.setI(0);
         flapPidController.setD(0);
-        flapPidController.setFF(0);
+        flapPidController.setFF(0);*/
 
         bottomPidController.setP(0);
         bottomPidController.setI(0);
@@ -71,16 +71,20 @@ import com.revrobotics.CANSparkBase.ControlType;
     }
 
     // Setting the speed of the motors
-    public void setBottomMotorSpeed(double rpm){
-        bottomMotor.set(rpm); 
+    public void setBottomMotorSpeed(double speed){
+        if(Flags.Shooter.ENABLED) {
+            bottomMotor.set(speed);
+        }
     }
+    /*/
     public void setPivotMotorSpeed(double degrees){
         pivotMotor.set(degrees);
     }
     public void setFlapMotorSpeed(double degrees){
         flapMotor.set(degrees);
-    }
+    } */
 
+    /*
     // Getting
     public double getPivotPosition(){
         return pivotEncoder.getPosition();
@@ -113,17 +117,24 @@ import com.revrobotics.CANSparkBase.ControlType;
     }
     public void setFlapTargetPosition(double degree){
         flapPidController.setReference(degree, ControlType.kPosition);
-    }
+    }*/
     public void setMotorRpm(double rpm){
-        bottomPidController.setReference(rpm, ControlType.kVelocity);
+        if(Flags.Shooter.ENABLED && Flags.Shooter.SHOOTER_RPM_PID_CONTROL) {
+            bottomPidController.setReference(rpm, ControlType.kVelocity);
+        }
     }
+
+    public double getShooterRpm() {
+        return bottomShooterEncoder.getVelocity();
+    }
+    /*
     // Resetting 
     public void resetPivot(){
         pivotEncoder.setPosition(0.0);
     }
     public void resetFlap(){
         flapEncoder.setPosition(0.0);
-    }
+    }*/
  }
 
 

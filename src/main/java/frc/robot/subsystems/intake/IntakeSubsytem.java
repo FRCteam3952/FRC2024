@@ -32,8 +32,8 @@ public class IntakeSubsytem extends SubsystemBase {
     private final DigitalInput pivotUpLimitSwitch;
 
     public IntakeSubsytem() {
-        leaderMotor = new CANSparkMax(PortConstants.TOP_INTAKE_MOTOR_ID, MotorType.kBrushless);
-        followerMotor = new CANSparkMax(PortConstants.BOTTOM_INTAKE_MOTOR_ID, MotorType.kBrushless);
+        leaderMotor = new CANSparkMax(PortConstants.INTAKE_TOP_MOTOR_ID, MotorType.kBrushless);
+        followerMotor = new CANSparkMax(PortConstants.INTAKE_BOTTOM_MOTOR_ID, MotorType.kBrushless);
 
         this.pivotDownLimitSwitch = new DigitalInput(PortConstants.INTAKE_DOWN_LIMIT_SWITCH_PORT);
         this.pivotUpLimitSwitch = new DigitalInput(PortConstants.INTAKE_UP_LIMIT_SWITCH_PORT);
@@ -74,6 +74,9 @@ public class IntakeSubsytem extends SubsystemBase {
         pivotPIDController.setFF(0, 1);
 
         pivotPIDController.setOutputRange(-1, 1, 1);
+
+        this.followerMotor.setOpenLoopRampRate(0.5);
+        this.leaderMotor.setOpenLoopRampRate(0.5);
     }
 
     public void setIntakeSpeed(double speed) {

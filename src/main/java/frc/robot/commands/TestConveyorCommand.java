@@ -1,20 +1,18 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants.OperatorConstants.ControllerConstants;
-import frc.robot.subsystems.intake.IntakeSubsytem;
-import frc.robot.util.ControlHandler;
+import frc.robot.subsystems.conveyor.ConveyorSubsystem;
 import frc.robot.controllers.AbstractController;
 
-public class TestIntakeCommand extends Command {
-    private final IntakeSubsytem intake;
+public class TestConveyorCommand extends Command {
+    private final ConveyorSubsystem conveyor;
     private final AbstractController joystick;
 
-    public TestIntakeCommand(IntakeSubsytem intake, AbstractController joystick) {
-        this.intake = intake;
+    public TestConveyorCommand(ConveyorSubsystem conveyor, AbstractController joystick) {
+        this.conveyor = conveyor;
         this.joystick = joystick;
 
-        addRequirements(intake);
+        addRequirements(conveyor);
     }
 
     @Override
@@ -23,13 +21,7 @@ public class TestIntakeCommand extends Command {
 
     @Override
     public void execute() {
-        if (ControlHandler.get(joystick, ControllerConstants.RUN_INTAKE).getAsBoolean()) {
-            this.intake.setIntakeSpeed(0.8, 0.8);
-        } else if (ControlHandler.get(joystick, ControllerConstants.REVERSE_INTAKE).getAsBoolean()) {
-            this.intake.setIntakeSpeed(-0.2, -0.2);
-        } else {
-            this.intake.setIntakeSpeed(0, 0);
-        }
+        conveyor.setShooterFeederMotorSpeed(-this.joystick.getRightVerticalMovement());
 
         // this.intake.setPivotSpeed(-joystick.getRightVerticalMovement());
 

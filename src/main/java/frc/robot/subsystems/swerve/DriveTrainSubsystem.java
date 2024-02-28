@@ -51,33 +51,33 @@ public class DriveTrainSubsystem extends SubsystemBase {
     private final Translation2d backRightLocation = new Translation2d(-RobotConstants.LEG_LENGTHS_M, -RobotConstants.LEG_LENGTHS_M);
 
     private final SwerveModule frontLeft = new SwerveModule(
-            PortConstants.FRONT_LEFT_DRIVE_MOTOR_ID,
-            PortConstants.FRONT_LEFT_ROTATION_MOTOR_ID,
-            PortConstants.FRONT_LEFT_ROTATION_CANCODER_ID,
+            PortConstants.DTRAIN_FRONT_LEFT_DRIVE_MOTOR_ID,
+            PortConstants.DTRAIN_FRONT_LEFT_ROTATION_MOTOR_ID,
+            PortConstants.DTRAIN_FRONT_LEFT_CANCODER_ID,
             "fL_12",
             INVERT_DRIVE_MOTORS,
             true
     );
     private final SwerveModule frontRight = new SwerveModule(
-            PortConstants.FRONT_RIGHT_DRIVE_MOTOR_ID,
-            PortConstants.FRONT_RIGHT_ROTATION_MOTOR_ID,
-            PortConstants.FRONT_RIGHT_ROTATION_CANCODER_ID,
+            PortConstants.DTRAIN_FRONT_RIGHT_DRIVE_MOTOR_ID,
+            PortConstants.DTRAIN_FRONT_RIGHT_ROTATION_MOTOR_ID,
+            PortConstants.DTRAIN_FRONT_RIGHT_CANCODER_ID,
             "fR_03",
             INVERT_DRIVE_MOTORS,
             true
     );
     private final SwerveModule backLeft = new SwerveModule(
-            PortConstants.BACK_LEFT_DRIVE_MOTOR_ID,
-            PortConstants.BACK_LEFT_ROTATION_MOTOR_ID,
-            PortConstants.BACK_LEFT_ROTATION_CANCODER_ID,
+            PortConstants.DTRAIN_BACK_LEFT_DRIVE_MOTOR_ID,
+            PortConstants.DTRAIN_BACK_LEFT_ROTATION_MOTOR_ID,
+            PortConstants.DTRAIN_BACK_LEFT_CANCODER_ID,
             "bL_06",
             INVERT_DRIVE_MOTORS,
             true
     );
     private final SwerveModule backRight = new SwerveModule(
-            PortConstants.BACK_RIGHT_DRIVE_MOTOR_ID,
-            PortConstants.BACK_RIGHT_ROTATION_MOTOR_ID,
-            PortConstants.BACK_RIGHT_ROTATION_CANCODER_ID,
+            PortConstants.DTRAIN_BACK_RIGHT_DRIVE_MOTOR_ID,
+            PortConstants.DTRAIN_BACK_RIGHT_ROTATION_MOTOR_ID,
+            PortConstants.DTRAIN_BACK_RIGHT_CANCODER_ID,
             "bR_01",
             INVERT_DRIVE_MOTORS,
             true

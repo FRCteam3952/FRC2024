@@ -3,12 +3,19 @@ package frc.robot;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.IntakeAndConveyorCommand;
 import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.ManualDriveCommand;
+import frc.robot.commands.RingHandlingCommand;
 import frc.robot.commands.TestConveyorCommand;
 import frc.robot.commands.TestDriveCommand;
 import frc.robot.commands.TestIntakeCommand;
@@ -45,42 +52,22 @@ public class RobotContainer {
 
     private final GyroPoseEstimator gyroPoseEstimator = new GyroPoseEstimator();
 
+    private final SendableChooser<Command> autonChooser;
+
     public RobotContainer() {
         this.driveTrain = Util.createIfFlagElseNull(DriveTrainSubsystem::new, Flags.DriveTrain.IS_ATTACHED);
         this.intake     = Util.createIfFlagElseNull(IntakeSubsytem::new, Flags.Intake.IS_ATTACHED);
         this.shooter    = Util.createIfFlagElseNull(ShooterSubsystem::new, Flags.Shooter.IS_ATTACHED);
         this.conveyor   = Util.createIfFlagElseNull(ConveyorSubsystem::new, Flags.Conveyor.IS_ATTACHED);
 
-        /*
-        if(Flags.DriveTrain.IS_ATTACHED) {
-            this.driveTrain = new DriveTrainSubsystem();
-        } else {
-            this.driveTrain = null;
-        }
-
-        if(Flags.Intake.IS_ATTACHED) {
-            this.intake = new IntakeSubsytem();
-        } else {
-            this.intake = null;
-        }
-
-        if(Flags.Shooter.IS_ATTACHED) {
-            this.shooter = new ShooterSubsystem();
-        } else {
-            this.shooter = null;
-        }
-
-        if(Flags.Conveyor.IS_ATTACHED) {
-            this.conveyor = new ConveyorSubsystem();
-        } else {
-            this.conveyor = null;
-        }*/
-
         configureBindings();
 
         // Initialize static subsystems (this is a Java thing don't worry about it just copy it so that static blocks run on startup)
         LimeLight.poke();
         RobotGyro.poke();
+
+        this.autonChooser = AutoBuilder.buildAutoChooser();
+        SmartDashboard.putData("choose your auto", this.autonChooser);
     }
 
     private void configureBindings() {
@@ -91,10 +78,14 @@ public class RobotContainer {
     }
 
     public void onRobotInit() {
-        printFlagsClass();
+        uploadFlagsClass();
     }
 
-    private static void printFlagsClass() {
+    /**
+     * This method is used to upload the contents of the {@link frc.robot.Flags Flags} class to NetworkTables.
+     * This is useful for debugging since the flags control robot functionality and allow an uploaded method to quickly check which parts of the robot code are enabled or disabled.
+     */
+    private static void uploadFlagsClass() {
         try {
             Class<Flags> clazz = Flags.class;
             var flagsTable = NetworkTablesUtil.MAIN_ROBOT_TABLE.getSubTable("Flags");
@@ -127,10 +118,6 @@ public class RobotContainer {
         }
     }
 
-    public void onAutonInit() {
-
-    }
-
     public void onTeleopInit() {
         if(Flags.DriveTrain.IS_ATTACHED) {
             if(Flags.DriveTrain.USE_TEST_DRIVE_COMMAND) {
@@ -143,6 +130,8 @@ public class RobotContainer {
         if(Flags.Intake.IS_ATTACHED) {
             if(Flags.Intake.USE_TEST_INTAKE_COMMAND) {
                 this.intake.setDefaultCommand(new TestIntakeCommand(this.intake, this.primaryController));
+            } else if(Flags.Conveyor.IS_ATTACHED && Flags.Shooter.IS_ATTACHED) {
+                this.intake.setDefaultCommand(new RingHandlingCommand(shooter, intake, conveyor, this.primaryController));
             } else {
                 this.intake.setDefaultCommand(new IntakeCommand(this.intake, this.primaryController));
             }
@@ -151,14 +140,23 @@ public class RobotContainer {
         if(Flags.Shooter.IS_ATTACHED) {
             if(Flags.Shooter.USE_TEST_SHOOTER_COMMAND) {
                 this.shooter.setDefaultCommand(new TestShooterCommand(this.shooter, this.primaryController));
+            } else {
+
             }
         }
 
+        /*
         if(Flags.Conveyor.IS_ATTACHED) {
             if(Flags.Conveyor.USE_TEST_CONVEYOR_COMMAND) {
                 this.conveyor.setDefaultCommand(new TestConveyorCommand(this.conveyor, this.primaryController));
+            } else {
+                
             }
-        }
+        }*/
+    }
+
+    public Command getAutonomousCommand() {
+        return this.autonChooser.getSelected();
     }
 
     public void onTeleopPeriodic() {

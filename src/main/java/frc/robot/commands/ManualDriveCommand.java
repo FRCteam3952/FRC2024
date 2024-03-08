@@ -34,7 +34,7 @@ public class ManualDriveCommand extends Command {
         // this.driveTrain.drive(this.joystick.getVerticalMovement());
         double ySpeed = Util.squareKeepSign(this.ySpeedLimiter.calculate(-this.joystick.getLeftVerticalMovement())) * MAX_SPEED_METERS_PER_SEC;
         double xSpeed = Util.squareKeepSign(this.xSpeedLimiter.calculate(-this.joystick.getLeftHorizontalMovement())) * MAX_SPEED_METERS_PER_SEC;
-        double rotSpeed = this.rotLimiter.calculate(-this.joystick.getRightHorizontalMovement());
+        double rotSpeed = this.rotLimiter.calculate(this.joystick.getRightHorizontalMovement());
         // System.out.println("forward speed: " + ySpeed + ", x speed: " + xSpeed);
         // System.out.println("y: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftVerticalMovement()) + ", x: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftHorizontalMovement()));
         this.driveTrain.drive(ySpeed, xSpeed, rotSpeed, true);

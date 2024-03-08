@@ -39,7 +39,7 @@ public class PowerHandler {
     }
 
     public void updateNT() {
-        voltagePublisher.set(this.getVoltage());
-        currentPublisher.set(this.getTotalCurrent());
+        // voltagePublisher.set(this.getVoltage());
+        // currentPublisher.set(this.getTotalCurrent());
     }
 }

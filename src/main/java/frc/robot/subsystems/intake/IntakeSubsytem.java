@@ -168,7 +168,7 @@ public class IntakeSubsytem extends SubsystemBase {
 
         leaderCurrentPublisher.set(this.getLeaderMotorCurrent());
         followerCurrentPublisher.set(this.getFollowerMotorCurrent());
-        pivotCurrentPublisher.set(this.getPivotMotorCurrent());
+        //pivotCurrentPublisher.set(this.getPivotMotorCurrent());
         // System.out.println("piv lim: " + this.isPivotLimitPressed());
         // System.out.println("pivot angle: " + this.getPivotEncoder()); 
     }

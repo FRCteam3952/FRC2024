@@ -88,21 +88,21 @@ public class PS5Controller extends AbstractController {
 
     @Override
     public Trigger leftShoulderButton() {
-        return this.controller.L2();
-    }
-
-    @Override
-    public Trigger rightShoulderButton() {
-        return this.controller.R2();
-    }
-
-    @Override
-    public Trigger leftShoulderTrigger() {
         return this.controller.L1();
     }
 
     @Override
-    public Trigger rightShoulderTrigger() {
+    public Trigger rightShoulderButton() {
         return this.controller.R1();
+    }
+
+    @Override
+    public Trigger leftShoulderTrigger() {
+        return this.controller.L2();
+    }
+
+    @Override
+    public Trigger rightShoulderTrigger() {
+        return this.controller.R2();
     }
 }

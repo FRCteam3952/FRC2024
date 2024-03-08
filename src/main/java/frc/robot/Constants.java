@@ -19,8 +19,12 @@ public final class Constants {
 
         // Should this be here? especially with our new controller system, we could potentially refactor or re-abstract this using another class (maybe even for multiple driver preferences?)
         public static class ControllerConstants {
-            public static final TriggerType RUN_INTAKE = TriggerType.RIGHT_BUTTON;
-            public static final TriggerType REVERSE_INTAKE = TriggerType.LOWER_BUTTON;
+            public static final TriggerType INTAKE_RUN = TriggerType.RIGHT_BUTTON;
+            public static final TriggerType INTAKE_REVERSE = TriggerType.LOWER_BUTTON;
+            public static final TriggerType INTAKE_POS_UP = TriggerType.LEFT_SHOULDER_BUTTON;
+            public static final TriggerType INTAKE_POS_DOWN = TriggerType.LEFT_SHOULDER_TRIGGER;
+
+            public static final TriggerType SHOOTER_RUN = TriggerType.RIGHT_SHOULDER_TRIGGER;
         }
     }
 
@@ -48,8 +52,9 @@ public final class Constants {
      * 
      * 
      * 
-     * 
+     * 21 (CON)
      * 22 (CON)
+     * 23 (CON)
      */
     public static class PortConstants {
         // CAN IDs
@@ -76,9 +81,9 @@ public final class Constants {
         public static final int INTAKE_PIVOT_MOTOR_ID                   = 13;
 
         // Conveyor
-        public static final int CONVEYOR_FEED_TO_SHOOTER_MOTOR_ID       = 22;
-        public static final int CONVEYOR_LEFT_MOTOR_ID                  = -1;
-        public static final int CONVEYOR_RIGHT_MOTOR_ID                 = -1;
+        public static final int CONVEYOR_TO_SHOOTER_MOTOR_ID            = 22;
+        public static final int CONVEYOR_LEFT_MOTOR_ID                  = 23;
+        public static final int CONVEYOR_RIGHT_MOTOR_ID                 = 21;
 
         // Shooter
         public static final int SHOOTER_TOP_MOTOR_ID                    = 16;

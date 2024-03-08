@@ -4,6 +4,10 @@
 
 package frc.robot.subsystems.swerve;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.ReplanningConfig;
+
 /*
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
@@ -134,7 +138,6 @@ public class DriveTrainSubsystem extends SubsystemBase {
     public DriveTrainSubsystem() {
         RobotGyro.resetGyroAngle();
 
-        /*
         AutoBuilder.configureHolonomic(
             this::getPose,
             this::setPose,
@@ -143,7 +146,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             new HolonomicPathFollowerConfig(3, Math.PI, new ReplanningConfig()),
             () -> !NetworkTablesUtil.getIfOnBlueTeam(),
             this
-        );*/
+        );
     }
 
     /**
@@ -304,10 +307,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
         this.updateOdometry();
         // System.out.println(this.getPose());
 
-        fLAmp.set(frontLeft.getDriveAmperage());
-        fRAmp.set(frontRight.getDriveAmperage());
-        bLAmp.set(backLeft.getDriveAmperage());
-        bRAmp.set(backRight.getDriveAmperage());
+        // fLAmp.set(frontLeft.getDriveAmperage());
+        // fRAmp.set(frontRight.getDriveAmperage());
+        // bLAmp.set(backLeft.getDriveAmperage());
+        // bRAmp.set(backRight.getDriveAmperage());
     }
 
     /**

@@ -52,6 +52,10 @@ public final class Constants {
      * 22 (CON)
      */
     public static class PortConstants {
+        // Climber port constants
+        public static final int CLIMBER_MOTOR_1_ID = 0xdeadbeef;
+        public static final int CLIMBER_MOTOR_2_ID = 0xdeadbeef;
+
         // CAN IDs
         
         // Drive Train

@@ -1,6 +1,7 @@
 package frc.robot.subsystems.climber;
 
 
+import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
@@ -8,50 +9,74 @@ import com.revrobotics.SparkPIDController;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PortConstants;
+import frc.robot.Flags;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.DoubleConsumer;
+import java.util.function.DoubleSupplier;
+import java.util.stream.Collectors;
 
 public class ClimberSubsystem extends SubsystemBase {
 
-    private final CANSparkMax motor1;
-    private final CANSparkMax motor2;
+    private static final int LEFT_MOTOR = 1;
+    private static final int RIGHT_MOTOR = 2;
 
-    private final RelativeEncoder motor1Encoder;
-    private final RelativeEncoder motor2Encoder;
+    private final List<CANSparkMax> motors;
+    private final List<RelativeEncoder> encoders;
+    private final List<SparkPIDController> pids;
 
-    private final SparkPIDController motor1Pid;
-    private final SparkPIDController motor2Pid;
+    public final DoubleConsumer setLeftMotorSpeed, setRightMotorSpeed,
+                                setLeftMotorPosition, setRightMotorPosition;
+
+    public final DoubleSupplier getLeftMotorPosition, getRightMotorPosition,
+                                getLeftMotorAmperage, getRightMotorAmperage;
 
     public ClimberSubsystem() {
-        motor1 = new CANSparkMax(PortConstants.CLIMBER_MOTOR_1_ID, MotorType.kBrushless);
-        motor2 = new CANSparkMax(PortConstants.CLIMBER_MOTOR_2_ID, MotorType.kBrushless);
+        motors = new ArrayList<>(Arrays.asList(
+            new CANSparkMax(PortConstants.CLIMBER_MOTOR_1_ID, MotorType.kBrushless),
+            new CANSparkMax(PortConstants.CLIMBER_MOTOR_2_ID, MotorType.kBrushless)
+        ));
 
-        motor1Encoder = motor1.getEncoder();
-        motor2Encoder = motor2.getEncoder();
+        encoders = motors.stream().map(CANSparkBase::getEncoder)      .collect(Collectors.toList());
+        pids     = motors.stream().map(CANSparkBase::getPIDController).collect(Collectors.toList());
 
-        motor1Pid = motor1.getPIDController();
-        motor2Pid = motor2.getPIDController();
+        pids.forEach((pid) -> {
+            pid.setP(0);
+            pid.setI(0);
+            pid.setD(0);
+            pid.setFF(0);
+        });
 
-        zeroPid(motor1Pid);
-        zeroPid(motor2Pid);
+        setLeftMotorSpeed     = motorSpeedSetter(LEFT_MOTOR);
+        getLeftMotorAmperage  = motorAmperageGetter(LEFT_MOTOR);
+        getLeftMotorPosition  = motorPositionGetter(LEFT_MOTOR);
+        setLeftMotorPosition  = motorPositionSetter(LEFT_MOTOR);
+
+        setRightMotorSpeed    = motorSpeedSetter(RIGHT_MOTOR);
+        setRightMotorPosition = motorSpeedSetter(RIGHT_MOTOR);
+        getRightMotorPosition = motorPositionGetter(RIGHT_MOTOR);
+        getRightMotorAmperage = motorAmperageGetter(RIGHT_MOTOR);
     }
 
-    public void zeroPid(SparkPIDController pid) {
-        pid.setP(0);
-        pid.setI(0);
-        pid.setD(0);
-        pid.setFF(0);
+    public DoubleConsumer motorSpeedSetter(int motorId) {
+        return Flags.Climber.ENABLED ?
+               (double speed) -> motors.get(motorId).set(speed) :
+               (double speed) -> {};
     }
 
-    public double getMotor1Amperage() { return motor1.getOutputCurrent(); }
-    public double getMotor2Amperage() { return motor2.getOutputCurrent(); }
+    public DoubleConsumer motorPositionSetter(int motorId) {
+        return Flags.Climber.ENABLED ?
+                (double position) -> encoders.get(motorId).setPosition(position) :
+                (double position) -> {};
+    }
 
-    public double getMotor1Position() { return motor1Encoder.getPosition(); }
-    public double getMotor2Position() { return motor2Encoder.getPosition(); }
+    public DoubleSupplier motorAmperageGetter(int motorId) {
+        return () -> motors.get(motorId).getOutputCurrent();
+    }
 
-    public void setMotor1Position(double position) { motor1Encoder.setPosition(position); }
-    public void setMotor2Position(double position) { motor2Encoder.setPosition(position); }
-
-    public void setMotor1Speed(double speed) { motor1.set(speed); }
-    public void setMotor2Speed(double speed) { motor2.set(speed); }
+    public DoubleSupplier motorPositionGetter(int motorId) {
+        return () -> encoders.get(motorId).getPosition();
+    }
 }

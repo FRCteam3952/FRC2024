@@ -112,10 +112,10 @@ public class SwerveModule {
         this.driveMotor.enableVoltageCompensation(10);
         this.drivePIDController = this.driveMotor.getPIDController();
 
-        this.drivePIDController.setP(0.34);
+        this.drivePIDController.setP(0.52);
         this.drivePIDController.setI(0);
-        this.drivePIDController.setD(0);
-        this.drivePIDController.setFF(0.2);
+        this.drivePIDController.setD(0.2);
+        this.drivePIDController.setFF(0.3);
         this.drivePIDController.setOutputRange(-1, 1);
 
         this.turnMotor.enableVoltageCompensation(10);

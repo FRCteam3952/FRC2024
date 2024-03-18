@@ -4,8 +4,9 @@ import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.OperatorConstants.ControllerConstants;
 import frc.robot.subsystems.conveyor.ConveyorSubsystem;
-import frc.robot.subsystems.intake.IntakeSubsytem;
+import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
+import frc.robot.subsystems.staticsubsystems.ColorSensor;
 import frc.robot.util.ControlHandler;
 import frc.robot.util.NetworkTablesUtil;
 import frc.robot.controllers.AbstractController;
@@ -14,13 +15,22 @@ import frc.robot.controllers.AbstractController;
  * also known as SonicTheHedgehogCommand
  */
 public class RingHandlingCommand extends Command {
+    private static final int HANDLE_NOTE_FOR_TICKS = 10; // 50 tps
+
     private final ShooterSubsystem shooter;
-    private final IntakeSubsytem intake;
+    private final IntakeSubsystem intake;
     private final ConveyorSubsystem conveyor;
     private final AbstractController joystick;
     
     private static final DoublePublisher rpmPub = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("shooter_rpm").publish();
-    public RingHandlingCommand(ShooterSubsystem shooter, IntakeSubsytem intake, ConveyorSubsystem conveyor, AbstractController joystick) {
+
+    private boolean intakeToggledOn = false;
+    private boolean buttonWasPressedLastTick = false;
+
+    private boolean hasHandledNote = false;
+    private int noteHandledForTicks = 0;
+
+    public RingHandlingCommand(ShooterSubsystem shooter, IntakeSubsystem intake, ConveyorSubsystem conveyor, AbstractController joystick) {
         this.shooter = shooter;
         this.intake = intake;
         this.conveyor = conveyor;
@@ -36,13 +46,33 @@ public class RingHandlingCommand extends Command {
     @Override
     public void execute() {
         if (ControlHandler.get(joystick, ControllerConstants.INTAKE_RUN).getAsBoolean()) {
-            this.intake.setIntakeSpeed(0.8, 0.8);
-            this.conveyor.setConveyorMotorsSpeed(1);
-            this.conveyor.setShooterFeederMotorSpeed(1);
-        } else if (ControlHandler.get(joystick, ControllerConstants.INTAKE_REVERSE).getAsBoolean()) {
+            if(!buttonWasPressedLastTick) {
+                intakeToggledOn = !intakeToggledOn;
+                buttonWasPressedLastTick = true;
+            }
+        } else {
+            buttonWasPressedLastTick = false;
+        }
+        
+        if (ControlHandler.get(joystick, ControllerConstants.INTAKE_REVERSE).getAsBoolean()) { // eject takes priority
             this.intake.setIntakeSpeed(-0.2, -0.2);
-            this.conveyor.setConveyorMotorsSpeed(-0.2);
-            this.conveyor.setShooterFeederMotorSpeed(-0.2);
+            this.conveyor.setConveyorMotorsSpeed(0.2);
+            this.conveyor.setShooterFeederMotorSpeed(-1);
+        } else if(false && ColorSensor.isNoteColor() && !hasHandledNote) {
+            this.intake.setIntakeSpeed(0);
+            this.conveyor.setConveyorMotorsSpeed(0);
+            if(noteHandledForTicks == HANDLE_NOTE_FOR_TICKS) {
+                hasHandledNote = true;
+                this.conveyor.setShooterFeederMotorSpeed(0);
+                noteHandledForTicks = 0;
+            } else {
+                this.conveyor.setShooterFeederMotorSpeed(-0.1);
+                noteHandledForTicks++;
+            }
+        } else if(intakeToggledOn) {
+            this.intake.setIntakeSpeed(1, 1);
+            this.conveyor.setConveyorMotorsSpeed(-1);
+            this.conveyor.setShooterFeederMotorSpeed(1);
         } else {
             this.intake.setIntakeSpeed(0, 0);
             this.conveyor.setConveyorMotorsSpeed(0);
@@ -51,8 +81,8 @@ public class RingHandlingCommand extends Command {
 
         // when the shooter is up high enough we GO BRRRR
         if(joystick.rightShoulderTrigger().getAsBoolean()) {
-            shooter.setMotorRpm(700);
-            if(shooter.getShooterRpm() > 500) {
+            shooter.setMotorRpm(1200);
+            if(shooter.getShooterRpm() > 1150) {
                 this.conveyor.setShooterFeederMotorSpeed(1);
             }
         } else {

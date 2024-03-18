@@ -6,14 +6,17 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 import com.revrobotics.CANSparkBase.ControlType;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Flags;
 import frc.robot.Constants.PortConstants;
 import frc.robot.util.NetworkTablesUtil;
+import frc.robot.util.ThroughboreEncoder;
+import frc.robot.util.Util;
 
-public class IntakeSubsytem extends SubsystemBase {
+public class IntakeSubsystem extends SubsystemBase {
     private static final double LEADER_CURRENT_SPIKE_THRESH = 17.5;
     private static final double FOLLOWER_CURRENT_SPIKE_THRESH = 15;
 
@@ -26,16 +29,18 @@ public class IntakeSubsytem extends SubsystemBase {
     private final CANSparkMax pivotMotor;
 
     private final RelativeEncoder pivotEncoder;
-    private final SparkPIDController pivotPIDController;
-
-    private final DigitalInput pivotDownLimitSwitch;
+    // private final SparkPIDController pivotPIDController;
+    private final PIDController pivotPIDController;
     private final DigitalInput pivotUpLimitSwitch;
 
-    public IntakeSubsytem() {
+    private final ThroughboreEncoder throughboreEncoder;
+
+    private double intakeAngleSetpoint = 0;
+
+    public IntakeSubsystem() {
         leaderMotor = new CANSparkMax(PortConstants.INTAKE_TOP_MOTOR_ID, MotorType.kBrushless);
         followerMotor = new CANSparkMax(PortConstants.INTAKE_BOTTOM_MOTOR_ID, MotorType.kBrushless);
 
-        this.pivotDownLimitSwitch = new DigitalInput(PortConstants.INTAKE_DOWN_LIMIT_SWITCH_PORT);
         this.pivotUpLimitSwitch = new DigitalInput(PortConstants.INTAKE_UP_LIMIT_SWITCH_PORT);
         
         leaderMotor.setInverted(true);
@@ -55,12 +60,17 @@ public class IntakeSubsytem extends SubsystemBase {
         // this.leaderMotor.setSecondaryCurrentLimit(60);
         // this.followerMotor.setSecondaryCurrentLimit(60);
 
-        pivotEncoder.setPositionConversionFactor(1); // 90deg = 20rot
+        pivotEncoder.setPositionConversionFactor(70 / 20d); // 70deg = 20rot
         pivotEncoder.setPosition(0);
 
+        this.throughboreEncoder = new ThroughboreEncoder(PortConstants.INTAKE_ABSOLUTE_ENCODER_ABS_PORT, PortConstants.INTAKE_ABSOLUTE_ENCODER_A_PORT, PortConstants.INTAKE_ABSOLUTE_ENCODER_B_PORT, 0.955, true);
+        
+        this.pivotPIDController = new PIDController(9e-3, 0, 1e-4);
+
+        /*
         pivotPIDController = pivotMotor.getPIDController();
 
-        pivotPIDController.setP(0, 0); // DOWN
+        pivotPIDController.setP(1.85e-2, 0); // DOWN
         pivotPIDController.setI(0, 0);
         pivotPIDController.setD(0, 0);
         pivotPIDController.setFF(0, 0);
@@ -73,7 +83,7 @@ public class IntakeSubsytem extends SubsystemBase {
         pivotPIDController.setD(0, 1);
         pivotPIDController.setFF(0, 1);
 
-        pivotPIDController.setOutputRange(-1, 1, 1);
+        pivotPIDController.setOutputRange(-1, 1, 1); */
 
         this.followerMotor.setOpenLoopRampRate(0.5);
         this.leaderMotor.setOpenLoopRampRate(0.5);
@@ -105,10 +115,6 @@ public class IntakeSubsytem extends SubsystemBase {
     public void setPivotEncoderPosition(double degrees) {
         pivotEncoder.setPosition(degrees);
     }
-
-    public double getPivotEncoder() {
-        return pivotEncoder.getPosition();
-    }
    
     public void resetPivotEncoder() {
         setPivotEncoderPosition(0.0);
@@ -126,10 +132,6 @@ public class IntakeSubsytem extends SubsystemBase {
         return pivotMotor.getOutputCurrent();
     }
 
-    public boolean isPivotDownLimitPressed() {
-        return !this.pivotDownLimitSwitch.get();
-    }
-
     public boolean isPivotUpLimitPressed() {
         return this.pivotUpLimitSwitch.get();
     }
@@ -140,13 +142,8 @@ public class IntakeSubsytem extends SubsystemBase {
      */
     public void pivotToAngle(double degrees) {
         if(Flags.Intake.ENABLED && Flags.Intake.PIVOT_ENABLED && Flags.Intake.PIVOT_PID_CONTROL) {
-            if(degrees - this.getPivotPosition() < 0) {
-                System.out.println("going down");
-                pivotPIDController.setReference(degrees, ControlType.kPosition, 0, 0.6);
-            } else {
-                System.out.println("going up");
-                pivotPIDController.setReference(degrees, ControlType.kPosition, 1, 0);
-            }
+            this.intakeAngleSetpoint = degrees;
+            // pivotPIDController.setReference(degrees, ControlType.kPosition, 0);
         }
     }
 
@@ -158,18 +155,35 @@ public class IntakeSubsytem extends SubsystemBase {
         return this.getFollowerMotorCurrent() > FOLLOWER_CURRENT_SPIKE_THRESH;
     }
 
+    public ThroughboreEncoder getThroughboreEncoder() {
+        return this.throughboreEncoder;
+    }
+
     @Override
     public void periodic() {
-        if(this.isPivotDownLimitPressed()) {
-            this.setPivotEncoderPosition(-90);
-        } else if(this.isPivotUpLimitPressed()) {
-            this.setPivotEncoderPosition(0);
+        /*
+        if(this.isPivotUpLimitPressed()) {
+            this.setPivotEncoderPosition(70);
+        }*/
+
+        if(Flags.Intake.ENABLED && Flags.Intake.PIVOT_ENABLED && Flags.Intake.PIVOT_PID_CONTROL) {
+            boolean goingDown = this.throughboreEncoder.getAbsoluteEncoderValue() - this.intakeAngleSetpoint > 0;
+            double speed = this.pivotPIDController.calculate(this.throughboreEncoder.getAbsoluteEncoderValue(), this.intakeAngleSetpoint);
+            // System.out.println("going to: " + this.intakeAngleSetpoint + ", desired pivot speed: " + speed);
+            if(goingDown) {
+                // this.pivotMotor.set(speed);
+            } else if(!goingDown) { // going up
+                this.pivotMotor.set(speed + 0.02); // feedforward
+            } else {
+                this.pivotMotor.set(0);
+            }
         }
 
         leaderCurrentPublisher.set(this.getLeaderMotorCurrent());
         followerCurrentPublisher.set(this.getFollowerMotorCurrent());
         //pivotCurrentPublisher.set(this.getPivotMotorCurrent());
-        // System.out.println("piv lim: " + this.isPivotLimitPressed());
         // System.out.println("pivot angle: " + this.getPivotEncoder()); 
+        // System.out.println(this.throughboreEncoder.getAbsoluteEncoderValue());
+        //System.out.println(this.getPivotPosition());
     }
 }

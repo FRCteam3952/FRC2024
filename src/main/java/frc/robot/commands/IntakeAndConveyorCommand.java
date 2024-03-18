@@ -3,16 +3,16 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.OperatorConstants.ControllerConstants;
 import frc.robot.subsystems.conveyor.ConveyorSubsystem;
-import frc.robot.subsystems.intake.IntakeSubsytem;
+import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.util.ControlHandler;
 import frc.robot.controllers.AbstractController;
 
 public class IntakeAndConveyorCommand extends Command {
-    private final IntakeSubsytem intake;
+    private final IntakeSubsystem intake;
     private final ConveyorSubsystem conveyor;
     private final AbstractController joystick;
 
-    public IntakeAndConveyorCommand(IntakeSubsytem intake, ConveyorSubsystem conveyor, AbstractController joystick) {
+    public IntakeAndConveyorCommand(IntakeSubsystem intake, ConveyorSubsystem conveyor, AbstractController joystick) {
         this.intake = intake;
         this.conveyor = conveyor;
         this.joystick = joystick;

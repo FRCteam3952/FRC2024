@@ -7,7 +7,10 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Flags;
 import frc.robot.util.NetworkTablesUtil;
+import frc.robot.util.ThroughboreEncoder;
 import frc.robot.Constants.PortConstants;
+import frc.robot.subsystems.staticsubsystems.ColorSensor;
+
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 import com.revrobotics.CANSparkBase.ControlType;
@@ -15,52 +18,43 @@ import com.revrobotics.CANSparkBase.IdleMode;
 
 // Shoutout to Avni whose code I reverse engineered - Fox in a box(awesome sause)
 
- public class ShooterSubsystem extends SubsystemBase{
-    //make the motor variables
+public class ShooterSubsystem extends SubsystemBase {
     private final CANSparkMax topMotor;
     private final CANSparkMax bottomMotor;
-    // private final CANSparkMax pivotMotor;
-    // private final CANSparkMax flapMotor;
-    //make the motor encoder variables
-    // private final RelativeEncoder pivotEncoder;
-    // private final RelativeEncoder flapEncoder;
+
+    private final CANSparkMax pivotMotor;
+    private final RelativeEncoder pivotEncoder;
     private final RelativeEncoder bottomShooterEncoder;
-    //make the limit switch variables
-    // private final DigitalInput pivotLimitSwitch;
-    // private final DigitalInput flapLimitSwitch;
-    //PID stuff
-    // private final SparkPIDController pivotPidController;
-    // private final SparkPIDController flapPidController;
-    private final SparkPIDController bottomPidController;
     
+    private final DigitalInput pivotDownLimitSwitch;
+
+    private final SparkPIDController pivotPidController;
+    private final SparkPIDController bottomPidController;
     
     private static final DoublePublisher lAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("lAmp").publish();
     private static final DoublePublisher rAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("rAmp").publish();
 
+    private final ThroughboreEncoder throughboreEncoder;
 
-    public ShooterSubsystem(){
-        // intialize motors
-        topMotor = new CANSparkMax(PortConstants.SHOOTER_TOP_MOTOR_ID, MotorType.kBrushless);
-        bottomMotor = new CANSparkMax(PortConstants.SHOOTER_BOTTOM_MOTOR_ID, MotorType.kBrushless);
+    public ShooterSubsystem() {
+        topMotor = new CANSparkMax(PortConstants.SHOOTER_LEFT_MOTOR_ID, MotorType.kBrushless);
+        bottomMotor = new CANSparkMax(PortConstants.SHOOTER_RIGHT_MOTOR_ID, MotorType.kBrushless);
 
         topMotor.setIdleMode(IdleMode.kCoast);
         bottomMotor.setIdleMode(IdleMode.kCoast);
-        // pivotMotor = new CANSparkMax(PortConstants.SHOOTER_PIVOT_MOTOR_ID, MotorType.kBrushless);
-        // flapMotor = new CANSparkMax(PortConstants.SHOOTER_FLAP_MOTOR_ID, MotorType.kBrushless);
-        // intialize encoders
-        // pivotEncoder = pivotMotor.getEncoder();
-        // flapEncoder = flapMotor.getEncoder();
-        //makes topMotor follow bottomMotor
+        pivotMotor = new CANSparkMax(PortConstants.SHOOTER_PIVOT_MOTOR_ID, MotorType.kBrushless);
+        
+        pivotEncoder = pivotMotor.getEncoder();
         bottomShooterEncoder = bottomMotor.getEncoder();
+        bottomMotor.setInverted(true);
         topMotor.follow(bottomMotor, true);
-        //intialize limit switch
-        // pivotLimitSwitch = new DigitalInput(PortConstants.SHOOTER_PIVOT_LIMIT_SWITCH);
-        // flapLimitSwitch = new DigitalInput(PortConstants.SHOOTER_PIVOT_LIMIT_SWITCH);
+        
+        pivotDownLimitSwitch = new DigitalInput(PortConstants.SHOOTER_DOWN_LIMIT_SWITCH_PORT);
 
-        //intialize PIDs
-        // pivotPidController = pivotMotor.getPIDController();
-        // flapPidController = flapMotor.getPIDController();
+        pivotPidController = pivotMotor.getPIDController();
         bottomPidController = bottomMotor.getPIDController();
+
+        this.throughboreEncoder = new ThroughboreEncoder(PortConstants.SHOOTER_ABSOLUTE_ENCODER_ABS_PORT, PortConstants.SHOOTER_ABSOLUTE_ENCODER_A_PORT, PortConstants.SHOOTER_ABSOLUTE_ENCODER_B_PORT);
         
         /*
         //intializen PID values to 0
@@ -68,11 +62,7 @@ import com.revrobotics.CANSparkBase.IdleMode;
         pivotPidController.setI(0);
         pivotPidController.setD(0);
         pivotPidController.setFF(0);
-
-        flapPidController.setP(0);
-        flapPidController.setI(0);
-        flapPidController.setD(0);
-        flapPidController.setFF(0);*/
+        */
 
         bottomPidController.setP(7.31415926e-4, 0);
         bottomPidController.setI(0, 0);
@@ -91,31 +81,38 @@ import com.revrobotics.CANSparkBase.IdleMode;
             bottomMotor.set(speed);
         }
     }
-    /*/
+    
     public void setPivotMotorSpeed(double degrees){
         pivotMotor.set(degrees);
     }
-    public void setFlapMotorSpeed(double degrees){
-        flapMotor.set(degrees);
-    } */
 
-    /*
     // Getting
     public double getPivotPosition(){
         return pivotEncoder.getPosition();
     }
-    public double getFlapPosition(){
-        return flapEncoder.getPosition();
-    }
+    
+    /*
     public boolean getPivotLimitSwitch(){
         return pivotLimitSwitch.get();
-    }
-    public boolean getFlapLimitSwitch(){
-        return flapLimitSwitch.get();
-    }
+    }*/
+
     public double getPivotVelocity(){
         return pivotEncoder.getVelocity();
     }
+
+    /*
+    public void setFlapMotorSpeed(double degrees){
+        flapMotor.set(degrees);
+    }
+
+    public double getFlapPosition(){
+        return flapEncoder.getPosition();
+    }
+
+    public boolean getFlapLimitSwitch(){
+        return flapLimitSwitch.get();
+    }
+    
     public double getFlapVelocity(){
         return flapEncoder.getVelocity();
     }
@@ -158,8 +155,13 @@ import com.revrobotics.CANSparkBase.IdleMode;
     }*/
     @Override
     public void periodic() {
+        //System.out.println(ColorSensor.colorAsRGBString(ColorSensor.getColor()));
+        if(ColorSensor.isNoteColor()) {
+            // System.out.println("omg its a note");
+        }
         //lAmp.set(this.topMotor.getOutputCurrent());
         //rAmp.set(this.bottomMotor.getOutputCurrent());
+        // System.out.println(this.throughboreEncoder.getAbsoluteEncoderValue());
     }
  }
 

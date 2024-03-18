@@ -46,7 +46,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
     public static final double MAX_ANGULAR_SPEED = Math.PI; // 1/2 rotation per second
     private static final double SMART_OPTIMIZATION_THRESH_M_PER_SEC = 2;
 
-    private static final boolean INVERT_DRIVE_MOTORS = false;
+    private static final boolean INVERT_DRIVE_MOTORS = true;
 
     // Location of each swerve drive, relative to motor center. +X -> moving to front of robot, +Y -> moving to left of robot. IMPORTANT.
     private final Translation2d frontLeftLocation = new Translation2d(RobotConstants.LEG_LENGTHS_M, RobotConstants.LEG_LENGTHS_M);
@@ -143,7 +143,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
             this::setPose,
             this::getRobotRelativeChassisSpeeds,
             (chassisSpeeds) -> this.consumeRawModuleStates(kinematics.toSwerveModuleStates(chassisSpeeds)),
-            new HolonomicPathFollowerConfig(3, Math.PI, new ReplanningConfig()),
+            new HolonomicPathFollowerConfig(2.00, Math.PI, new ReplanningConfig(true, true, 1, 0.1)),
             () -> !NetworkTablesUtil.getIfOnBlueTeam(),
             this
         );
@@ -307,10 +307,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
         this.updateOdometry();
         // System.out.println(this.getPose());
 
-        // fLAmp.set(frontLeft.getDriveAmperage());
-        // fRAmp.set(frontRight.getDriveAmperage());
-        // bLAmp.set(backLeft.getDriveAmperage());
-        // bRAmp.set(backRight.getDriveAmperage());
+        fLAmp.set(frontLeft.getDriveAmperage());
+        fRAmp.set(frontRight.getDriveAmperage());
+        bLAmp.set(backLeft.getDriveAmperage());
+        bRAmp.set(backRight.getDriveAmperage());
     }
 
     /**

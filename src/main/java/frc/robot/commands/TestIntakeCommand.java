@@ -2,15 +2,15 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.OperatorConstants.ControllerConstants;
-import frc.robot.subsystems.intake.IntakeSubsytem;
+import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.util.ControlHandler;
 import frc.robot.controllers.AbstractController;
 
 public class TestIntakeCommand extends Command {
-    private final IntakeSubsytem intake;
+    private final IntakeSubsystem intake;
     private final AbstractController joystick;
 
-    public TestIntakeCommand(IntakeSubsytem intake, AbstractController joystick) {
+    public TestIntakeCommand(IntakeSubsystem intake, AbstractController joystick) {
         this.intake = intake;
         this.joystick = joystick;
 
@@ -31,7 +31,8 @@ public class TestIntakeCommand extends Command {
             this.intake.setIntakeSpeed(0, 0);
         }
 
-        // this.intake.setPivotSpeed(-joystick.getRightVerticalMovement());
+        // System.out.println(joystick.getRightVerticalMovement());
+        this.intake.setPivotSpeed(-joystick.getRightVerticalMovement());
 
         // System.out.println("intake position: " + Util.nearestHundredth(intake.getPivotPosition()));
 

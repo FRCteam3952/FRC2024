@@ -80,32 +80,35 @@ public final class Constants {
         public static final int DTRAIN_BACK_RIGHT_CANCODER_ID           = 1;
         
         // Intake
-        public static final int INTAKE_TOP_MOTOR_ID                     = 14;
-        public static final int INTAKE_BOTTOM_MOTOR_ID                  = 15;
-        public static final int INTAKE_PIVOT_MOTOR_ID                   = 13;
+        public static final int INTAKE_TOP_MOTOR_ID                     = 13;
+        public static final int INTAKE_BOTTOM_MOTOR_ID                  = 14;
+        public static final int INTAKE_PIVOT_MOTOR_ID                   = 23;
 
         // Conveyor
         public static final int CONVEYOR_TO_SHOOTER_MOTOR_ID            = 22;
-        public static final int CONVEYOR_LEFT_MOTOR_ID                  = 23;
-        public static final int CONVEYOR_RIGHT_MOTOR_ID                 = 21;
+        public static final int CONVEYOR_LEFT_MOTOR_ID                  = 15;
+        public static final int CONVEYOR_RIGHT_MOTOR_ID                 = 18;
 
         // Shooter
-        public static final int SHOOTER_TOP_MOTOR_ID                    = 16;
-        public static final int SHOOTER_BOTTOM_MOTOR_ID                 = 17;
-        public static final int SHOOTER_FLAP_MOTOR_ID                   = -1; 
-        public static final int SHOOTER_PIVOT_MOTOR_ID                  = -1;
-
+        public static final int SHOOTER_LEFT_MOTOR_ID                   = 21;
+        public static final int SHOOTER_RIGHT_MOTOR_ID                  = 16;
+        public static final int SHOOTER_PIVOT_MOTOR_ID                  = 17;
         
 
         // DIO Ports
         
         // Intake
-        public static final int INTAKE_DOWN_LIMIT_SWITCH_PORT           = 1;
-        public static final int INTAKE_UP_LIMIT_SWITCH_PORT             = 3;
+        public static final int INTAKE_UP_LIMIT_SWITCH_PORT             = 7;
 
+        public static final int INTAKE_ABSOLUTE_ENCODER_ABS_PORT        = 3;
+        public static final int INTAKE_ABSOLUTE_ENCODER_A_PORT          = 4;
+        public static final int INTAKE_ABSOLUTE_ENCODER_B_PORT          = 5;
         // Shooter
-        public static final int SHOOTER_PIVOT_LIMIT_SWITCH_PORT         = -1; 
-        public static final int SHOOTER_FLAP_LIMIT_SWITCH_PORT          = -1; 
+        public static final int SHOOTER_DOWN_LIMIT_SWITCH_PORT          = 6;
+
+        public static final int SHOOTER_ABSOLUTE_ENCODER_ABS_PORT       = 0;
+        public static final int SHOOTER_ABSOLUTE_ENCODER_A_PORT         = 1;
+        public static final int SHOOTER_ABSOLUTE_ENCODER_B_PORT         = 2;
     }
 
     public static class DriveConstants {

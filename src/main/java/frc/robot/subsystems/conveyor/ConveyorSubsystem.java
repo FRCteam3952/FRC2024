@@ -21,7 +21,12 @@ public class ConveyorSubsystem extends SubsystemBase {
         this.conveyorMotorFollower = new CANSparkMax(PortConstants.CONVEYOR_LEFT_MOTOR_ID, MotorType.kBrushless);
         this.conveyorMotorLeader = new CANSparkMax(PortConstants.CONVEYOR_RIGHT_MOTOR_ID, MotorType.kBrushless);
 
-        this.conveyorMotorFollower.follow(conveyorMotorLeader, true);
+        // this.conveyorMotorFollower.follow(conveyorMotorLeader, true);
+    }
+
+    public void setConveyorMotorsSpeed(double speedLeft, double speedRight) {
+        this.conveyorMotorFollower.set(speedLeft);
+        this.conveyorMotorLeader.set(speedRight);
     }
 
     public void setShooterFeederMotorSpeed(double speed) {
@@ -29,7 +34,7 @@ public class ConveyorSubsystem extends SubsystemBase {
     }
 
     public void setConveyorMotorsSpeed(double speed) {
-        this.conveyorMotorLeader.set(speed);
+        this.setConveyorMotorsSpeed(speed, speed);
     }
 
     @Override

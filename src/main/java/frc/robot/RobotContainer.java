@@ -27,7 +27,7 @@ import frc.robot.controllers.PS5Controller;
 import frc.robot.subsystems.swerve.DriveTrainSubsystem;
 import frc.robot.subsystems.PowerHandler;
 import frc.robot.subsystems.conveyor.ConveyorSubsystem;
-import frc.robot.subsystems.intake.IntakeSubsytem;
+import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.staticsubsystems.LimeLight;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
@@ -38,7 +38,7 @@ import frc.robot.util.Util;
 
 public class RobotContainer {
     private final DriveTrainSubsystem driveTrain;
-    private final IntakeSubsytem intake;
+    private final IntakeSubsystem intake;
     private final ShooterSubsystem shooter;
     private final ConveyorSubsystem conveyor;
 
@@ -56,7 +56,7 @@ public class RobotContainer {
 
     public RobotContainer() {
         this.driveTrain = Util.createIfFlagElseNull(DriveTrainSubsystem::new, Flags.DriveTrain.IS_ATTACHED);
-        this.intake     = Util.createIfFlagElseNull(IntakeSubsytem::new, Flags.Intake.IS_ATTACHED);
+        this.intake     = Util.createIfFlagElseNull(IntakeSubsystem::new, Flags.Intake.IS_ATTACHED);
         this.shooter    = Util.createIfFlagElseNull(ShooterSubsystem::new, Flags.Shooter.IS_ATTACHED);
         this.conveyor   = Util.createIfFlagElseNull(ConveyorSubsystem::new, Flags.Conveyor.IS_ATTACHED);
 

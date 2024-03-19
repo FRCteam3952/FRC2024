@@ -25,13 +25,15 @@ public class TestShooterCommand extends Command {
     @Override
     public void execute() {
         // shooter.setBottomMotorSpeed(-this.joystick.getRightVerticalMovement());
+        this.shooter.flapToAngle(180);
+        /*
         if (joystick.rightShoulderTrigger().getAsBoolean()) {
             shooter.setMotorRpm(700);
         } else {
             shooter.stopShooterPID();
         }
         // System.out.println("RPM: " + shooter.getShooterRpm());
-        rpmPub.set(shooter.getShooterRpm());
+        rpmPub.set(shooter.getShooterRpm());*/
     }
 
     // Called once the command ends or is interrupted.

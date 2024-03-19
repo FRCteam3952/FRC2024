@@ -28,8 +28,7 @@ public final class Constants {
 
             public static final TriggerType INTAKE_RUN = TriggerType.RIGHT_BUTTON;
             public static final TriggerType INTAKE_REVERSE = TriggerType.LOWER_BUTTON;
-            public static final TriggerType INTAKE_POS_UP = TriggerType.LEFT_SHOULDER_BUTTON;
-            public static final TriggerType INTAKE_POS_DOWN = TriggerType.LEFT_SHOULDER_TRIGGER;
+            public static final TriggerType INTAKE_POS_TOGGLE = TriggerType.LEFT_SHOULDER_BUTTON;
 
             public static final TriggerType SHOOTER_RUN = TriggerType.RIGHT_SHOULDER_TRIGGER;
         }
@@ -71,6 +70,8 @@ public final class Constants {
      * 3 (INT)
      * 4 (INT)
      * 5 (INT)
+     * 
+     * PWMs USED:
      * 
      */
     public static class PortConstants {
@@ -123,6 +124,13 @@ public final class Constants {
         public static final int SHOOTER_ABSOLUTE_ENCODER_ABS_PORT       = 0;
         public static final int SHOOTER_ABSOLUTE_ENCODER_A_PORT         = 1;
         public static final int SHOOTER_ABSOLUTE_ENCODER_B_PORT         = 2;
+
+        
+        // PWM Ports
+
+        // Shooter
+        public static final int SHOOTER_LEFT_SERVO_PORT                 = 1;
+        public static final int SHOOTER_RIGHT_SERVO_PORT                = 0;
     }
 
     public static class DriveConstants {

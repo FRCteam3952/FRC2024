@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants.OperatorConstants.ControllerConstants;
 import frc.robot.controllers.AbstractController;
 import frc.robot.subsystems.conveyor.ConveyorSubsystem;
@@ -15,18 +16,16 @@ import frc.robot.util.NetworkTablesUtil;
  * also known as SonicTheHedgehogCommand
  */
 public class RingHandlingCommand extends Command {
-    private static final int HANDLE_NOTE_FOR_TICKS = 10; // 50 tps
     private static final DoublePublisher rpmPub = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("shooter_rpm").publish();
     private final ShooterSubsystem shooter;
     private final IntakeSubsystem intake;
     private final ConveyorSubsystem conveyor;
     private final AbstractController joystick;
-    private final int noteHandledForTicks = 0;
     private boolean intakeToggledOn = false;
-    private boolean buttonWasPressedLastTick = false;
     private boolean hasHandledNote = false;
     private int reverseTimerElapsed = 0;
     private boolean shouldReverse = false;
+    private boolean intakeUp = false;
 
     public RingHandlingCommand(ShooterSubsystem shooter, IntakeSubsystem intake, ConveyorSubsystem conveyor, AbstractController joystick) {
         this.shooter = shooter;
@@ -49,15 +48,24 @@ public class RingHandlingCommand extends Command {
             this.shooter.pivotToAngle(30);
         }
 
-        if (ControlHandler.get(joystick, ControllerConstants.INTAKE_RUN).getAsBoolean()) {
-            if (!buttonWasPressedLastTick) {
-                System.out.println("toggling intatke on");
-                intakeToggledOn = !intakeToggledOn;
-                buttonWasPressedLastTick = true;
-            }
-        } else {
-            buttonWasPressedLastTick = false;
-        }
+        ControlHandler.get(joystick, ControllerConstants.INTAKE_RUN)
+            .onTrue(new InstantCommand(() -> this.intakeToggledOn = true))
+            .onFalse(new InstantCommand(() -> this.intakeToggledOn = false));
+        
+        ControlHandler.get(joystick, ControllerConstants.INTAKE_POS_TOGGLE)
+            .onTrue(new InstantCommand(() -> {
+                intakeUp = !intakeUp;
+                if(intakeUp) {
+                    double throughboreValue = this.intake.getThroughboreEncoder().getAbsoluteEncoderValue();
+                    if (throughboreValue > 0 && throughboreValue < 3) {
+                        this.intake.pivotToAngle(70 + throughboreValue);
+                    } else {
+                        this.intake.pivotToAngle(70);
+                    }
+                } else {
+                    this.intake.pivotToAngle(0);
+                }
+            }));
 
         if (shouldReverse && reverseTimerElapsed++ < 1) {
             System.out.println("reversing at " + reverseTimerElapsed);

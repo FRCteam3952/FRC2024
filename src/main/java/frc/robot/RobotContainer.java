@@ -59,8 +59,12 @@ public class RobotContainer {
         RobotGyro.poke();
         ColorSensor.initialize();
 
-        this.autonChooser = AutoBuilder.buildAutoChooser();
-        SmartDashboard.putData("choose your auto", this.autonChooser);
+        if(Flags.DriveTrain.IS_ATTACHED) {
+            this.autonChooser = AutoBuilder.buildAutoChooser();
+            SmartDashboard.putData("choose your auto", this.autonChooser);
+        } else {
+            this.autonChooser = null;
+        }
     }
 
     /**
@@ -155,8 +159,9 @@ public class RobotContainer {
     public void onTeleopPeriodic() {
         this.powerHandler.updateNT();
     }
-
+    
     public void onRobotPeriodic() {
         this.gyroPoseEstimator.update();
+        System.out.println(NetworkTablesUtil.getJetsonAprilTagPoses());
     }
 }

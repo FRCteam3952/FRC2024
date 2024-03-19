@@ -8,6 +8,7 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PortConstants;
 import frc.robot.Flags;
@@ -30,6 +31,9 @@ public class ShooterSubsystem extends SubsystemBase {
     private final SparkPIDController leftPidController;
     private final ThroughboreEncoder throughboreEncoder;
 
+    private final Servo leftServo;
+    private final Servo rightServo;
+
     private double pivotAngleSetpoint = 30;
 
     public ShooterSubsystem() {
@@ -48,6 +52,9 @@ public class ShooterSubsystem extends SubsystemBase {
         // leftMotor.follow(rightMotor, true);
         pivotMotor.setInverted(false);
         pivotEncoder.setPosition(0);
+
+        leftServo = new Servo(PortConstants.SHOOTER_LEFT_SERVO_PORT);
+        rightServo = new Servo(PortConstants.SHOOTER_RIGHT_SERVO_PORT);
 
         pivotPidController = new PIDController(7.3e-3, 0, 0);
         rightPidController = rightMotor.getPIDController();
@@ -80,6 +87,11 @@ public class ShooterSubsystem extends SubsystemBase {
         leftPidController.setFF(0, 1);
     }
 
+    public void flapToAngle(double degrees) {
+        this.leftServo.setAngle(180 - degrees);
+        this.rightServo.setAngle(degrees);
+    }
+
     public void pivotToAngle(double degrees) {
         if (Flags.Shooter.ENABLED && Flags.Shooter.PIVOT_ENABLED && Flags.Shooter.PIVOT_PID_CONTROL) {
             this.pivotAngleSetpoint = degrees;
@@ -101,44 +113,11 @@ public class ShooterSubsystem extends SubsystemBase {
     public double getPivotPosition() {
         return pivotEncoder.getPosition();
     }
-    
-    /*
-    public boolean getPivotLimitSwitch(){
-        return pivotLimitSwitch.get();
-    }*/
 
     public double getPivotVelocity() {
         return pivotEncoder.getVelocity();
     }
 
-    /*
-    public void setFlapMotorSpeed(double degrees){
-        flapMotor.set(degrees);
-    }
-
-    public double getFlapPosition(){
-        return flapEncoder.getPosition();
-    }
-
-    public boolean getFlapLimitSwitch(){
-        return flapLimitSwitch.get();
-    }
-    
-    public double getFlapVelocity(){
-        return flapEncoder.getVelocity();
-    }
-
-    // Setting 
-    public void setPivotEncoderPosition(double position){
-        pivotEncoder.setPosition(position);
-    }
-    public void setFlapEncoderPosition(double position){
-        flapEncoder.setPosition(position);
-    }
-
-    public void setFlapTargetPosition(double degree){
-        flapPidController.setReference(degree, ControlType.kPosition);
-    }*/
     public void setMotorRpm(double rpm) {
         if (Flags.Shooter.ENABLED && Flags.Shooter.SHOOTER_RPM_PID_CONTROL) {
             rightPidController.setReference(rpm, ControlType.kVelocity, 0);
@@ -160,14 +139,6 @@ public class ShooterSubsystem extends SubsystemBase {
         return bottomShooterEncoder.getVelocity();
     }
 
-    /*
-    // Resetting 
-    public void resetPivot(){
-        pivotEncoder.setPosition(0.0);
-    }
-    public void resetFlap(){
-        flapEncoder.setPosition(0.0);
-    }*/
     @Override
     public void periodic() {
         if (Flags.Shooter.ENABLED && Flags.Shooter.PIVOT_ENABLED && Flags.Shooter.PIVOT_PID_CONTROL) {

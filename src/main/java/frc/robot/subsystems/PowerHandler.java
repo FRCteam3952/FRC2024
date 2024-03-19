@@ -1,10 +1,10 @@
 package frc.robot.subsystems;
 
-import java.lang.reflect.Field;
-
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import frc.robot.util.NetworkTablesUtil;
+
+import java.lang.reflect.Field;
 
 public class PowerHandler {
     private static final DoublePublisher voltagePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("battery_voltage").publish();
@@ -20,10 +20,11 @@ public class PowerHandler {
         var f = pdp.getStickyFaults();
         System.out.println("PDP FAULTS: ");
         try {
-            for(Field field : f.getClass().getDeclaredFields()) {
+            for (Field field : f.getClass().getDeclaredFields()) {
                 System.out.println(field.getName() + ": " + field.getBoolean(f));
             }
-        } catch (Exception e) {};
+        } catch (Exception ignored) {
+        }
     }
 
     public double getVoltage() {

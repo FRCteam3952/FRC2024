@@ -3,13 +3,15 @@ package frc.robot.subsystems.staticsubsystems;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
 
-import static edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis; // i dont wanna type it
+import static edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
+
 /**
  * Wrapper around gyro
  */
 
 public final class RobotGyro {
     private static final ADIS16470_IMU gyro = new ADIS16470_IMU();
+    private static double angleAdjust = 0;
 
     static {
         // gyro.setYawAxis(ADIS16470_IMU.IMUAxis.kZ);
@@ -27,10 +29,9 @@ public final class RobotGyro {
         System.out.println("RobotGyro init");
     }
 
-    private static double angleAdjust = 0;
-
     /**
      * Get the robot's current rotation as a {@link Rotation2d}
+     *
      * @return The robot's current rotation as a {@link Rotation2d}
      */
     public static Rotation2d getRotation2d() {
@@ -39,6 +40,7 @@ public final class RobotGyro {
 
     /**
      * Get the robot's current yaw value.
+     *
      * @return The robot's current yaw value.
      */
     public static double getGyroAngleDegreesYaw() {
@@ -47,6 +49,7 @@ public final class RobotGyro {
 
     /**
      * Get the robot's current roll value.
+     *
      * @return The robot's current roll value.
      */
     public static double getGyroAngleDegreesRoll() {
@@ -55,6 +58,7 @@ public final class RobotGyro {
 
     /**
      * Get the robot's current pitch value.
+     *
      * @return The robot's current pitch value.
      */
     public static double getGyroAngleDegreesPitch() {
@@ -83,6 +87,7 @@ public final class RobotGyro {
 
     /**
      * Set the gyro's current heading to a specific value.
+     *
      * @param deg The desired current heading, in degrees.
      */
     public static void setGyroAngle(double deg) {

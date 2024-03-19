@@ -7,19 +7,16 @@ package frc.robot.subsystems.swerve;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.ReplanningConfig;
-
-/*
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
-import com.pathplanner.lib.util.ReplanningConfig;
-*/
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.*;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -30,30 +27,28 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import frc.robot.Constants.DriveConstants;
-import frc.robot.Constants.RobotConstants;
-import frc.robot.commands.ManualDriveCommand;
-import frc.robot.Flags;
-import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.Constants.PortConstants;
+import frc.robot.Constants.RobotConstants;
+import frc.robot.Flags;
+import frc.robot.commands.ManualDriveCommand;
+import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.util.NetworkTablesUtil;
-import frc.robot.util.Util;
 
 /**
  * Represents a swerve drive style drivetrain.
  */
 public class DriveTrainSubsystem extends SubsystemBase {
     // public static final double MAX_SPEED = 3.0; // 3 meters per second
-    public static final double MAX_ANGULAR_SPEED = Math.PI; // 1/2 rotation per second
+    // public static final double MAX_ANGULAR_SPEED = Math.PI; // 1/2 rotation per second
     private static final double SMART_OPTIMIZATION_THRESH_M_PER_SEC = 2;
 
-    private static final boolean INVERT_DRIVE_MOTORS = false;
-
+    private static final boolean INVERT_DRIVE_MOTORS = true;
+    static SwerveModuleState[] optimizedTargetStates = new SwerveModuleState[4]; // for debugging purposes
     // Location of each swerve drive, relative to motor center. +X -> moving to front of robot, +Y -> moving to left of robot. IMPORTANT.
     private final Translation2d frontLeftLocation = new Translation2d(RobotConstants.LEG_LENGTHS_M, RobotConstants.LEG_LENGTHS_M);
     private final Translation2d frontRightLocation = new Translation2d(RobotConstants.LEG_LENGTHS_M, -RobotConstants.LEG_LENGTHS_M);
     private final Translation2d backLeftLocation = new Translation2d(-RobotConstants.LEG_LENGTHS_M, RobotConstants.LEG_LENGTHS_M);
     private final Translation2d backRightLocation = new Translation2d(-RobotConstants.LEG_LENGTHS_M, -RobotConstants.LEG_LENGTHS_M);
-
     private final SwerveModule frontLeft = new SwerveModule(
             PortConstants.DTRAIN_FRONT_LEFT_DRIVE_MOTOR_ID,
             PortConstants.DTRAIN_FRONT_LEFT_ROTATION_MOTOR_ID,
@@ -86,28 +81,52 @@ public class DriveTrainSubsystem extends SubsystemBase {
             INVERT_DRIVE_MOTORS,
             true
     );
-
     public final SwerveModule[] swerveModules = {frontLeft, frontRight, backLeft, backRight};
-
     private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(frontLeftLocation, frontRightLocation, backLeftLocation, backRightLocation);
-
     private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, RobotGyro.getRotation2d(), this.getAbsoluteModulePositions(), new Pose2d());
+    // uploads the intended, estimated, and actual states of the robot.
+    StructArrayPublisher<SwerveModuleState> targetSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("TargetStates", SwerveModuleState.struct).publish();
+    StructArrayPublisher<SwerveModuleState> realSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("ActualStates", SwerveModuleState.struct).publish();
+    StructArrayPublisher<SwerveModuleState> absoluteAbsoluteSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("AbsoluteAbsolute", SwerveModuleState.struct).publish();
+    StructArrayPublisher<SwerveModuleState> relativeSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("RelativeStates", SwerveModuleState.struct).publish();
+    // publish robot position relative to field
+    StructPublisher<Pose2d> posePositionPublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructTopic("estimatedOdometryPosition", Pose2d.struct).publish();
+    StructPublisher<Rotation2d> robotRotationPublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructTopic("rotation", Rotation2d.struct).publish();
+    DoublePublisher fLAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("fl_amp").publish();
+    DoublePublisher fRAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("fr_amp").publish();
+    DoublePublisher bLAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("bl_amp").publish();
+    DoublePublisher bRAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("br_amp").publish();
+    public DriveTrainSubsystem() {
+        RobotGyro.resetGyroAngle();
+
+        AutoBuilder.configureHolonomic(
+                this::getPose,
+                this::setPose,
+                this::getRobotRelativeChassisSpeeds,
+                (chassisSpeeds) -> this.consumeRawModuleStates(kinematics.toSwerveModuleStates(chassisSpeeds)),
+                new HolonomicPathFollowerConfig(2.00, Math.PI, new ReplanningConfig(true, true, 1, 0.1)),
+                () -> !NetworkTablesUtil.getIfOnBlueTeam(),
+                this
+        );
+    }
 
     /**
      * Get the absolute positions of all swerve modules, using the CANCoder's *relative* mode for the module heading. Arranged as FL, FR, BL, BR
+     *
      * @return The position of all swerve modules, with module heading determined by the CANCoder's relative mode.
      */
     public SwerveModulePosition[] getAbsoluteModulePositions() {
-        return new SwerveModulePosition[] {
-            frontLeft.getAbsoluteModulePosition(),
-            frontRight.getAbsoluteModulePosition(),
-            backLeft.getAbsoluteModulePosition(),
-            backRight.getAbsoluteModulePosition()
+        return new SwerveModulePosition[]{
+                frontLeft.getAbsoluteModulePosition(),
+                frontRight.getAbsoluteModulePosition(),
+                backLeft.getAbsoluteModulePosition(),
+                backRight.getAbsoluteModulePosition()
         };
     }
 
     /**
      * The robot's current estimated pose, as estimated by the pose estimator using motor rotations and vision measurements.
+     *
      * @return The current pose of the robot.
      */
     public Pose2d getPose() {
@@ -116,6 +135,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     /**
      * Set the robot's current pose
+     *
      * @param pose The desired current code
      */
     public void setPose(Pose2d pose) {
@@ -124,35 +144,23 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     /**
      * Get the current chassis speeds of the robot, relative to the robot.
+     *
      * @return The current chassis speeds of the robot, relative to the robot.
      */
     public ChassisSpeeds getRobotRelativeChassisSpeeds() {
         return kinematics.toChassisSpeeds(
-            frontLeft.getAbsoluteModuleState(),
-            frontRight.getAbsoluteModuleState(),
-            backLeft.getAbsoluteModuleState(),
-            backRight.getAbsoluteModuleState()
-        );
-    }
-
-    public DriveTrainSubsystem() {
-        RobotGyro.resetGyroAngle();
-
-        AutoBuilder.configureHolonomic(
-            this::getPose,
-            this::setPose,
-            this::getRobotRelativeChassisSpeeds,
-            (chassisSpeeds) -> this.consumeRawModuleStates(kinematics.toSwerveModuleStates(chassisSpeeds)),
-            new HolonomicPathFollowerConfig(3, Math.PI, new ReplanningConfig()),
-            () -> !NetworkTablesUtil.getIfOnBlueTeam(),
-            this
+                frontLeft.getAbsoluteModuleState(),
+                frontRight.getAbsoluteModuleState(),
+                backLeft.getAbsoluteModuleState(),
+                backRight.getAbsoluteModuleState()
         );
     }
 
     /**
      * Get a {@link Command} to rotate all modules to absolute zero. This command will time itself out if incomplete after 1 second. Regardless of completion, all non-absolutely-absolute encoders (see {@link SwerveModule#resetEncodersToAbsoluteValue()}) are set to the absolutely-absolute encoder's value.
+     *
      * @return A {@link Command} to rotate all modules to absolute zero.
-     * @see {@link SwerveModule#resetEncodersToAbsoluteValue()}
+     * @see SwerveModule#resetEncodersToAbsoluteValue()
      */
     public Command rotateToAbsoluteZeroCommand() {
         return new RunCommand(() -> {
@@ -161,35 +169,18 @@ public class DriveTrainSubsystem extends SubsystemBase {
             backLeft.rotateToAbsoluteZero(2);
             backRight.rotateToAbsoluteZero(3);
         }, this).until(() -> { // Until all modules have a heading of <= 0.03 rad
-            for(SwerveModule module : swerveModules) {
-                if(Math.abs(module.getAbsoluteModulePosition().angle.getRadians()) > 0.04) {
+            for (SwerveModule module : swerveModules) {
+                if (Math.abs(module.getAbsoluteModulePosition().angle.getRadians()) > 0.04) {
                     return false;
                 }
             }
             return true;
         }).withTimeout(1).andThen(() -> { // or it takes more than one second
-            for(SwerveModule module : swerveModules) { // then we want to set all of them to the absolutely-absolute value (not zero, since we might not actually be at zero)
+            for (SwerveModule module : swerveModules) { // then we want to set all of them to the absolutely-absolute value (not zero, since we might not actually be at zero)
                 module.resetEncodersToAbsoluteValue();
             }
         });
     }
-
-    // uploads the intended, estimated, and actual states of the robot.
-    StructArrayPublisher<SwerveModuleState> targetSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("TargetStates", SwerveModuleState.struct).publish();
-    StructArrayPublisher<SwerveModuleState> realSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("ActualStates", SwerveModuleState.struct).publish();
-    StructArrayPublisher<SwerveModuleState> absoluteAbsoluteSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("AbsoluteAbsolute", SwerveModuleState.struct).publish();
-
-    StructArrayPublisher<SwerveModuleState> relativeSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("RelativeStates", SwerveModuleState.struct).publish();
-    // publish robot position relative to field
-    StructPublisher<Pose2d> posePositionPublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructTopic("estimatedOdometryPosition", Pose2d.struct).publish();
-    StructPublisher<Rotation2d> robotRotationPublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructTopic("rotation", Rotation2d.struct).publish();
-
-    static SwerveModuleState[] optimizedTargetStates = new SwerveModuleState[4]; // for debugging purposes
-
-    DoublePublisher fLAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("fl_amp").publish();
-    DoublePublisher fRAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("fr_amp").publish();
-    DoublePublisher bLAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("bl_amp").publish();
-    DoublePublisher bRAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("br_amp").publish();
 
     /**
      * Method to drive the robot using joystick info.
@@ -200,7 +191,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
      * @param fieldRelative Whether the provided x and y speeds are relative to the field.
      */
     public void drive(double forwardSpeed, double sidewaysSpeed, double rotSpeed, boolean fieldRelative) {
-        if(Flags.DriveTrain.ENABLED) {
+        if (Flags.DriveTrain.ENABLED) {
             // System.out.println("targets: x: " + xSpeed + " y: " + ySpeed + " rot: " + rot);
             // System.out.println("Gyro angle: " + RobotGyro.getRotation2d().getDegrees());
             var swerveModuleStates = kinematics.toSwerveModuleStates(fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed, RobotGyro.getRotation2d()) : new ChassisSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed));
@@ -213,7 +204,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
                     break;
                 }
             }
-            if(shouldOptimize || !Flags.DriveTrain.SPEED_BASED_SWERVE_MODULE_OPTIMIZATION) {
+            if (shouldOptimize || !Flags.DriveTrain.SPEED_BASED_SWERVE_MODULE_OPTIMIZATION) {
                 // System.out.println("Optimizing");
                 frontLeft.setDesiredState(swerveModuleStates[0], 0);
                 frontRight.setDesiredState(swerveModuleStates[1], 1);
@@ -233,6 +224,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     /**
      * Set all drive motor speeds to a specified value without any PID control.
+     *
      * @param speed The desired speed, [-1, 1]
      */
     public void directDriveSpeed(double speed) { // INCHES: 10 rot ~= 18.25, ~ 9 rot ~= 15.75
@@ -244,6 +236,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     /**
      * Set all turn motor speeds to a specified value without any PID control.
+     *
      * @param speed The desired speed, [-1, 1]
      */
     public void directTurnSpeed(double speed) {
@@ -255,6 +248,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     /**
      * Set all drive motor voltages to a specified value without any PID control.
+     *
      * @param volts The desired voltage output
      */
     public void directDriveVoltage(double volts) {
@@ -266,6 +260,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     /**
      * Consumes a set of raw {@link SwerveModuleState}s, setting the modules to target those states.
+     *
      * @param states An array of 4 desired states, in the order FL, FR, BL, BR.
      */
     public void consumeRawModuleStates(SwerveModuleState[] states) {
@@ -284,7 +279,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
         this.backLeft.stop();
         this.backRight.stop();
     }
-    
+
     @Override
     public void periodic() {
         //publishes each wheel information to network table for debugging
@@ -307,28 +302,29 @@ public class DriveTrainSubsystem extends SubsystemBase {
         this.updateOdometry();
         // System.out.println(this.getPose());
 
-        // fLAmp.set(frontLeft.getDriveAmperage());
-        // fRAmp.set(frontRight.getDriveAmperage());
-        // bLAmp.set(backLeft.getDriveAmperage());
-        // bRAmp.set(backRight.getDriveAmperage());
+        fLAmp.set(frontLeft.getDriveAmperage());
+        fRAmp.set(frontRight.getDriveAmperage());
+        bLAmp.set(backLeft.getDriveAmperage());
+        bRAmp.set(backRight.getDriveAmperage());
     }
 
     /**
      * Generates a command to follow a given trajectory, then stops at the end if desired.
+     *
      * @param trajectory The desired trajectory to follow.
-     * @param stopOnEnd Whether to set speeds to 0 at the end.
-     * @return
+     * @param stopOnEnd  Whether to set speeds to 0 at the end.
+     * @return A command to follow the trajectory. This command must be scheduled manually.
      */
     public Command generateTrajectoryFollowerCommand(Trajectory trajectory, boolean stopOnEnd) {
         return new SwerveControllerCommand(
-            trajectory,
-            this::getPose,
-            this.kinematics,
-            new PIDController(DriveConstants.TRAJ_X_CONTROLLER_KP, 0, 0),
-            new PIDController(DriveConstants.TRAJ_Y_CONTROLLER_KP, 0, 0),
-            new ProfiledPIDController(DriveConstants.TRAJ_THETA_CONTROLLER_KP, 0, 0, new TrapezoidProfile.Constraints(DriveConstants.TRAJ_MAX_ANG_VELO, DriveConstants.TRAJ_MAX_ANG_ACCEL)),
-            this::consumeRawModuleStates,
-            this
+                trajectory,
+                this::getPose,
+                this.kinematics,
+                new PIDController(DriveConstants.TRAJ_X_CONTROLLER_KP, 0, 0),
+                new PIDController(DriveConstants.TRAJ_Y_CONTROLLER_KP, 0, 0),
+                new ProfiledPIDController(DriveConstants.TRAJ_THETA_CONTROLLER_KP, 0, 0, new TrapezoidProfile.Constraints(DriveConstants.TRAJ_MAX_ANG_VELO, DriveConstants.TRAJ_MAX_ANG_ACCEL)),
+                this::consumeRawModuleStates,
+                this
         ).andThen(() -> {
             if (stopOnEnd) {
                 drive(0, 0, 0, false);

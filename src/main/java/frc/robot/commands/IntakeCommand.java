@@ -1,16 +1,16 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.intake.IntakeSubsytem;
-import frc.robot.util.ControlHandler;
 import frc.robot.Constants.OperatorConstants.ControllerConstants;
 import frc.robot.controllers.AbstractController;
+import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.util.ControlHandler;
 
 public class IntakeCommand extends Command {
-    private final IntakeSubsytem intake;
+    private final IntakeSubsystem intake;
     private final AbstractController joystick;
 
-    public IntakeCommand(IntakeSubsytem intake, AbstractController joystick) {
+    public IntakeCommand(IntakeSubsystem intake, AbstractController joystick) {
         this.intake = intake;
         this.joystick = joystick;
 
@@ -31,10 +31,15 @@ public class IntakeCommand extends Command {
             this.intake.setIntakeSpeed(0, 0);
         }
 
-        if(joystick.leftShoulderButton().getAsBoolean()) {
+        if (joystick.leftShoulderButton().getAsBoolean()) {
+            double throughboreValue = this.intake.getThroughboreEncoder().getAbsoluteEncoderValue();
+            if (throughboreValue > 0 && throughboreValue < 3) {
+                this.intake.pivotToAngle(70 + throughboreValue);
+            } else {
+                this.intake.pivotToAngle(70);
+            }
+        } else if (joystick.leftShoulderTrigger().getAsBoolean()) {
             this.intake.pivotToAngle(0);
-        } else if(joystick.leftShoulderTrigger().getAsBoolean()) {
-            this.intake.pivotToAngle(-90);
         }
 
         // this.intake.setPivotSpeed(-joystick.getRightVerticalMovement());

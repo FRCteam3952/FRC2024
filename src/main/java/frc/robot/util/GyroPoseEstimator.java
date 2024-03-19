@@ -37,12 +37,12 @@ public class GyroPoseEstimator {
         return this.position;
     }
 
-    public void resetPosition() {
-        this.setPosition(new Translation3d());
-    }
-
     public void setPosition(Translation3d newPos) {
         this.position = newPos;
+    }
+
+    public void resetPosition() {
+        this.setPosition(new Translation3d());
     }
 
     public Translation3d getVelocity() {

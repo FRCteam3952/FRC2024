@@ -22,8 +22,8 @@ import java.util.stream.Stream;
 
 public class ClimberSubsystem extends SubsystemBase {
 
-    private static final int LEFT_MOTOR = 1;
-    private static final int RIGHT_MOTOR = 2;
+    private static final int LEFT_MOTOR = 0;
+    private static final int RIGHT_MOTOR = 1;
 
     private final List<CANSparkMax> motors;
     private final List<RelativeEncoder> encoders;

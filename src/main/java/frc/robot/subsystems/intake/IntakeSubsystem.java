@@ -12,7 +12,6 @@ import frc.robot.util.NetworkTablesUtil;
 import frc.robot.util.ThroughboreEncoder;
 
 public class IntakeSubsystem extends SubsystemBase {
-public class IntakeSubsytem extends SubsystemBase { // i love subsytems ❤️
     private static final double LEADER_CURRENT_SPIKE_THRESH = 17.5;
     private static final double FOLLOWER_CURRENT_SPIKE_THRESH = 15;
 

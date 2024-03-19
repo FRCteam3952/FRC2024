@@ -6,7 +6,7 @@ import frc.robot.Constants;
 import frc.robot.Flags;
 import frc.robot.controllers.AbstractController;
 import frc.robot.subsystems.climber.ClimberSubsystem;
-import frc.robot.subsystems.intake.IntakeSubsytem;
+import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.subsystems.swerve.DriveTrainSubsystem;
@@ -17,14 +17,14 @@ public class ClimbCommand extends Command {
 //    private final AbstractController joystick;
 
     private final ShooterSubsystem shooter;
-    private final IntakeSubsytem intake;
+    private final IntakeSubsystem intake;
     private final ClimberSubsystem climber;
 
     public static final double MAX_SPEED_METERS_PER_SEC = Flags.DriveTrain.LOWER_MAX_SPEED ? 1.5 : 3;
 
     public ClimbCommand(
             ShooterSubsystem shooter,
-            IntakeSubsytem intake,
+            IntakeSubsystem intake,
             ClimberSubsystem climber
     ) {
         this.shooter = shooter;
@@ -83,24 +83,11 @@ public class ClimbCommand extends Command {
     public void execute() {
         setClimberSpeeds();
 
+        // fully extend intake & shooter
         double pitch = RobotGyro.getGyroAngleDegreesPitch(); // if the gyro is sideways just change this so it is actual pitch
 
-
-
-//        double pitchDegreesToMotorSpeeds = 0.01;
-//        double maximumOffset = 5;
-//
-//        // Bad design, temporary unless it works
-//        if (pitch > maximumOffset) {
-//            shooter.setBottomMotorSpeed(pitchDegreesToMotorSpeeds * pitch);
-//            intake.setPivotSpeed(-pitchDegreesToMotorSpeeds * pitch);
-//        } else if (Math.abs(pitch) < maximumOffset) {
-//            shooter.setBottomMotorSpeed(0);
-//                intake.setPivotSpeed(0);
-//            } else {
-//                shooter.setBottomMotorSpeed(-pitchDegreesToMotorSpeeds * pitch);
-//                intake.setPivotSpeed(pitchDegreesToMotorSpeeds * pitch);
-//            }
+        double intakePosition  = this.intake .getPivotPosition();
+        double shooterPosition = this.shooter.getPivotPosition();
     }
 
     // Called once the command ends or is interrupted.

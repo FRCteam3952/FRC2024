@@ -41,5 +41,9 @@ public class ConveyorSubsystem extends SubsystemBase {
     public void periodic() {
         leftCurrentPublisher.set(this.conveyorMotorFollower.getOutputCurrent());
         rightCurrentPublisher.set(this.conveyorMotorLeader.getOutputCurrent());
+
+        //if(Math.abs(conveyorMotorFollower.get()) < 0.02) {
+        //    System.out.println("left conveyor motor is at 0");
+        //}
     }
 }

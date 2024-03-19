@@ -86,8 +86,8 @@ public final class Constants {
 
         // Conveyor
         public static final int CONVEYOR_TO_SHOOTER_MOTOR_ID            = 22;
-        public static final int CONVEYOR_LEFT_MOTOR_ID                  = 15;
-        public static final int CONVEYOR_RIGHT_MOTOR_ID                 = 18;
+        public static final int CONVEYOR_LEFT_MOTOR_ID                  = 18;
+        public static final int CONVEYOR_RIGHT_MOTOR_ID                 = 15;
 
         // Shooter
         public static final int SHOOTER_LEFT_MOTOR_ID                   = 21;

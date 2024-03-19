@@ -29,6 +29,7 @@ import frc.robot.subsystems.PowerHandler;
 import frc.robot.subsystems.conveyor.ConveyorSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
+import frc.robot.subsystems.staticsubsystems.ColorSensor;
 import frc.robot.subsystems.staticsubsystems.LimeLight;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.Constants.OperatorConstants;
@@ -65,6 +66,7 @@ public class RobotContainer {
         // Initialize static subsystems (this is a Java thing don't worry about it just copy it so that static blocks run on startup)
         LimeLight.poke();
         RobotGyro.poke();
+        ColorSensor.initialize();
 
         this.autonChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("choose your auto", this.autonChooser);

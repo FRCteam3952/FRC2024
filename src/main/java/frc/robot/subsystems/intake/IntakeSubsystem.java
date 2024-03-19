@@ -3,8 +3,6 @@ package frc.robot.subsystems.intake;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkPIDController;
-import com.revrobotics.CANSparkBase.ControlType;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -35,7 +33,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private final ThroughboreEncoder throughboreEncoder;
 
-    private double intakeAngleSetpoint = 0;
+    private double pivotAngleSetpoint = 0;
 
     public IntakeSubsystem() {
         leaderMotor = new CANSparkMax(PortConstants.INTAKE_TOP_MOTOR_ID, MotorType.kBrushless);
@@ -142,8 +140,7 @@ public class IntakeSubsystem extends SubsystemBase {
      */
     public void pivotToAngle(double degrees) {
         if(Flags.Intake.ENABLED && Flags.Intake.PIVOT_ENABLED && Flags.Intake.PIVOT_PID_CONTROL) {
-            this.intakeAngleSetpoint = degrees;
-            // pivotPIDController.setReference(degrees, ControlType.kPosition, 0);
+            this.pivotAngleSetpoint = degrees;
         }
     }
 
@@ -167,8 +164,8 @@ public class IntakeSubsystem extends SubsystemBase {
         }*/
 
         if(Flags.Intake.ENABLED && Flags.Intake.PIVOT_ENABLED && Flags.Intake.PIVOT_PID_CONTROL) {
-            boolean goingDown = this.throughboreEncoder.getAbsoluteEncoderValue() - this.intakeAngleSetpoint > 0;
-            double speed = this.pivotPIDController.calculate(this.throughboreEncoder.getAbsoluteEncoderValue(), this.intakeAngleSetpoint);
+            boolean goingDown = this.throughboreEncoder.getAbsoluteEncoderValue() - this.pivotAngleSetpoint > 0;
+            double speed = this.pivotPIDController.calculate(this.throughboreEncoder.getAbsoluteEncoderValue(), this.pivotAngleSetpoint);
             // System.out.println("going to: " + this.intakeAngleSetpoint + ", desired pivot speed: " + speed);
             if(goingDown) {
                 // this.pivotMotor.set(speed);
@@ -183,7 +180,7 @@ public class IntakeSubsystem extends SubsystemBase {
         followerCurrentPublisher.set(this.getFollowerMotorCurrent());
         //pivotCurrentPublisher.set(this.getPivotMotorCurrent());
         // System.out.println("pivot angle: " + this.getPivotEncoder()); 
-        // System.out.println(this.throughboreEncoder.getAbsoluteEncoderValue());
+        // System.out.println("intake throughbore: " + this.throughboreEncoder.getAbsoluteEncoderValue());
         //System.out.println(this.getPivotPosition());
     }
 }

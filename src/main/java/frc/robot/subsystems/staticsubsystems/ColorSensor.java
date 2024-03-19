@@ -6,7 +6,6 @@ import com.revrobotics.ColorSensorV3;
 
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.util.Color;
-import frc.robot.Flags;
 
 public final class ColorSensor {
     private static final Color NOTE_COLOR = new Color(132, 96, 27);
@@ -27,8 +26,11 @@ public final class ColorSensor {
      * @return Whether the color readout matches the target note color.
      */
     public static boolean isNoteColor() {
-        ColorMatchResult matchResult = colorMatcher.matchClosestColor(getColor());
-        // System.out.println(colorAsRGBString(matchResult.color));
+        ColorMatchResult matchResult = colorMatcher.matchColor(getColor());
+        if(matchResult == null) {
+            return false;
+        }
+        System.out.println("match result: " + colorAsRGBString(matchResult.color));
         return matchResult.color == NOTE_COLOR;
     }
 

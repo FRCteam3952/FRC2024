@@ -147,7 +147,7 @@ public class SwerveModule {
      */
     public void resetEncodersToAbsoluteValue() {
         // this.turnAbsoluteEncoder.setPosition(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
-        // this.turnEncoder.setPosition(this.getTurnAbsolutelyAbsolutePosition());
+        this.turnEncoder.setPosition(this.getTurnAbsEncoderPosition());
     }
 
     /**

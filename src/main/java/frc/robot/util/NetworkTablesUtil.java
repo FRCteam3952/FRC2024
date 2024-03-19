@@ -1,9 +1,12 @@
 package frc.robot.util;
 
-import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.CoordinateSystem;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Quaternion;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.networktables.*;
@@ -14,6 +17,7 @@ import frc.robot.Constants.NetworkTablesConstants;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class NetworkTablesUtil {
     private static final NetworkTableInstance INSTANCE = NetworkTableInstance.getDefault();
@@ -21,6 +25,8 @@ public class NetworkTablesUtil {
     private static final Map<String, GenericSubscriber> subscribers = new HashMap<>();
 
     public static final NetworkTable MAIN_ROBOT_TABLE = INSTANCE.getTable(NetworkTablesConstants.MAIN_TABLE_NAME);
+    
+    private static final AprilTagFieldLayout TAG_FIELD_LAYOUT = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
 
     /**
      * Gets the NetworkTablesConstants Instance being used by the program
@@ -96,43 +102,59 @@ public class NetworkTablesUtil {
         return (int) table.getEntry("key_int").getNumber(0).intValue();
     }
 
+    public record DistanceAndAprilTagDetection(Pose3d fieldRelativePose, double distanceFromRobot) {}
+
     /**
      * Returns the current robot pose according to AprilTags on Jetson, in meters since that's what they want. The rotation is really the gyro's rotation, since we know that the gyro is accurate.
      *
      * @return A {@link Translation2d} representing the robot's pose ([x, y, radians])
      */
-    public static Pose2d getJetsonPoseMeters() {
+    public static ArrayList<DistanceAndAprilTagDetection> getJetsonPoseMeters() {
         if(!jetsonHasPose()) {
-            return new Pose2d();
+            return new ArrayList<>();
         }
 
         NetworkTable table = INSTANCE.getTable("jetson");
-        double[] readTags = table.getEntry("apriltags_pose").getDoubleArray(new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}); // The jetson outputs a list with 7 elements: (x, y, z) of tag followed by Quaternion (x, y, z, w)
-        if(readTags.length % 7 != 0) {
+        double[] readTags = table.getEntry("apriltags_pose").getDoubleArray(new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}); // The jetson outputs a list with 7 elements: (x, y, z) of tag followed by Quaternion (x, y, z, w)
+        if(readTags.length % 8 != 0) {
             System.out.println("Error: bad tag array");
-            return new Pose2d();
+            return new ArrayList<>();
         }
 
-        ArrayList<Pose3d> poses = new ArrayList<>(readTags.length / 7);
+        ArrayList<DistanceAndAprilTagDetection> poses = new ArrayList<>(readTags.length / 8);
         for(int i = 0; i < readTags.length; i += 7) {
-            Translation3d pose = new Translation3d(readTags[i + 0], readTags[i + 1], readTags[i + 2]);
-            Quaternion q = new Quaternion(readTags[i + 3], readTags[i + 4], readTags[i + 5], readTags[i + 6]);
-            Pose3d tagPose = new Pose3d(pose, new Rotation3d(q));
+            int tagId = (int) readTags[i + 0];
+            Optional<Pose3d> fieldRelTagPoseOpt = TAG_FIELD_LAYOUT.getTagPose(tagId);
+            if(fieldRelTagPoseOpt.isEmpty()) {
+                continue;
+            }
+            Pose3d originToTag = fieldRelTagPoseOpt.get();
+            Translation3d pose = new Translation3d(readTags[i + 1], readTags[i + 2], readTags[i + 3]);
+            Quaternion q = new Quaternion(readTags[i + 4], readTags[i + 5], readTags[i + 6], readTags[i + 7]);
+            Pose3d robotToTag = CoordinateSystem.convert(new Pose3d(pose, new Rotation3d(q)), Util.APRILTAGS_COORD_SYSTEM, CoordinateSystem.NWU()); // robot's pose relative to tag
+            
+            Pose3d finalPose = robotToTag.plus(new Transform3d(originToTag.getTranslation(), originToTag.getRotation()));
 
-            if(checkRequestedPoseValues(tagPose)) {
-                poses.add(tagPose);
+            if(checkRequestedPoseValues(finalPose)) {
+                poses.add(new DistanceAndAprilTagDetection(finalPose, robotToTag.getTranslation().getDistance(new Translation3d())));
             }
         }
 
-        return null; // AWAITING IMPLEMENTATION.
+        return poses;
     }
 
+    /**
+     * Whether the given pose seems "reasonable"
+     * @param pose The given pose
+     * @return True if the pose can reasonably be kept, false otherwise.
+     */
     private static boolean checkRequestedPoseValues(Pose3d pose) {
         return true;
     }
 
     public static boolean jetsonHasPose() {
-        return getEntry("jetson", "has_pose").getBoolean(false);
+        NetworkTableEntry entry = getEntry("jetson", "apriltags_pose"); // ????? wdym "resource leak"
+        return entry.getDoubleArray(new double[]{1.0}).length != 1;
     }
 
     /**

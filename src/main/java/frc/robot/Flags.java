@@ -11,7 +11,7 @@ public final class Flags {
      * Flags relating to the Operator console (i.e. relating to the Driver Station laptop).
      */
     public static class Operator {
-        public static final boolean USING_NINTENDO_SWITCH_CONTROLLER = false;
+        public static final boolean USING_NINTENDO_SWITCH_CONTROLLER = true;
     }
 
     /**
@@ -130,12 +130,12 @@ public final class Flags {
         /**
          * Whether the pivot is enabled.
          */
-        public static final boolean PIVOT_ENABLED = false;
+        public static final boolean PIVOT_ENABLED = true;
 
         /**
          * Whether the shooter pivot motors should be allowed to run based on PID control. If false, the pivot motors can only be run by sending raw power values/voltages.
          */
-        public static final boolean PIVOT_PID_CONTROL = false;
+        public static final boolean PIVOT_PID_CONTROL = true;
 
         /**
          * Whether the shooter motors should use PID to target a specific RPM.

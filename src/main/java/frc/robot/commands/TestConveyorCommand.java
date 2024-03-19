@@ -1,8 +1,8 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.conveyor.ConveyorSubsystem;
 import frc.robot.controllers.AbstractController;
+import frc.robot.subsystems.conveyor.ConveyorSubsystem;
 
 public class TestConveyorCommand extends Command {
     private final ConveyorSubsystem conveyor;
@@ -32,7 +32,7 @@ public class TestConveyorCommand extends Command {
 
     // Called once the command ends or is interrupted.
     @Override
-     public void end(boolean interrupted) {
+    public void end(boolean interrupted) {
 
     }
 

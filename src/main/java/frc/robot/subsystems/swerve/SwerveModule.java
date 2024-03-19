@@ -5,35 +5,31 @@
 package frc.robot.subsystems.swerve;
 
 import com.ctre.phoenix6.hardware.CANcoder;
-import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
-import com.revrobotics.CANSparkBase.ControlType;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Flags;
-import frc.robot.util.Util;
-
-import static frc.robot.util.Util.*;
 
 /**
  * There are three existing readouts for the module's rotational position.
- * 
+ *
  * <p>
  * The first is the integrated encoder on the motor controller (CANSparkMax), which uses integration of velocity to determine position.
  * <p>
  * The second is the CANcoder, which offers a physically measured value for the position.
  * The CANcoder has two output modes:
- * 
+ *
  * <ul>
  *     <li> one mode which only measures from [-PI, PI] or from [0, 2 * PI] (i.e. there exists a discontinuity where the values will loop around to remain within a unit circle),
  *     <li> and a second mode which does not contain any discontinuity.
  * </ul>
- * 
+ * <p>
  * The non-discontinuous mode's value can be set in code (the discontinuous cannot), but this should be avoided unless resetting to the value of the discontinuous output.
  * <p>
  * The CANcoder mode containing the discontinuity should always be considered the most accurate reference, and is the one we use when initializing everything on robot code startup.
@@ -63,12 +59,12 @@ public class SwerveModule {
     private final SparkPIDController turnPIDController;
 
     /**
-     * @param driveMotorCANID       CAN ID for the drive motor.
-     * @param turningMotorCANID     CAN ID for the turning motor.
-     * @param turningEncoderCANID   CAN ID for the turning absolute encoder.
-     * @param name                  The name of this module.
-     * @param invertDriveMotor      Whether to invert the drive motor. This should be the same across all modules.
-     * @param invertTurnMotor       Whether to invert the turn motor. This should be the same across all modules.
+     * @param driveMotorCANID     CAN ID for the drive motor.
+     * @param turningMotorCANID   CAN ID for the turning motor.
+     * @param turningEncoderCANID CAN ID for the turning absolute encoder.
+     * @param name                The name of this module.
+     * @param invertDriveMotor    Whether to invert the drive motor. This should be the same across all modules.
+     * @param invertTurnMotor     Whether to invert the turn motor. This should be the same across all modules.
      */
     public SwerveModule(int driveMotorCANID, int turningMotorCANID, int turningEncoderCANID, String name, boolean invertDriveMotor, boolean invertTurnMotor) {
         driveMotor = new CANSparkMax(driveMotorCANID, MotorType.kBrushless);
@@ -103,7 +99,7 @@ public class SwerveModule {
         this.turnAbsoluteEncoder.setPosition(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
         System.out.println("magnet health of " + name + " is " + this.turnAbsoluteEncoder.getMagnetHealth().getValue());
 
-        if(this.turnAbsoluteEncoder.getFault_BadMagnet().getValue().booleanValue()) {
+        if (this.turnAbsoluteEncoder.getFault_BadMagnet().getValue()) {
             System.out.println(name + " has a bad magnet");
         }
 
@@ -136,13 +132,50 @@ public class SwerveModule {
         // System.out.println(this.name + " abs pos " + RobotMathUtil.roundNearestHundredth(this.turnAbsoluteEncoder.getAbsolutePosition().getValueAsDouble()));
     }
 
+    /**
+     * ORIGINAL: {@link SwerveModuleState#optimize(SwerveModuleState, Rotation2d)}
+     * <p>
+     * Minimize the change in heading the desired swerve module state would require by potentially
+     * reversing the direction the wheel spins. If this is used with the PIDController class's
+     * continuous input functionality, the furthest a wheel will ever rotate is {@link SwerveModule#SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG} degrees.
+     *
+     * <p>
+     * NOTE: Team 3419 suggested this change on ChiefDelphi for mechanical reasons (sending the motors in the opposite direction at top speed is bad),
+     * but we are primarily using this to resolve a separate issue where occasionally one swerve module would turn in a direction opposite of the other modules when executing a direction change of 90 degrees.
+     *
+     * <p>
+     * ChiefDelphi comment: <a href="https://www.chiefdelphi.com/t/swerve-pid-continuous-input-and-swerve-state-optimization/416292/6">...</a>
+     * <p>
+     * Team 3419's code with the relevant change: <a href="https://github.com/RoHawks/UniversalSwerve/blob/2fb7c0c9c9d7d3def7ba680bcd48b4b5456f09e1/src/main/java/universalSwerve/SwerveDrive.java#L267">...</a>
+     *
+     * <p>
+     * Change made: only optimize the rotation direction when the angle is greater than a certain amount (higher than 90deg).
+     * Original value in WPILIB code: 90 degrees.
+     * New value determined by {@link SwerveModule#SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG}
+     *
+     * @param desiredState The desired state.
+     * @param currentAngle The current module angle.
+     * @return Optimized swerve module state.
+     */
+    private static SwerveModuleState optimize(
+            SwerveModuleState desiredState, Rotation2d currentAngle) {
+        var delta = desiredState.angle.minus(currentAngle);
+        if (Math.abs(delta.getDegrees()) > SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG) {
+            return new SwerveModuleState(
+                    -desiredState.speedMetersPerSecond,
+                    desiredState.angle.rotateBy(Rotation2d.fromDegrees(180.0)));
+        } else {
+            return new SwerveModuleState(desiredState.speedMetersPerSecond, desiredState.angle);
+        }
+    }
+
     public double getDriveAmperage() {
         return this.driveMotor.getOutputCurrent();
     }
 
     /**
      * Sets all non-absolutely-absolute encoders to the absolutely-absolute CANcoder value.
-     * 
+     *
      * @see SwerveModule
      */
     public void resetEncodersToAbsoluteValue() {
@@ -184,6 +217,7 @@ public class SwerveModule {
 
     /**
      * This value is exact if the CANcoder is tuned properly in Phoenix Tuner X. Use this value for all further calibration.
+     *
      * @return The absolutely-absolute position of the CANcoder in radians.
      * @see SwerveModule
      */
@@ -216,6 +250,7 @@ public class SwerveModule {
 
     /**
      * Uses the absolute encoder position.
+     *
      * @return The current state of the module using the absolute encoder's position.
      */
     public SwerveModuleState getAbsoluteModuleState() {
@@ -224,6 +259,7 @@ public class SwerveModule {
 
     /**
      * Uses the absolutely-absolute encoder position.
+     *
      * @return The current state of the module using the absolutely-absolute encoder's position.
      */
     public SwerveModuleState getAbsoluteAbsoluteModuleState() {
@@ -232,6 +268,7 @@ public class SwerveModule {
 
     /**
      * Uses the absolute encoder position.
+     *
      * @return The current position of the module using the absolute encoder's position.
      */
     public SwerveModulePosition getAbsoluteModulePosition() {
@@ -240,6 +277,7 @@ public class SwerveModule {
 
     /**
      * Uses the relative encoder position.
+     *
      * @return The current state of the module using the relative encoder's position.
      */
     public SwerveModuleState getRelativeModuleState() {
@@ -248,6 +286,7 @@ public class SwerveModule {
 
     /**
      * Uses the relative encoder position.
+     *
      * @return The current position of the module using the relative encoder's position.
      */
     public SwerveModulePosition getRelativeModulePosition() {
@@ -256,9 +295,9 @@ public class SwerveModule {
 
     /**
      * Directly set the voltage outputs of the motors.
-     * 
+     *
      * @param driveVoltage Voltage of drive motor
-     * @param turnVoltage Voltage of turn motor
+     * @param turnVoltage  Voltage of turn motor
      */
     public void setVoltages(double driveVoltage, double turnVoltage) {
         driveMotor.setVoltage(driveVoltage);
@@ -282,6 +321,7 @@ public class SwerveModule {
 
     /**
      * Sets the module's target state to absolute zero. This method accepts a debug index.
+     *
      * @param debugIdx The debug index of the array.
      * @see DriveTrainSubsystem#optimizedTargetStates
      */
@@ -291,50 +331,13 @@ public class SwerveModule {
     }
 
     /**
-     * ORIGINAL: {@link SwerveModuleState#optimize(SwerveModuleState, Rotation2d)}
-     * <p>
-     * Minimize the change in heading the desired swerve module state would require by potentially
-     * reversing the direction the wheel spins. If this is used with the PIDController class's
-     * continuous input functionality, the furthest a wheel will ever rotate is {@link SwerveModule#SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG} degrees.
-     *
-     * <p>
-     * NOTE: Team 3419 suggested this change on ChiefDelphi for mechanical reasons (sending the motors in the opposite direction at top speed is bad),
-     * but we are primarily using this to resolve a separate issue where occasionally one swerve module would turn in a direction opposite of the other modules when executing a direction change of 90 degrees.
-     *
-     * <p>
-     * ChiefDelphi comment: <a href="https://www.chiefdelphi.com/t/swerve-pid-continuous-input-and-swerve-state-optimization/416292/6">...</a>
-     * <p>
-     * Team 3419's code with the relevant change: <a href="https://github.com/RoHawks/UniversalSwerve/blob/2fb7c0c9c9d7d3def7ba680bcd48b4b5456f09e1/src/main/java/universalSwerve/SwerveDrive.java#L267">...</a>
-     *
-     * <p>
-     * Change made: only optimize the rotation direction when the angle is greater than a certain amount (higher than 90deg).
-     * Original value in WPILIB code: 90 degrees.
-     * New value determined by {@link SwerveModule#SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG}
-     *
-     * @param desiredState The desired state.
-     * @param currentAngle The current module angle.
-     * @return Optimized swerve module state.
-     */
-    private static SwerveModuleState optimize(
-        SwerveModuleState desiredState, Rotation2d currentAngle) {
-        var delta = desiredState.angle.minus(currentAngle);
-        if (Math.abs(delta.getDegrees()) > SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG) {
-            return new SwerveModuleState(
-                -desiredState.speedMetersPerSecond,
-                desiredState.angle.rotateBy(Rotation2d.fromDegrees(180.0)));
-        } else {
-            return new SwerveModuleState(desiredState.speedMetersPerSecond, desiredState.angle);
-        }
-    }
-
-    /**
      * Sets the desired state for the module.
      *
      * @param desiredState Desired state with speed and angle.
      */
     public void setDesiredState(SwerveModuleState desiredState) {
         SwerveModuleState state;
-        if(Flags.DriveTrain.SWERVE_MODULE_OPTIMIZATION) {
+        if (Flags.DriveTrain.SWERVE_MODULE_OPTIMIZATION) {
             state = optimize(desiredState, new Rotation2d(this.getTurnAbsEncoderPosition()));
         } else {
             state = desiredState;
@@ -345,13 +348,14 @@ public class SwerveModule {
 
     /**
      * Sets the desired state for the model. This method accepts a debug index.
+     *
      * @param desiredState Desired state with speed and angle.
-     * @param debugIdx The debug index of the array.
+     * @param debugIdx     The debug index of the array.
      * @see DriveTrainSubsystem#optimizedTargetStates
      */
     public void setDesiredState(SwerveModuleState desiredState, int debugIdx) {
         SwerveModuleState state;
-        if(Flags.DriveTrain.SWERVE_MODULE_OPTIMIZATION) {
+        if (Flags.DriveTrain.SWERVE_MODULE_OPTIMIZATION) {
             state = optimize(desiredState, new Rotation2d(this.getTurnAbsEncoderPosition()));
         } else {
             state = desiredState;
@@ -362,6 +366,7 @@ public class SwerveModule {
 
     /**
      * Sets the desired state without optimizing for efficiency.
+     *
      * @param desiredState Desired state with speed and angle.
      * @see SwerveModule#optimize(SwerveModuleState, Rotation2d)
      */
@@ -369,7 +374,7 @@ public class SwerveModule {
         this.setDriveDesiredState(desiredState);
         this.setRotationDesiredState(desiredState);
 
-        if(Math.abs(desiredState.speedMetersPerSecond) < 0.01 && Math.abs(this.getTurnRelativeVelocity()) < 0.01) {
+        if (Math.abs(desiredState.speedMetersPerSecond) < 0.01 && Math.abs(this.getTurnRelativeVelocity()) < 0.01) {
             this.resetEncodersToAbsoluteValue();
             // System.out.println("resetting encoders");
         }
@@ -377,8 +382,9 @@ public class SwerveModule {
 
     /**
      * Sets the desired state without optimizing for efficiency. This method accepts a debug index
+     *
      * @param desiredState Desired state with speed and angle.
-     * @param debugIdx The debug index of the array.
+     * @param debugIdx     The debug index of the array.
      * @see SwerveModule#optimize(SwerveModuleState, Rotation2d)
      * @see DriveTrainSubsystem#optimizedTargetStates
      */
@@ -388,7 +394,7 @@ public class SwerveModule {
 
         DriveTrainSubsystem.optimizedTargetStates[debugIdx] = desiredState;
 
-        if(Math.abs(desiredState.speedMetersPerSecond) < 0.01 && Math.abs(this.getTurnRelativeVelocity()) < 0.01) {
+        if (Math.abs(desiredState.speedMetersPerSecond) < 0.01 && Math.abs(this.getTurnRelativeVelocity()) < 0.01) {
             this.resetEncodersToAbsoluteValue();
             // System.out.println("resetting encoders");
         }
@@ -396,18 +402,19 @@ public class SwerveModule {
 
     /**
      * Sets the drive motors to follow a desired state. The state will NOT be optimized.
+     *
      * @param optimizedDesiredState The desired module state.
      * @see SwerveModule#setDesiredState(SwerveModuleState)
      */
     private void setDriveDesiredState(SwerveModuleState optimizedDesiredState) {
         // Calculate the drive output from the drive PID controller.
-        if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_DRIVE_MOTORS && Flags.DriveTrain.DRIVE_PID_CONTROL) {
+        if (Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_DRIVE_MOTORS && Flags.DriveTrain.DRIVE_PID_CONTROL) {
             drivePIDController.setReference(optimizedDesiredState.speedMetersPerSecond, ControlType.kVelocity);
         }
-        
+
         double vel = driveEncoder.getVelocity(), tar = optimizedDesiredState.speedMetersPerSecond;
         double ratio = 0;
-        if(Math.abs(tar) > 0.01) {
+        if (Math.abs(tar) > 0.01) {
             ratio = vel / tar;
         }
         // System.out.println(this.name + " velocity: " + Util.nearestHundredth(driveEncoder.getVelocity()) + " target speed: " + Util.nearestHundredth(optimizedDesiredState.speedMetersPerSecond) + ", ratio: " + nearestHundredth(ratio));
@@ -416,12 +423,13 @@ public class SwerveModule {
 
     /**
      * Sets the rotation motors to follow a desired state. The state will NOT be optimized.
+     *
      * @param optimizedDesiredState The desired module state.
      * @see SwerveModule#setDesiredState(SwerveModuleState)
      */
     private void setRotationDesiredState(SwerveModuleState optimizedDesiredState) {
         // System.out.println("turn encoder at: " + RobotMathUtil.roundNearestHundredth(this.turnEncoder.getPosition()) + ", abs val: " + RobotMathUtil.roundNearestHundredth(this.getTurningAbsEncoderPositionConverted()));
-        if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_TURN_MOTORS && Flags.DriveTrain.TURN_PID_CONTROL) {
+        if (Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_TURN_MOTORS && Flags.DriveTrain.TURN_PID_CONTROL) {
             turnPIDController.setReference(optimizedDesiredState.angle.getRadians(), ControlType.kPosition);
         }
         // System.out.println("target: " + roundNearestHundredth(bringAngleWithinUnitCircle(optimizedDesiredState.angle.getDegrees())) + ", rel: " + roundNearestHundredth(bringAngleWithinUnitCircle(this.getRelativeTurnRotations() * 180 / Math.PI)) + ", abs: " + roundNearestHundredth(bringAngleWithinUnitCircle(this.getTurningAbsEncoderPositionConverted() * 180 / Math.PI)));
@@ -429,20 +437,22 @@ public class SwerveModule {
 
     /**
      * Sends a direct speed to the drive motor.
+     *
      * @param speed The desired speed, [-1, 1]
      */
     public void directDrive(double speed) {
-        if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_DRIVE_MOTORS) {
+        if (Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_DRIVE_MOTORS) {
             this.driveMotor.set(speed);
         }
     }
 
     /**
      * Sends a direct speed to the turn motor.
+     *
      * @param speed The desired speed, [-1, 1]
      */
     public void directTurn(double speed) {
-        if(Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_TURN_MOTORS) {
+        if (Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_TURN_MOTORS) {
             this.turnMotor.set(speed);
         }
     }

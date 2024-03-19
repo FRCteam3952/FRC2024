@@ -12,23 +12,25 @@ public class NintendoProController extends AbstractController {
     public static final double IGNORE_DELTA = 0.15;
 
     private final CommandXboxController controller;
+
     public NintendoProController(CommandXboxController controller) {
         this.controller = controller;
     }
 
     /**
      * Applies a deadzone and scale to the raw controller values. Necessary because the Pro Controller has some bounds issues where extremities do not return values equal to 1.
-     * @param rawVal The raw value from the controller
+     *
+     * @param rawVal    The raw value from the controller
      * @param maxValPos The maximum (farthest from 0) value possible for rawVal > 0. This value should be POSITIVE.
      * @param maxValNeg The maximum (farthest from 0) value possible for rawVal < 0. This value should be NEGATIVE.
      * @return A value, deadzoned to 0 if within {@link NintendoProController#IGNORE_DELTA IGNORE_DELTA}. If value is not deadzoned, positive values will be scaled such that maxValPos will become a value of 1, and negative values scaled similarly with maxValNeg
      */
     private static double correctDeadzone(double rawVal, double maxValPos, double maxValNeg) {
         double absVal = Math.abs(rawVal);
-        if(absVal < IGNORE_DELTA) {
+        if (absVal < IGNORE_DELTA) {
             return 0;
         }
-        if(rawVal > 0) {
+        if (rawVal > 0) {
             return (absVal - IGNORE_DELTA) / (maxValPos - 0.15);
         }
         return (absVal - IGNORE_DELTA) / (maxValNeg + 0.15);

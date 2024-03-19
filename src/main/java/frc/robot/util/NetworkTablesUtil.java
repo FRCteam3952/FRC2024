@@ -2,13 +2,7 @@ package frc.robot.util;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.CoordinateSystem;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Quaternion;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -21,11 +15,9 @@ import java.util.Optional;
 
 public class NetworkTablesUtil {
     private static final NetworkTableInstance INSTANCE = NetworkTableInstance.getDefault();
+    public static final NetworkTable MAIN_ROBOT_TABLE = INSTANCE.getTable(NetworkTablesConstants.MAIN_TABLE_NAME);
     private static final Map<String, GenericPublisher> publishers = new HashMap<>();
     private static final Map<String, GenericSubscriber> subscribers = new HashMap<>();
-
-    public static final NetworkTable MAIN_ROBOT_TABLE = INSTANCE.getTable(NetworkTablesConstants.MAIN_TABLE_NAME);
-    
     private static final AprilTagFieldLayout TAG_FIELD_LAYOUT = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
 
     /**
@@ -99,10 +91,8 @@ public class NetworkTablesUtil {
     // Gets key from keyboard
     public static int getKeyInteger() {
         NetworkTable table = INSTANCE.getTable("robogui");
-        return (int) table.getEntry("key_int").getNumber(0).intValue();
+        return table.getEntry("key_int").getNumber(0).intValue();
     }
-
-    public record DistanceAndAprilTagDetection(Pose3d fieldRelativePose, double distanceFromRobot) {}
 
     /**
      * Returns the current robot pose according to AprilTags on Jetson, in meters since that's what they want. The rotation is really the gyro's rotation, since we know that the gyro is accurate.
@@ -110,32 +100,32 @@ public class NetworkTablesUtil {
      * @return A {@link Translation2d} representing the robot's pose ([x, y, radians])
      */
     public static ArrayList<DistanceAndAprilTagDetection> getJetsonPoseMeters() {
-        if(!jetsonHasPose()) {
+        if (!jetsonHasPose()) {
             return new ArrayList<>();
         }
 
         NetworkTable table = INSTANCE.getTable("jetson");
         double[] readTags = table.getEntry("apriltags_pose").getDoubleArray(new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}); // The jetson outputs a list with 7 elements: (x, y, z) of tag followed by Quaternion (x, y, z, w)
-        if(readTags.length % 8 != 0) {
+        if (readTags.length % 8 != 0) {
             System.out.println("Error: bad tag array");
             return new ArrayList<>();
         }
 
         ArrayList<DistanceAndAprilTagDetection> poses = new ArrayList<>(readTags.length / 8);
-        for(int i = 0; i < readTags.length; i += 7) {
-            int tagId = (int) readTags[i + 0];
+        for (int i = 0; i < readTags.length; i += 7) {
+            int tagId = (int) readTags[i];
             Optional<Pose3d> fieldRelTagPoseOpt = TAG_FIELD_LAYOUT.getTagPose(tagId);
-            if(fieldRelTagPoseOpt.isEmpty()) {
+            if (fieldRelTagPoseOpt.isEmpty()) {
                 continue;
             }
             Pose3d originToTag = fieldRelTagPoseOpt.get();
             Translation3d pose = new Translation3d(readTags[i + 1], readTags[i + 2], readTags[i + 3]);
             Quaternion q = new Quaternion(readTags[i + 4], readTags[i + 5], readTags[i + 6], readTags[i + 7]);
             Pose3d robotToTag = CoordinateSystem.convert(new Pose3d(pose, new Rotation3d(q)), Util.APRILTAGS_COORD_SYSTEM, CoordinateSystem.NWU()); // robot's pose relative to tag
-            
+
             Pose3d finalPose = robotToTag.plus(new Transform3d(originToTag.getTranslation(), originToTag.getRotation()));
 
-            if(checkRequestedPoseValues(finalPose)) {
+            if (checkRequestedPoseValues(finalPose)) {
                 poses.add(new DistanceAndAprilTagDetection(finalPose, robotToTag.getTranslation().getDistance(new Translation3d())));
             }
         }
@@ -145,6 +135,7 @@ public class NetworkTablesUtil {
 
     /**
      * Whether the given pose seems "reasonable"
+     *
      * @param pose The given pose
      * @return True if the pose can reasonably be kept, false otherwise.
      */
@@ -159,11 +150,12 @@ public class NetworkTablesUtil {
 
     /**
      * Gets whether the robot is on the blue alliance, according to the Driver Station.
+     *
      * @return True if on blue, false if on red. If alliance is not present, will default to true.
      */
     public static boolean getIfOnBlueTeam() {
         var alliance = DriverStation.getAlliance();
-        if(alliance.isPresent()) {
+        if (alliance.isPresent()) {
             return alliance.get().equals(Alliance.Blue);
         }
         System.out.println("Alliance not present!");
@@ -229,5 +221,8 @@ public class NetworkTablesUtil {
         if (timeDiff > 1000) {
             System.out.println(timeDiff - 1000);
         }
+    }
+
+    public record DistanceAndAprilTagDetection(Pose3d fieldRelativePose, double distanceFromRobot) {
     }
 }

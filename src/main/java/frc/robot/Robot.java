@@ -4,21 +4,20 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
-
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 public class Robot extends LoggedRobot {
+    private RobotContainer robotContainer;
+
     public Robot() {
         super();
     }
-
-    private RobotContainer robotContainer;
 
     @Override
     public void robotInit() {
@@ -32,7 +31,7 @@ public class Robot extends LoggedRobot {
         // https://github.com/Mechanical-Advantage/AdvantageKit/blob/main/docs/INSTALLATION.md#robot-configuration
         Logger.recordMetadata("3952", "Crescendo_Robot");
 
-        if(isReal()) {
+        if (isReal()) {
             Logger.addDataReceiver(new WPILOGWriter("/home/lvuser/logs/"));
             Logger.addDataReceiver(new NT4Publisher());
         } else {

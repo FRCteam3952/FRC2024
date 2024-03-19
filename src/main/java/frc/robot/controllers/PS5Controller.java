@@ -10,12 +10,13 @@ public class PS5Controller extends AbstractController {
     public static final double IGNORE_DELTA = 0.08;
 
     private final CommandPS5Controller controller;
+
     public PS5Controller(CommandPS5Controller controller) {
         this.controller = controller;
     }
 
     private static double deadzone(double val) {
-        if(Math.abs(val) < IGNORE_DELTA) {
+        if (Math.abs(val) < IGNORE_DELTA) {
             return 0;
         }
         return val;

@@ -3,7 +3,6 @@ package frc.robot.subsystems.staticsubsystems;
 import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorMatchResult;
 import com.revrobotics.ColorSensorV3;
-
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.util.Color;
 
@@ -23,11 +22,12 @@ public final class ColorSensor {
 
     /**
      * Returns whether the color readout matches the target note color.
+     *
      * @return Whether the color readout matches the target note color.
      */
     public static boolean isNoteColor() {
         ColorMatchResult matchResult = colorMatcher.matchColor(getColor());
-        if(matchResult == null) {
+        if (matchResult == null) {
             return false;
         }
         System.out.println("match result: " + colorAsRGBString(matchResult.color));
@@ -35,6 +35,6 @@ public final class ColorSensor {
     }
 
     public static String colorAsRGBString(Color c) {
-        return "Color[" + (int)(c.red * 256) + ", " + (int)(c.green * 256) + ", " + (int)(c.blue * 256) + "]";
+        return "Color[" + (int) (c.red * 256) + ", " + (int) (c.green * 256) + ", " + (int) (c.blue * 256) + "]";
     }
 }

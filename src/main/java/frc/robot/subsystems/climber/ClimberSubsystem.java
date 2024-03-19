@@ -39,15 +39,35 @@ public class ClimberSubsystem extends SubsystemBase {
         pid.setFF(0);
     }
 
-    public double getMotor1Amperage() { return motor1.getOutputCurrent(); }
-    public double getMotor2Amperage() { return motor2.getOutputCurrent(); }
+    public double getMotor1Amperage() {
+        return motor1.getOutputCurrent();
+    }
 
-    public double getMotor1Position() { return motor1Encoder.getPosition(); }
-    public double getMotor2Position() { return motor2Encoder.getPosition(); }
+    public double getMotor2Amperage() {
+        return motor2.getOutputCurrent();
+    }
 
-    public void setMotor1Position(double position) { motor1Encoder.setPosition(position); }
-    public void setMotor2Position(double position) { motor2Encoder.setPosition(position); }
+    public double getMotor1Position() {
+        return motor1Encoder.getPosition();
+    }
 
-    public void setMotor1Speed(double speed) { motor1.set(speed); }
-    public void setMotor2Speed(double speed) { motor2.set(speed); }
+    public void setMotor1Position(double position) {
+        motor1Encoder.setPosition(position);
+    }
+
+    public double getMotor2Position() {
+        return motor2Encoder.getPosition();
+    }
+
+    public void setMotor2Position(double position) {
+        motor2Encoder.setPosition(position);
+    }
+
+    public void setMotor1Speed(double speed) {
+        motor1.set(speed);
+    }
+
+    public void setMotor2Speed(double speed) {
+        motor2.set(speed);
+    }
 }

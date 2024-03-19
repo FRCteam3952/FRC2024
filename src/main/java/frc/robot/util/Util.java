@@ -1,31 +1,32 @@
 package frc.robot.util;
 
-import java.util.function.Supplier;
-
 import edu.wpi.first.math.geometry.CoordinateAxis;
 import edu.wpi.first.math.geometry.CoordinateSystem;
 import edu.wpi.first.math.util.Units;
+
+import java.util.function.Supplier;
 
 /**
  * Does stuff for us
  */
 public final class Util {
+    public static final CoordinateSystem APRILTAGS_COORD_SYSTEM = new CoordinateSystem(CoordinateAxis.E(), CoordinateAxis.U(), CoordinateAxis.S());
+
     private Util() {
         throw new UnsupportedOperationException("Util is a utility class and should not be instantiated!");
     }
 
-    public static final CoordinateSystem APRILTAGS_COORD_SYSTEM = new CoordinateSystem(CoordinateAxis.E(), CoordinateAxis.U(), CoordinateAxis.S());
-
     /**
      * Bring a degree angle to a value between [0, 360)
+     *
      * @param angleDeg an angle in degrees
      * @return an equivalent angle, between [0, 360)
      */
     public static double bringAngleWithinUnitCircle(double angleDeg) {
-        while(angleDeg < 0) {
+        while (angleDeg < 0) {
             angleDeg += 360;
         }
-        while(angleDeg >= 360) {
+        while (angleDeg >= 360) {
             angleDeg -= 360;
         }
         return angleDeg;
@@ -128,8 +129,8 @@ public final class Util {
     /**
      * Rotates a point around the origin
      *
-     * @param x X coordinate
-     * @param y Y coordinate
+     * @param x     X coordinate
+     * @param y     Y coordinate
      * @param angle Angle to rotate by, in deg
      */
     public static double[] rotatePoint(double x, double y, double angle) {
@@ -141,14 +142,17 @@ public final class Util {
 
     /**
      * Rounds a double to the nearest hundredth.
+     *
      * @param d The value to round.
      * @return The parameter, rounded to the nearest hundredth place.
      */
     public static double nearestHundredth(double d) {
         return Math.floor(d * 100) / 100d;
     }
+
     /**
      * Square a value but keep the sign of the value. Ex: squareKeepSign(-1) = -1
+     *
      * @param d The input value
      * @return The input value squared, but keeping the same sign.
      */
@@ -158,12 +162,13 @@ public final class Util {
 
     /**
      * If a given flag is true, runs the supplier. Otherwise returns null.
+     *
      * @param objSupplier A supplier (should be a constructor call) for a class.
-     * @param flag If true, runs the supplier. Otherwise the supplier is not run and null is returned.
+     * @param flag        If true, runs the supplier. Otherwise the supplier is not run and null is returned.
      * @return The return value of the supplier if flag is true, else null.
      */
     public static <T> T createIfFlagElseNull(Supplier<T> objSupplier, boolean flag) {
-        if(flag) {
+        if (flag) {
             return objSupplier.get();
         }
         return null;

@@ -8,6 +8,10 @@ import frc.robot.util.ControlHandler.TriggerType;
  * This is different from the {@link frc.robot.Flags Flags} class, which toggles functionality on the robot and may be changed more often.
  */
 public final class Constants {
+    private Constants() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
+
     public static class NetworkTablesConstants {
         public static final String MAIN_TABLE_NAME = "robot";
     }
@@ -49,9 +53,9 @@ public final class Constants {
      * 15 (INT)
      * 16 (SHO)
      * 17 (SHO)
-     * 
-     * 
-     * 
+     * <p>
+     * <p>
+     * <p>
      * 21 (CON)
      * 22 (CON)
      * 23 (CON)
@@ -62,7 +66,7 @@ public final class Constants {
         public static final int CLIMBER_MOTOR_2_ID = 0xdeadbeef;
 
         // CAN IDs
-        
+
         // Drive Train
         public static final int DTRAIN_FRONT_LEFT_DRIVE_MOTOR_ID        = 9;
         public static final int DTRAIN_FRONT_RIGHT_DRIVE_MOTOR_ID       = 11;
@@ -78,7 +82,7 @@ public final class Constants {
         public static final int DTRAIN_FRONT_RIGHT_CANCODER_ID          = 3;
         public static final int DTRAIN_BACK_LEFT_CANCODER_ID            = 6;
         public static final int DTRAIN_BACK_RIGHT_CANCODER_ID           = 1;
-        
+
         // Intake
         public static final int INTAKE_TOP_MOTOR_ID                     = 13;
         public static final int INTAKE_BOTTOM_MOTOR_ID                  = 14;
@@ -93,10 +97,10 @@ public final class Constants {
         public static final int SHOOTER_LEFT_MOTOR_ID                   = 21;
         public static final int SHOOTER_RIGHT_MOTOR_ID                  = 16;
         public static final int SHOOTER_PIVOT_MOTOR_ID                  = 17;
-        
+
 
         // DIO Ports
-        
+
         // Intake
         public static final int INTAKE_UP_LIMIT_SWITCH_PORT             = 7;
 
@@ -125,13 +129,8 @@ public final class Constants {
         public static final double DIAGONAL_LENGTH_INCHES = Math.sqrt(2) * SIDE_LENGTH_INCHES;
         public static final double DIAGONAL_LENGTH_CM = DIAGONAL_LENGTH_INCHES * 2.54;
         public static final double SWERVE_MODULE_INSET_FROM_CORNER_CM = 9; // CM
-
         public static final double SWERVE_MODULE_DIST_FROM_MIDDLE_CM = DIAGONAL_LENGTH_CM - SWERVE_MODULE_INSET_FROM_CORNER_CM;
         public static final double LEG_LENGTHS_CM = SWERVE_MODULE_DIST_FROM_MIDDLE_CM / Math.sqrt(2);
         public static final double LEG_LENGTHS_M = LEG_LENGTHS_CM / 100;
-    }
-
-    private Constants() {
-        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 }

@@ -3,16 +3,14 @@ package frc.robot.subsystems.intake;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Flags;
 import frc.robot.Constants.PortConstants;
+import frc.robot.Flags;
 import frc.robot.util.NetworkTablesUtil;
 import frc.robot.util.ThroughboreEncoder;
-import frc.robot.util.Util;
 
 public class IntakeSubsystem extends SubsystemBase {
     private static final double LEADER_CURRENT_SPIKE_THRESH = 17.5;
@@ -40,7 +38,7 @@ public class IntakeSubsystem extends SubsystemBase {
         followerMotor = new CANSparkMax(PortConstants.INTAKE_BOTTOM_MOTOR_ID, MotorType.kBrushless);
 
         this.pivotUpLimitSwitch = new DigitalInput(PortConstants.INTAKE_UP_LIMIT_SWITCH_PORT);
-        
+
         leaderMotor.setInverted(true);
         followerMotor.setInverted(true);
         // followerMotor.follow(leaderMotor, false);
@@ -62,7 +60,7 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotEncoder.setPosition(0);
 
         this.throughboreEncoder = new ThroughboreEncoder(PortConstants.INTAKE_ABSOLUTE_ENCODER_ABS_PORT, PortConstants.INTAKE_ABSOLUTE_ENCODER_A_PORT, PortConstants.INTAKE_ABSOLUTE_ENCODER_B_PORT, 0.955, true);
-        
+
         this.pivotPIDController = new PIDController(9e-3, 0, 1e-4);
 
         /*
@@ -88,13 +86,13 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void setIntakeSpeed(double speed) {
-        if(Flags.Intake.ENABLED) {
+        if (Flags.Intake.ENABLED) {
             leaderMotor.set(speed);
         }
     }
 
     public void setIntakeSpeed(double speedTop, double speedBottom) {
-        if(Flags.Intake.ENABLED) {
+        if (Flags.Intake.ENABLED) {
             leaderMotor.set(speedTop);
             followerMotor.set(speedBottom);
         }
@@ -105,7 +103,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void setPivotSpeed(double pivotSpeed) {
-        if(Flags.Intake.ENABLED && Flags.Intake.PIVOT_ENABLED) {
+        if (Flags.Intake.ENABLED && Flags.Intake.PIVOT_ENABLED) {
             pivotMotor.set(pivotSpeed);
         }
     }
@@ -113,7 +111,7 @@ public class IntakeSubsystem extends SubsystemBase {
     public void setPivotEncoderPosition(double degrees) {
         pivotEncoder.setPosition(degrees);
     }
-   
+
     public void resetPivotEncoder() {
         setPivotEncoderPosition(0.0);
     }
@@ -136,10 +134,11 @@ public class IntakeSubsystem extends SubsystemBase {
 
     /**
      * Set the PID controller to target a specific position in degrees. Degrees should be [-90, 0], with -90 being the "down" position.
+     *
      * @param degrees The target setpoint, with -90 being the down position and 0 being the up position.
      */
     public void pivotToAngle(double degrees) {
-        if(Flags.Intake.ENABLED && Flags.Intake.PIVOT_ENABLED && Flags.Intake.PIVOT_PID_CONTROL) {
+        if (Flags.Intake.ENABLED && Flags.Intake.PIVOT_ENABLED && Flags.Intake.PIVOT_PID_CONTROL) {
             this.pivotAngleSetpoint = degrees;
         }
     }
@@ -163,13 +162,13 @@ public class IntakeSubsystem extends SubsystemBase {
             this.setPivotEncoderPosition(70);
         }*/
 
-        if(Flags.Intake.ENABLED && Flags.Intake.PIVOT_ENABLED && Flags.Intake.PIVOT_PID_CONTROL) {
+        if (Flags.Intake.ENABLED && Flags.Intake.PIVOT_ENABLED && Flags.Intake.PIVOT_PID_CONTROL) {
             boolean goingDown = this.throughboreEncoder.getAbsoluteEncoderValue() - this.pivotAngleSetpoint > 0;
             double speed = this.pivotPIDController.calculate(this.throughboreEncoder.getAbsoluteEncoderValue(), this.pivotAngleSetpoint);
             // System.out.println("going to: " + this.intakeAngleSetpoint + ", desired pivot speed: " + speed);
-            if(goingDown) {
+            if (goingDown) {
                 // this.pivotMotor.set(speed);
-            } else if(!goingDown) { // going up
+            } else if (!goingDown) { // going up
                 this.pivotMotor.set(speed + 0.02); // feedforward
             } else {
                 this.pivotMotor.set(0);

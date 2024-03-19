@@ -1,8 +1,8 @@
 package frc.robot.util;
 
+import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 
 public class ThroughboreEncoder {
     private final DutyCycleEncoder throughboreAbsoluteEncoder;

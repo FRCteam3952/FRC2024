@@ -126,7 +126,7 @@ public final class Flags {
          * Whether the shooter should be allowed to send power to motor controllers. If false, motors will not be set to any power and PID requests will not be sent.
          */
         public static final boolean ENABLED = true;
-        
+
         /**
          * Whether the pivot is enabled.
          */

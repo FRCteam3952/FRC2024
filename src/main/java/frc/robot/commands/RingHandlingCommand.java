@@ -53,19 +53,18 @@ public class RingHandlingCommand extends Command {
             .onFalse(new InstantCommand(() -> this.intakeToggledOn = false));
         
         ControlHandler.get(joystick, ControllerConstants.INTAKE_POS_TOGGLE)
-            .onTrue(new InstantCommand(() -> {
-                intakeUp = !intakeUp;
-                if(intakeUp) {
-                    double throughboreValue = this.intake.getThroughboreEncoder().getAbsoluteEncoderValue();
-                    if (throughboreValue > 0 && throughboreValue < 3) {
-                        this.intake.pivotToAngle(70 + throughboreValue);
-                    } else {
-                        this.intake.pivotToAngle(70);
-                    }
-                } else {
-                    this.intake.pivotToAngle(0);
-                }
-            }));
+            .onTrue(new InstantCommand(() -> intakeUp = !intakeUp));
+
+        if(intakeUp) {
+            double throughboreValue = this.intake.getThroughboreEncoder().getAbsoluteEncoderValue();
+            if (throughboreValue > 0 && throughboreValue < 3) {
+                this.intake.pivotToAngle(70 + throughboreValue);
+            } else {
+                this.intake.pivotToAngle(70);
+            }
+        } else {
+            this.intake.pivotToAngle(0);
+        }
 
         if (shouldReverse && reverseTimerElapsed++ < 1) {
             System.out.println("reversing at " + reverseTimerElapsed);

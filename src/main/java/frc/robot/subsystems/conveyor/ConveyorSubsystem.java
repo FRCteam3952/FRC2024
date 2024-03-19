@@ -5,6 +5,7 @@ import com.revrobotics.CANSparkMax;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PortConstants;
+import frc.robot.Flags;
 import frc.robot.util.NetworkTablesUtil;
 
 public class ConveyorSubsystem extends SubsystemBase {
@@ -23,16 +24,22 @@ public class ConveyorSubsystem extends SubsystemBase {
     }
 
     public void setConveyorMotorsSpeed(double speedLeft, double speedRight) {
-        this.conveyorMotorFollower.set(speedLeft);
-        this.conveyorMotorLeader.set(speedRight);
+        if(Flags.Conveyor.ENABLED) {
+            this.conveyorMotorFollower.set(speedLeft);
+            this.conveyorMotorLeader.set(speedRight);
+        }
     }
 
     public void setShooterFeederMotorSpeed(double speed) {
-        this.shooterFeederMotor.set(speed);
+        if(Flags.Conveyor.ENABLED) {
+            this.shooterFeederMotor.set(speed);
+        }
     }
 
     public void setConveyorMotorsSpeed(double speed) {
-        this.setConveyorMotorsSpeed(speed, speed);
+        if(Flags.Conveyor.ENABLED) {
+            this.setConveyorMotorsSpeed(speed, speed);
+        }
     }
 
     @Override

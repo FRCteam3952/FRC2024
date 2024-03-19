@@ -23,6 +23,9 @@ public final class Constants {
 
         // Should this be here? especially with our new controller system, we could potentially refactor or re-abstract this using another class (maybe even for multiple driver preferences?)
         public static class ControllerConstants {
+            public static final TriggerType ZERO_GYRO = TriggerType.LEFT_BUTTON;
+            public static final TriggerType ZERO_SWERVE_MODULES = TriggerType.UPPER_BUTTON;
+
             public static final TriggerType INTAKE_RUN = TriggerType.RIGHT_BUTTON;
             public static final TriggerType INTAKE_REVERSE = TriggerType.LOWER_BUTTON;
             public static final TriggerType INTAKE_POS_UP = TriggerType.LEFT_SHOULDER_BUTTON;
@@ -34,7 +37,7 @@ public final class Constants {
 
     /**
      * Key: RIO = RoboRio, COD = CANCoder, DRI = Drive Motor, ROT = Rotation Motor, INT = Intake, CON = Conveyor
-     * USED:
+     * CAN IDs USED:
      * 0  (RIO)
      * 1  (COD)
      * 2  (ROT)
@@ -50,15 +53,25 @@ public final class Constants {
      * 12 (COD)
      * 13 (INT)
      * 14 (INT)
-     * 15 (INT)
+     * 15 (CON)
      * 16 (SHO)
      * 17 (SHO)
+     * 18 (CON)
      * <p>
      * <p>
-     * <p>
-     * 21 (CON)
+     * 21 (SHO)
      * 22 (CON)
-     * 23 (CON)
+     * 23 (INT)
+     * <p>
+     * 
+     * DIOs USED:
+     * 0 (SHO)
+     * 1 (SHO)
+     * 2 (SHO)
+     * 3 (INT)
+     * 4 (INT)
+     * 5 (INT)
+     * 
      */
     public static class PortConstants {
         // Climber port constants
@@ -102,14 +115,11 @@ public final class Constants {
         // DIO Ports
 
         // Intake
-        public static final int INTAKE_UP_LIMIT_SWITCH_PORT             = 7;
-
         public static final int INTAKE_ABSOLUTE_ENCODER_ABS_PORT        = 3;
         public static final int INTAKE_ABSOLUTE_ENCODER_A_PORT          = 4;
         public static final int INTAKE_ABSOLUTE_ENCODER_B_PORT          = 5;
+        
         // Shooter
-        public static final int SHOOTER_DOWN_LIMIT_SWITCH_PORT          = 6;
-
         public static final int SHOOTER_ABSOLUTE_ENCODER_ABS_PORT       = 0;
         public static final int SHOOTER_ABSOLUTE_ENCODER_A_PORT         = 1;
         public static final int SHOOTER_ABSOLUTE_ENCODER_B_PORT         = 2;

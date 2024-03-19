@@ -14,6 +14,14 @@ public final class ControlHandler {
         LEFT_SHOULDER_TRIGGER,
         RIGHT_SHOULDER_TRIGGER
     }
+
+    /**
+     * Gets the {@link Trigger} from the given controller based on the requested button.
+     *
+     * @param controller The controller to get the Trigger from.
+     * @param type       The button to get.
+     * @return           The Trigger for the requested button from the given controller.
+     */
     public static Trigger get(AbstractController controller, TriggerType type) {
         return switch (type) {
             case UPPER_BUTTON -> controller.upperButton();

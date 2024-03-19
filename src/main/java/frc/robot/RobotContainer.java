@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.Constants.OperatorConstants.ControllerConstants;
 import frc.robot.commands.*;
 import frc.robot.controllers.AbstractController;
 import frc.robot.controllers.FlightJoystick;
@@ -22,6 +23,7 @@ import frc.robot.subsystems.staticsubsystems.ColorSensor;
 import frc.robot.subsystems.staticsubsystems.LimeLight;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.subsystems.swerve.DriveTrainSubsystem;
+import frc.robot.util.ControlHandler;
 import frc.robot.util.GyroPoseEstimator;
 import frc.robot.util.NetworkTablesUtil;
 import frc.robot.util.Util;
@@ -100,9 +102,9 @@ public class RobotContainer {
 
     private void configureBindings() {
         if (Flags.DriveTrain.IS_ATTACHED) {
-            this.primaryController.upperButton().onTrue(this.driveTrain.rotateToAbsoluteZeroCommand());
+            ControlHandler.get(this.primaryController, ControllerConstants.ZERO_SWERVE_MODULES).onTrue(this.driveTrain.rotateToAbsoluteZeroCommand());
         }
-        this.primaryController.leftButton().onTrue(Commands.runOnce(RobotGyro::resetGyroAngle));
+        ControlHandler.get(this.primaryController, ControllerConstants.ZERO_GYRO).onTrue(Commands.runOnce(RobotGyro::resetGyroAngle));
     }
 
     public void onRobotInit() {

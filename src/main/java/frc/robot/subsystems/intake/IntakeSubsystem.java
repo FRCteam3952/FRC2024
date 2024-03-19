@@ -5,7 +5,6 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.DoublePublisher;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PortConstants;
 import frc.robot.Flags;
@@ -27,7 +26,6 @@ public class IntakeSubsystem extends SubsystemBase {
     private final RelativeEncoder pivotEncoder;
     // private final SparkPIDController pivotPIDController;
     private final PIDController pivotPIDController;
-    private final DigitalInput pivotUpLimitSwitch;
 
     private final ThroughboreEncoder throughboreEncoder;
 
@@ -36,8 +34,6 @@ public class IntakeSubsystem extends SubsystemBase {
     public IntakeSubsystem() {
         leaderMotor = new CANSparkMax(PortConstants.INTAKE_TOP_MOTOR_ID, MotorType.kBrushless);
         followerMotor = new CANSparkMax(PortConstants.INTAKE_BOTTOM_MOTOR_ID, MotorType.kBrushless);
-
-        this.pivotUpLimitSwitch = new DigitalInput(PortConstants.INTAKE_UP_LIMIT_SWITCH_PORT);
 
         leaderMotor.setInverted(true);
         followerMotor.setInverted(true);
@@ -128,10 +124,6 @@ public class IntakeSubsystem extends SubsystemBase {
         return pivotMotor.getOutputCurrent();
     }
 
-    public boolean isPivotUpLimitPressed() {
-        return this.pivotUpLimitSwitch.get();
-    }
-
     /**
      * Set the PID controller to target a specific position in degrees. Degrees should be [-90, 0], with -90 being the "down" position.
      *
@@ -157,11 +149,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        /*
-        if(this.isPivotUpLimitPressed()) {
-            this.setPivotEncoderPosition(70);
-        }*/
-
         if (Flags.Intake.ENABLED && Flags.Intake.PIVOT_ENABLED && Flags.Intake.PIVOT_PID_CONTROL) {
             boolean goingDown = this.throughboreEncoder.getAbsoluteEncoderValue() - this.pivotAngleSetpoint > 0;
             double speed = this.pivotPIDController.calculate(this.throughboreEncoder.getAbsoluteEncoderValue(), this.pivotAngleSetpoint);

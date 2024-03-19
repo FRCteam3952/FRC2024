@@ -88,7 +88,7 @@ public class RingHandlingCommand extends Command {
         }
 
         // when the shooter is up high enough we GO BRRRR
-        if (joystick.rightShoulderTrigger().getAsBoolean()) {
+        if (ControlHandler.get(this.joystick, ControllerConstants.SHOOTER_RUN).getAsBoolean()) {
             shooter.setMotorRpm(600);
             if (shooter.getShooterRpm() > 500) {
                 this.conveyor.setShooterFeederMotorSpeed(1);

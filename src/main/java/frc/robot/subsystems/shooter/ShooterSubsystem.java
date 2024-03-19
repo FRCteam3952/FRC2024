@@ -8,7 +8,6 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.DoublePublisher;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PortConstants;
 import frc.robot.Flags;
@@ -26,7 +25,6 @@ public class ShooterSubsystem extends SubsystemBase {
     private final CANSparkMax pivotMotor;
     private final RelativeEncoder pivotEncoder;
     private final RelativeEncoder bottomShooterEncoder;
-    private final DigitalInput pivotDownLimitSwitch;
     private final PIDController pivotPidController;
     private final SparkPIDController rightPidController;
     private final SparkPIDController leftPidController;
@@ -50,8 +48,6 @@ public class ShooterSubsystem extends SubsystemBase {
         // leftMotor.follow(rightMotor, true);
         pivotMotor.setInverted(false);
         pivotEncoder.setPosition(0);
-
-        pivotDownLimitSwitch = new DigitalInput(PortConstants.SHOOTER_DOWN_LIMIT_SWITCH_PORT);
 
         pivotPidController = new PIDController(7.3e-3, 0, 0);
         rightPidController = rightMotor.getPIDController();

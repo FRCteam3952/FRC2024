@@ -109,8 +109,6 @@ public final class Flags {
          * Whether the conveyor should be allowed to send power to motor controllers. If false, motors will not be set to any power and PID requests will not be sent.
          */
         public static final boolean ENABLED = true;
-
-        public static final boolean USE_COLOR_SENSOR_IN_INDEXING = true;
     }
 
     /**

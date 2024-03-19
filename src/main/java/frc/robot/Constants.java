@@ -36,7 +36,7 @@ public final class Constants {
     }
 
     /**
-     * Key: RIO = RoboRio, COD = CANCoder, DRI = Drive Motor, ROT = Rotation Motor, INT = Intake, CON = Conveyor
+     * Key: RIO = RoboRio, COD = CANCoder, DRI = Drive Motor, ROT = Rotation Motor, INT = Intake, CON = Conveyor, CLI = Climber, SHO = Shooter
      * CAN IDs USED:
      * 0  (RIO)
      * 1  (COD)
@@ -57,8 +57,8 @@ public final class Constants {
      * 16 (SHO)
      * 17 (SHO)
      * 18 (CON)
-     * <p>
-     * <p>
+     * 19 (CLI)
+     * 20 (CLI)
      * 21 (SHO)
      * 22 (CON)
      * 23 (INT)
@@ -73,13 +73,10 @@ public final class Constants {
      * 5 (INT)
      *
      * PWMs USED:
-     *
+     * 0 (SHO)
+     * 1 (SHO)
      */
     public static class PortConstants {
-        // Climber port constants
-        public static final int CLIMBER_MOTOR_1_ID = 0xdeadbeef;
-        public static final int CLIMBER_MOTOR_2_ID = 0xdeadbeef;
-
         // CAN IDs
 
         // Drive Train
@@ -113,6 +110,9 @@ public final class Constants {
         public static final int SHOOTER_RIGHT_MOTOR_ID                  = 16;
         public static final int SHOOTER_PIVOT_MOTOR_ID                  = 17;
 
+        // Climber
+        public static final int CLIMBER_LEFT_MOTOR_ID                   = 20;
+        public static final int CLIMBER_RIGHT_MOTOR_ID                  = 19;
 
         // DIO Ports
 

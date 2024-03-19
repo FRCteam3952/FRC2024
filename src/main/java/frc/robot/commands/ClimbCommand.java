@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
 import frc.robot.Flags;
 import frc.robot.controllers.AbstractController;
 import frc.robot.subsystems.climber.ClimberSubsystem;
@@ -34,25 +35,72 @@ public class ClimbCommand extends Command {
     }
 
     @Override
-    public void initialize() {
+    public void initialize() {}
+
+    public double vedanthsMagicalRadiansToVoltageFunction(double x) {
+        double k = 216.0 / 5.0 / Math.pow(Math.PI, 3);
+        return k * Math.pow(x, 3);
+    }
+
+    double[] correctRoll() {
+        // returns [leftMotorSpeed, rightMotorSpeed]
+        // if the roll is a POSITIVE value, that means the LEFT SIDE is TOO HIGH
+        // like this -> \ (left side of backslash is UP)
+        // so we send voltage to the LEFT MOTOR
+
+        double rollRadians = RobotGyro.getGyroAngleDegreesRoll() * Math.PI / 180;
+
+        double finalVoltage;
+        if (Math.abs(rollRadians) < Math.PI / 180) {
+            // we don't need to correct cus everything is going great :)
+            finalVoltage = 0.0;
+        } else if (Math.abs(rollRadians) < Math.PI / 6) {
+            // cool model function that gets the right amount of voltage
+            finalVoltage = vedanthsMagicalRadiansToVoltageFunction(rollRadians);
+        } else {
+            // let nature take its course, robot is screwed
+            finalVoltage = 0.0;
+        }
+
+        // adjust height, always going upwards
+        if (finalVoltage > 0) {
+            return new double[] {Math.abs(finalVoltage), 0};
+        } else {
+            return new double[] {0, Math.abs(finalVoltage)};
+        }
+    }
+
+    void setClimberSpeeds() {
+        double baseSpeed = 0.5;
+        double[] climberSpeedErrors = correctRoll();
+        double leftMotorSpeed = baseSpeed + climberSpeedErrors[0];
+        double rightMotorSpeed = baseSpeed + climberSpeedErrors[1];
+        climber.setRightMotorSpeed.accept(rightMotorSpeed);
+        climber.setLeftMotorSpeed.accept(leftMotorSpeed);
     }
 
     @Override
     public void execute() {
-        // TODO
+        setClimberSpeeds();
+
         double pitch = RobotGyro.getGyroAngleDegreesPitch(); // if the gyro is sideways just change this so it is actual pitch
 
-        // Bad design, temporary unless it works
-        if (pitch > 10) {
-            shooter.setBottomMotorSpeed(0.2);
-            intake.setPivotSpeed(-0.2);
-        } else if (pitch < 10 && pitch > -10) {
-            shooter.setBottomMotorSpeed(0);
-            intake.setPivotSpeed(0);
-        } else {
-            shooter.setBottomMotorSpeed(-0.2);
-            intake.setPivotSpeed(0.2);
-        }
+
+
+//        double pitchDegreesToMotorSpeeds = 0.01;
+//        double maximumOffset = 5;
+//
+//        // Bad design, temporary unless it works
+//        if (pitch > maximumOffset) {
+//            shooter.setBottomMotorSpeed(pitchDegreesToMotorSpeeds * pitch);
+//            intake.setPivotSpeed(-pitchDegreesToMotorSpeeds * pitch);
+//        } else if (Math.abs(pitch) < maximumOffset) {
+//            shooter.setBottomMotorSpeed(0);
+//                intake.setPivotSpeed(0);
+//            } else {
+//                shooter.setBottomMotorSpeed(-pitchDegreesToMotorSpeeds * pitch);
+//                intake.setPivotSpeed(pitchDegreesToMotorSpeeds * pitch);
+//            }
     }
 
     // Called once the command ends or is interrupted.

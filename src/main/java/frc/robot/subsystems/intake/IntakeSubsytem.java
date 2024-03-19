@@ -13,7 +13,7 @@ import frc.robot.Flags;
 import frc.robot.Constants.PortConstants;
 import frc.robot.util.NetworkTablesUtil;
 
-public class IntakeSubsytem extends SubsystemBase {
+public class IntakeSubsytem extends SubsystemBase { // i love subsytems ❤️
     private static final double LEADER_CURRENT_SPIKE_THRESH = 17.5;
     private static final double FOLLOWER_CURRENT_SPIKE_THRESH = 15;
 
@@ -64,6 +64,12 @@ public class IntakeSubsytem extends SubsystemBase {
         pivotPIDController.setI(0, 0);
         pivotPIDController.setD(0, 0);
         pivotPIDController.setFF(0, 0);
+
+        // old value
+//        bottomPidController.setP(7.31415926e-4, 0);
+//        bottomPidController.setI(0, 0);
+//        bottomPidController.setD(1e-3, 0);
+//        bottomPidController.setFF(2e-4, 0);
 
         pivotPIDController.setOutputRange(-1, 1, 0);
 

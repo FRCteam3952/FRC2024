@@ -8,6 +8,7 @@ import frc.robot.util.ControlHandler.TriggerType;
  * This is different from the {@link frc.robot.Flags Flags} class, which toggles functionality on the robot and may be changed more often.
  */
 public final class Constants {
+
     public static class NetworkTablesConstants {
         public static final String MAIN_TABLE_NAME = "robot";
     }
@@ -126,6 +127,7 @@ public final class Constants {
         public static final double SWERVE_MODULE_DIST_FROM_MIDDLE_CM = DIAGONAL_LENGTH_CM - SWERVE_MODULE_INSET_FROM_CORNER_CM;
         public static final double LEG_LENGTHS_CM = SWERVE_MODULE_DIST_FROM_MIDDLE_CM / Math.sqrt(2);
         public static final double LEG_LENGTHS_M = LEG_LENGTHS_CM / 100;
+        public static final double CLIMBER_HEIGHT_METERS = 0.0; // WRONGz
     }
 
     private Constants() {

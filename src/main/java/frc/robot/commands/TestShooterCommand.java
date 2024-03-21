@@ -25,7 +25,7 @@ public class TestShooterCommand extends Command {
     @Override
     public void execute() {
         // shooter.setBottomMotorSpeed(-this.joystick.getRightVerticalMovement());
-        this.shooter.flapToAngle(0);
+        // this.shooter.flapToAngle(90 * (joystick.getRightVerticalMovement() + 1));
         /*
         if (joystick.rightShoulderTrigger().getAsBoolean()) {
             shooter.setMotorRpm(700);

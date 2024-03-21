@@ -18,25 +18,29 @@ public final class Constants {
     }
 
     public static class OperatorConstants {
-        public static final int RIGHT_JOYSTICK_PORT = 0;
+        public static final int RIGHT_JOYSTICK_PORT = 2;
         public static final int NINTENDO_PRO_CONTROLLER = 1;
         public static final int PS5_CONTROLLER = 3;
 
         // Should this be here? especially with our new controller system, we could potentially refactor or re-abstract this using another class (maybe even for multiple driver preferences?)
         public static class ControllerConstants {
-            public static final TriggerType ZERO_GYRO = TriggerType.LEFT_BUTTON;
-            public static final TriggerType ZERO_SWERVE_MODULES = TriggerType.UPPER_BUTTON;
+            public static final TriggerType ZERO_GYRO               = TriggerType.LEFT_BUTTON;
+            public static final TriggerType ZERO_SWERVE_MODULES     = TriggerType.UPPER_BUTTON;
 
-            public static final TriggerType INTAKE_RUN = TriggerType.RIGHT_BUTTON;
-            public static final TriggerType INTAKE_REVERSE = TriggerType.LOWER_BUTTON;
-            public static final TriggerType INTAKE_POS_TOGGLE = TriggerType.LEFT_SHOULDER_BUTTON;
+            public static final TriggerType INTAKE_RUN              = TriggerType.RIGHT_BUTTON;
+            public static final TriggerType INTAKE_REVERSE          = TriggerType.LOWER_BUTTON;
+            public static final TriggerType INTAKE_POS_TOGGLE       = TriggerType.LEFT_SHOULDER_BUTTON;
 
-            public static final TriggerType SHOOTER_RUN = TriggerType.RIGHT_SHOULDER_TRIGGER;
+            public static final TriggerType SHOOTER_RUN_HIGH_SPEED  = TriggerType.RIGHT_SHOULDER_TRIGGER;
+            public static final TriggerType SHOOTER_RUN_AMP_SPEED   = TriggerType.LEFT_SHOULDER_TRIGGER;
+
+            public static final TriggerType AUTO_AIM_FOR_SHOOT      = TriggerType.RIGHT_SHOULDER_BUTTON;
         }
     }
 
     /**
-     * Key: RIO = RoboRio, COD = CANCoder, DRI = Drive Motor, ROT = Rotation Motor, INT = Intake, CON = Conveyor, CLI = Climber, SHO = Shooter
+     * Key: RIO = RoboRio, COD = CANCoder, DRI = Drive Motor, ROT = Rotation Motor, INT = Intake, CON = Conveyor, SHO = Shooter, CLI = Climber
+     * <pre>
      * CAN IDs USED:
      * 0  (RIO)
      * 1  (COD)
@@ -62,8 +66,9 @@ public final class Constants {
      * 21 (SHO)
      * 22 (CON)
      * 23 (INT)
-     * <p>
-     *
+     * 
+     * </pre>
+     * <pre>
      * DIOs USED:
      * 0 (SHO)
      * 1 (SHO)
@@ -71,7 +76,9 @@ public final class Constants {
      * 3 (INT)
      * 4 (INT)
      * 5 (INT)
-     *
+     * 
+     * </pre>
+     * <pre>
      * PWMs USED:
      * 0 (SHO)
      * 1 (SHO)
@@ -79,7 +86,7 @@ public final class Constants {
     public static class PortConstants {
         // CAN IDs
 
-        // Drive Train
+        // Drive Train (COD, DRI, ROT)
         public static final int DTRAIN_FRONT_LEFT_DRIVE_MOTOR_ID        = 9;
         public static final int DTRAIN_FRONT_RIGHT_DRIVE_MOTOR_ID       = 11;
         public static final int DTRAIN_BACK_LEFT_DRIVE_MOTOR_ID         = 7;
@@ -95,33 +102,33 @@ public final class Constants {
         public static final int DTRAIN_BACK_LEFT_CANCODER_ID            = 6;
         public static final int DTRAIN_BACK_RIGHT_CANCODER_ID           = 1;
 
-        // Intake
+        // Intake (INT)
         public static final int INTAKE_TOP_MOTOR_ID                     = 13;
         public static final int INTAKE_BOTTOM_MOTOR_ID                  = 14;
         public static final int INTAKE_PIVOT_MOTOR_ID                   = 23;
 
-        // Conveyor
+        // Conveyor (CON)
         public static final int CONVEYOR_TO_SHOOTER_MOTOR_ID            = 22;
         public static final int CONVEYOR_LEFT_MOTOR_ID                  = 18;
         public static final int CONVEYOR_RIGHT_MOTOR_ID                 = 15;
 
-        // Shooter
+        // Shooter (SHO)
         public static final int SHOOTER_LEFT_MOTOR_ID                   = 21;
         public static final int SHOOTER_RIGHT_MOTOR_ID                  = 16;
         public static final int SHOOTER_PIVOT_MOTOR_ID                  = 17;
 
-        // Climber
+        // Climber (CLI)
         public static final int CLIMBER_LEFT_MOTOR_ID                   = 20;
         public static final int CLIMBER_RIGHT_MOTOR_ID                  = 19;
 
         // DIO Ports
 
-        // Intake
+        // Intake (INT)
         public static final int INTAKE_ABSOLUTE_ENCODER_ABS_PORT        = 3;
         public static final int INTAKE_ABSOLUTE_ENCODER_A_PORT          = 4;
         public static final int INTAKE_ABSOLUTE_ENCODER_B_PORT          = 5;
 
-        // Shooter
+        // Shooter (SHO)
         public static final int SHOOTER_ABSOLUTE_ENCODER_ABS_PORT       = 0;
         public static final int SHOOTER_ABSOLUTE_ENCODER_A_PORT         = 1;
         public static final int SHOOTER_ABSOLUTE_ENCODER_B_PORT         = 2;
@@ -129,7 +136,7 @@ public final class Constants {
 
         // PWM Ports
 
-        // Shooter
+        // Sho)
         public static final int SHOOTER_LEFT_SERVO_PORT                 = 1;
         public static final int SHOOTER_RIGHT_SERVO_PORT                = 0;
     }

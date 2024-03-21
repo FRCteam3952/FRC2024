@@ -14,7 +14,12 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.GenericPublisher;
+import edu.wpi.first.networktables.NetworkTableType;
 import frc.robot.Flags;
+import frc.robot.Constants.NetworkTablesConstants;
+import frc.robot.util.NetworkTablesUtil;
 
 /**
  * There are three existing readouts for the module's rotational position.
@@ -43,7 +48,7 @@ import frc.robot.Flags;
  * The drive motors do not follow this naming scheme as they only have a relative encoder.
  */
 public class SwerveModule {
-    private static final double SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG = 120;
+    private static final double SWERVE_ROTATION_OPTIMIZATION_THRESH_DEG = 90;
 
     private final CANSparkMax driveMotor;
     private final CANSparkMax turnMotor;
@@ -57,6 +62,8 @@ public class SwerveModule {
 
     private final SparkPIDController drivePIDController;
     private final SparkPIDController turnPIDController;
+
+    private final GenericPublisher rotationPublisher;
 
     /**
      * @param driveMotorCANID     CAN ID for the drive motor.
@@ -73,6 +80,8 @@ public class SwerveModule {
         driveEncoder = driveMotor.getEncoder();
         turnEncoder = turnMotor.getEncoder();
         turnAbsoluteEncoder = new CANcoder(turningEncoderCANID);
+
+        rotationPublisher = NetworkTablesUtil.getPublisher(NetworkTablesConstants.MAIN_TABLE_NAME, name + "_rot", NetworkTableType.kDouble);
 
         driveMotor.setInverted(invertDriveMotor);
         turnMotor.setInverted(invertTurnMotor);
@@ -108,12 +117,13 @@ public class SwerveModule {
         this.driveMotor.enableVoltageCompensation(10);
         this.drivePIDController = this.driveMotor.getPIDController();
 
-        this.drivePIDController.setP(0.52);
+        this.drivePIDController.setP(0.2);
         this.drivePIDController.setI(0);
         this.drivePIDController.setD(0.2);
         this.drivePIDController.setFF(0.3);
         this.drivePIDController.setOutputRange(-1, 1);
 
+        this.driveMotor.enableVoltageCompensation(10);
         this.turnMotor.enableVoltageCompensation(10);
         this.turnPIDController = this.turnMotor.getPIDController();
 
@@ -432,6 +442,7 @@ public class SwerveModule {
         if (Flags.DriveTrain.ENABLED && Flags.DriveTrain.ENABLE_TURN_MOTORS && Flags.DriveTrain.TURN_PID_CONTROL) {
             turnPIDController.setReference(optimizedDesiredState.angle.getRadians(), ControlType.kPosition);
         }
+        rotationPublisher.setDouble(this.getTurnRelativePosition());
         // System.out.println("target: " + roundNearestHundredth(bringAngleWithinUnitCircle(optimizedDesiredState.angle.getDegrees())) + ", rel: " + roundNearestHundredth(bringAngleWithinUnitCircle(this.getRelativeTurnRotations() * 180 / Math.PI)) + ", abs: " + roundNearestHundredth(bringAngleWithinUnitCircle(this.getTurningAbsEncoderPositionConverted() * 180 / Math.PI)));
     }
 

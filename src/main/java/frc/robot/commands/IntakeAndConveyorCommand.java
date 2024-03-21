@@ -17,7 +17,7 @@ public class IntakeAndConveyorCommand extends Command {
         this.conveyor = conveyor;
         this.joystick = joystick;
 
-        addRequirements(intake);
+        addRequirements(intake, conveyor);
     }
 
     @Override

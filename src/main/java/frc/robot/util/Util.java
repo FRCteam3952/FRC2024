@@ -1,8 +1,12 @@
 package frc.robot.util;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.CoordinateAxis;
 import edu.wpi.first.math.geometry.CoordinateSystem;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 import java.util.function.Supplier;
 
@@ -10,7 +14,8 @@ import java.util.function.Supplier;
  * Does stuff for us
  */
 public final class Util {
-    public static final CoordinateSystem APRILTAGS_COORD_SYSTEM = new CoordinateSystem(CoordinateAxis.E(), CoordinateAxis.U(), CoordinateAxis.S());
+    public static final CoordinateSystem JETSON_APRILTAGS_COORD_SYSTEM = new CoordinateSystem(CoordinateAxis.E(), CoordinateAxis.U(), CoordinateAxis.N());
+    public static final AprilTagFieldLayout TAG_FIELD_LAYOUT = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
 
     private Util() {
         throw new UnsupportedOperationException("Util is a utility class and should not be instantiated!");
@@ -113,20 +118,6 @@ public final class Util {
     }
 
     /**
-     * Converts an array of inch values to an array of meters values. Returns a new array.
-     *
-     * @param inchesArray The array of inches
-     * @return The array of meters
-     */
-    public static double[] inchesArrayToMetersArray(double[] inchesArray) {
-        double[] metersArray = new double[inchesArray.length];
-        for (int i = 0; i < inchesArray.length; i++) {
-            metersArray[i] = Units.inchesToMeters(inchesArray[i]);
-        }
-        return metersArray;
-    }
-
-    /**
      * Rotates a point around the origin
      *
      * @param x     X coordinate
@@ -172,5 +163,24 @@ public final class Util {
             return objSupplier.get();
         }
         return null;
+    }
+
+    /**
+     * Gets whether the robot is on the blue alliance, according to the Driver Station.
+     *
+     * @return True if on blue, false if on red. If alliance is not present, will default to true.
+     */
+    public static boolean onBlueTeam() {
+        var alliance = DriverStation.getAlliance();
+        if (alliance.isPresent()) {
+            return alliance.get().equals(Alliance.Blue);
+        }
+        System.out.println("Alliance not present!");
+        DriverStation.reportError("Alliance not present!", true);
+        return true;
+    }
+
+    public static Pose3d getTagPose(int tagId) {
+        return TAG_FIELD_LAYOUT.getTagPose(tagId).orElse(new Pose3d());
     }
 }

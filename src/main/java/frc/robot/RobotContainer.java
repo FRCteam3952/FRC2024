@@ -16,6 +16,7 @@ import frc.robot.controllers.FlightJoystick;
 import frc.robot.controllers.NintendoProController;
 import frc.robot.controllers.PS5Controller;
 import frc.robot.subsystems.PowerHandler;
+import frc.robot.subsystems.climber.ClimberSubsystem;
 import frc.robot.subsystems.conveyor.ConveyorSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
@@ -36,11 +37,12 @@ public class RobotContainer {
     private final IntakeSubsystem intake;
     private final ShooterSubsystem shooter;
     private final ConveyorSubsystem conveyor;
+    private final ClimberSubsystem climber;
 
-    private final FlightJoystick driverController = new FlightJoystick(new CommandJoystick(OperatorConstants.RIGHT_JOYSTICK_PORT));
+    private final FlightJoystick sideJoystick = new FlightJoystick(new CommandJoystick(OperatorConstants.RIGHT_JOYSTICK_PORT));
     private final NintendoProController nintendoProController = new NintendoProController(new CommandXboxController(OperatorConstants.NINTENDO_PRO_CONTROLLER));
     private final PS5Controller ps5Controller = new PS5Controller(new CommandPS5Controller(OperatorConstants.PS5_CONTROLLER));
-    public final AbstractController primaryController = Flags.Operator.USING_NINTENDO_SWITCH_CONTROLLER ? this.nintendoProController : this.ps5Controller;
+    private final AbstractController primaryController = Flags.Operator.NINTENDO_SWITCH_CONTROLLER_AS_PRIMARY ? this.nintendoProController : this.ps5Controller;
     private final PowerHandler powerHandler = new PowerHandler();
     private final GyroPoseEstimator gyroPoseEstimator = new GyroPoseEstimator();
 
@@ -51,6 +53,7 @@ public class RobotContainer {
         this.intake     = Util.createIfFlagElseNull(IntakeSubsystem::new, Flags.Intake.IS_ATTACHED);
         this.shooter    = Util.createIfFlagElseNull(ShooterSubsystem::new, Flags.Shooter.IS_ATTACHED);
         this.conveyor   = Util.createIfFlagElseNull(ConveyorSubsystem::new, Flags.Conveyor.IS_ATTACHED);
+        this.climber    = Util.createIfFlagElseNull(ClimberSubsystem::new, Flags.Climber.IS_ATTACHED);
 
         configureBindings();
 
@@ -108,7 +111,12 @@ public class RobotContainer {
         if (Flags.DriveTrain.IS_ATTACHED) {
             ControlHandler.get(this.primaryController, ControllerConstants.ZERO_SWERVE_MODULES).onTrue(this.driveTrain.rotateToAbsoluteZeroCommand());
         }
-        ControlHandler.get(this.primaryController, ControllerConstants.ZERO_GYRO).onTrue(Commands.runOnce(RobotGyro::resetGyroAngle));
+        ControlHandler.get(this.primaryController, ControllerConstants.ZERO_GYRO).onTrue(Commands.runOnce(() -> {
+            RobotGyro.resetGyroAngle();
+            this.driveTrain.setHeadingLockMode(false);
+        }));
+
+        sideJoystick.joystick.button(8).whileTrue(new CalibrateCommand(climber, intake, nintendoProController));
     }
 
     public void onRobotInit() {
@@ -128,7 +136,7 @@ public class RobotContainer {
             if (Flags.Intake.USE_TEST_INTAKE_COMMAND) {
                 this.intake.setDefaultCommand(new TestIntakeCommand(this.intake, this.primaryController));
             } else if (Flags.Conveyor.IS_ATTACHED && Flags.Shooter.IS_ATTACHED) {
-                this.intake.setDefaultCommand(new RingHandlingCommand(shooter, intake, conveyor, this.primaryController));
+                this.intake.setDefaultCommand(new RingHandlingCommand(shooter, intake, conveyor, this.primaryController, this.sideJoystick));
             } else {
                 this.intake.setDefaultCommand(new IntakeCommand(this.intake, this.primaryController));
             }
@@ -139,6 +147,12 @@ public class RobotContainer {
                 this.shooter.setDefaultCommand(new TestShooterCommand(this.shooter, this.primaryController));
             } else {
 
+            }
+        }
+
+        if(Flags.Climber.IS_ATTACHED) {
+            if(Flags.Climber.USE_TEST_CLIMBER_COMMAND) {
+                this.climber.setDefaultCommand(new TestClimberCommand(climber, this.primaryController));
             }
         }
 
@@ -162,6 +176,6 @@ public class RobotContainer {
     
     public void onRobotPeriodic() {
         this.gyroPoseEstimator.update();
-        System.out.println(NetworkTablesUtil.getJetsonAprilTagPoses());
+        // System.out.println(NetworkTablesUtil.getJetsonAprilTagPoses());
     }
 }

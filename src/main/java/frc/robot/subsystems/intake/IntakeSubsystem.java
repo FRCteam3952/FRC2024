@@ -3,6 +3,8 @@ package frc.robot.subsystems.intake;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.CANSparkBase.IdleMode;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -12,9 +14,6 @@ import frc.robot.util.NetworkTablesUtil;
 import frc.robot.util.ThroughboreEncoder;
 
 public class IntakeSubsystem extends SubsystemBase {
-    private static final double LEADER_CURRENT_SPIKE_THRESH = 17.5;
-    private static final double FOLLOWER_CURRENT_SPIKE_THRESH = 15;
-
     private static final DoublePublisher leaderCurrentPublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("leader_current").publish();
     private static final DoublePublisher followerCurrentPublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("follower_current").publish();
     private static final DoublePublisher pivotCurrentPublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("pivot_current").publish();
@@ -25,11 +24,12 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private final RelativeEncoder pivotEncoder;
     // private final SparkPIDController pivotPIDController;
-    private final PIDController pivotPIDController;
+    private final PIDController pivotUpPIDController;
+    private final PIDController pivotDownPIDController;
 
     private final ThroughboreEncoder throughboreEncoder;
 
-    private double pivotAngleSetpoint = 0;
+    private double pivotAngleSetpoint = 73;
 
     public IntakeSubsystem() {
         leaderMotor = new CANSparkMax(PortConstants.INTAKE_TOP_MOTOR_ID, MotorType.kBrushless);
@@ -42,6 +42,11 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotMotor = new CANSparkMax(PortConstants.INTAKE_PIVOT_MOTOR_ID, MotorType.kBrushless);
         pivotEncoder = pivotMotor.getEncoder();
 
+        pivotMotor.setInverted(true);
+        pivotMotor.setIdleMode(IdleMode.kBrake);
+
+        leaderMotor.enableVoltageCompensation(10);
+        followerMotor.enableVoltageCompensation(10);
         pivotMotor.enableVoltageCompensation(10);
         // pivotMotor.setSmartCurrentLimit(20);
         // pivotMotor.setSecondaryCurrentLimit(100);
@@ -57,34 +62,11 @@ public class IntakeSubsystem extends SubsystemBase {
 
         this.throughboreEncoder = new ThroughboreEncoder(PortConstants.INTAKE_ABSOLUTE_ENCODER_ABS_PORT, PortConstants.INTAKE_ABSOLUTE_ENCODER_A_PORT, PortConstants.INTAKE_ABSOLUTE_ENCODER_B_PORT, 0.955, true);
 
-        this.pivotPIDController = new PIDController(9e-3, 0, 1e-4);
+        this.pivotUpPIDController = new PIDController(9e-3, 0, 1.5e-4);
+        this.pivotDownPIDController = new PIDController(5e-3, 0, 0);
 
-        /*
-        pivotPIDController = pivotMotor.getPIDController();
-
-        pivotPIDController.setP(1.85e-2, 0); // DOWN
-        pivotPIDController.setI(0, 0);
-        pivotPIDController.setD(0, 0);
-        pivotPIDController.setFF(0, 0);
-
-        // old value
-//        bottomPidController.setP(7.31415926e-4, 0);
-//        bottomPidController.setI(0, 0);
-//        bottomPidController.setD(1e-3, 0);
-//        bottomPidController.setFF(2e-4, 0);
-
-        pivotPIDController.setOutputRange(-1, 1, 0);
-
-        
-        pivotPIDController.setP(0, 1); // UP
-        pivotPIDController.setI(0, 1);
-        pivotPIDController.setD(0, 1);
-        pivotPIDController.setFF(0, 1);
-
-        pivotPIDController.setOutputRange(-1, 1, 1); */
-
-        this.followerMotor.setOpenLoopRampRate(0.5);
-        this.leaderMotor.setOpenLoopRampRate(0.5);
+        this.followerMotor.setOpenLoopRampRate(1);
+        this.leaderMotor.setOpenLoopRampRate(1);
     }
 
     public void setIntakeSpeed(double speed) {
@@ -141,14 +123,6 @@ public class IntakeSubsystem extends SubsystemBase {
         }
     }
 
-    public boolean isLeaderCurrentSpiked() {
-        return this.getLeaderMotorCurrent() > LEADER_CURRENT_SPIKE_THRESH;
-    }
-
-    public boolean isFollowerCurrentSpiked() {
-        return this.getFollowerMotorCurrent() > FOLLOWER_CURRENT_SPIKE_THRESH;
-    }
-
     public ThroughboreEncoder getThroughboreEncoder() {
         return this.throughboreEncoder;
     }
@@ -156,16 +130,19 @@ public class IntakeSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         if (Flags.Intake.ENABLED && Flags.Intake.PIVOT_ENABLED && Flags.Intake.PIVOT_PID_CONTROL) {
-            boolean goingDown = this.throughboreEncoder.getAbsoluteEncoderValue() - this.pivotAngleSetpoint > 0;
-            double speed = this.pivotPIDController.calculate(this.throughboreEncoder.getAbsoluteEncoderValue(), this.pivotAngleSetpoint);
-            // System.out.println("going to: " + this.intakeAngleSetpoint + ", desired pivot speed: " + speed);
-            if (goingDown) {
-                // this.pivotMotor.set(speed);
-            } else if (!goingDown) { // going up
-                this.pivotMotor.set(speed + 0.02); // feedforward
-            } else {
-                this.pivotMotor.set(0);
+            double deltaAngle = this.throughboreEncoder.getAbsoluteEncoderValue() - this.pivotAngleSetpoint;
+            double speed = 0;
+            if(Math.abs(deltaAngle) > 1) {
+                boolean goingDown = deltaAngle > 0;
+                if(goingDown) {
+                    speed = this.pivotDownPIDController.calculate(this.throughboreEncoder.getAbsoluteEncoderValue(), this.pivotAngleSetpoint) + 0;
+                } else {
+                    speed = this.pivotUpPIDController.calculate(this.throughboreEncoder.getAbsoluteEncoderValue(), this.pivotAngleSetpoint) + 0;
+                }
+                System.out.println("going to: " + this.pivotAngleSetpoint + " from " + this.throughboreEncoder.getAbsoluteEncoderValue() + ", desired pivot speed: " + speed);
+                // System.out.println("estimated encoder pos: " + this.pivotEncoder.getPosition());
             }
+            this.pivotMotor.set(speed);
         }
 
         leaderCurrentPublisher.set(this.getLeaderMotorCurrent());

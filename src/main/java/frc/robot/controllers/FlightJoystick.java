@@ -51,4 +51,7 @@ public class FlightJoystick {
         return this.joystick.getHID().getRawButtonReleased(button);
     }
 
+    public boolean getRawButtonPressedWrapper(int button) {
+        return this.joystick.getHID().getRawButtonPressed(button);
+    }
 }

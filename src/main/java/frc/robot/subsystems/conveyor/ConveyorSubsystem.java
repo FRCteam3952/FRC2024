@@ -20,6 +20,10 @@ public class ConveyorSubsystem extends SubsystemBase {
         this.conveyorMotorFollower = new CANSparkMax(PortConstants.CONVEYOR_LEFT_MOTOR_ID, MotorType.kBrushless);
         this.conveyorMotorLeader = new CANSparkMax(PortConstants.CONVEYOR_RIGHT_MOTOR_ID, MotorType.kBrushless);
 
+        this.shooterFeederMotor.enableVoltageCompensation(12);
+        this.conveyorMotorFollower.enableVoltageCompensation(10);
+        this.conveyorMotorLeader.enableVoltageCompensation(10);
+
         // this.conveyorMotorFollower.follow(conveyorMotorLeader, true);
     }
 

@@ -6,13 +6,14 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PortConstants;
 import frc.robot.Flags;
-import frc.robot.subsystems.staticsubsystems.ColorSensor;
 import frc.robot.util.NetworkTablesUtil;
 import frc.robot.util.ThroughboreEncoder;
 
@@ -21,6 +22,8 @@ import frc.robot.util.ThroughboreEncoder;
 public class ShooterSubsystem extends SubsystemBase {
     private static final DoublePublisher lAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("lAmp").publish();
     private static final DoublePublisher rAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("rAmp").publish();
+    private static final double MAX_SHOOTER_ANGLE_DEG = 54;
+    private static final double MIN_SHOOTER_ANGLE_DEG = 30;
     private final CANSparkMax leftMotor;
     private final CANSparkMax rightMotor;
     private final CANSparkMax pivotMotor;
@@ -34,7 +37,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private final Servo leftServo;
     private final Servo rightServo;
 
-    private double pivotAngleSetpoint = 30;
+    private double pivotAngleSetpoint = 45;
 
     public ShooterSubsystem() {
         leftMotor = new CANSparkMax(PortConstants.SHOOTER_LEFT_MOTOR_ID, MotorType.kBrushless);
@@ -52,6 +55,10 @@ public class ShooterSubsystem extends SubsystemBase {
         // leftMotor.follow(rightMotor, true);
         pivotMotor.setInverted(false);
         pivotEncoder.setPosition(0);
+
+        leftMotor.enableVoltageCompensation(10);
+        rightMotor.enableVoltageCompensation(10);
+        pivotMotor.enableVoltageCompensation(10);
 
         leftServo = new Servo(PortConstants.SHOOTER_LEFT_SERVO_PORT);
         rightServo = new Servo(PortConstants.SHOOTER_RIGHT_SERVO_PORT);
@@ -87,14 +94,15 @@ public class ShooterSubsystem extends SubsystemBase {
         leftPidController.setFF(0, 1);
     }
 
-    public void flapToAngle(double degrees) {
-        this.leftServo.setAngle(180 - degrees);
-        this.rightServo.setAngle(degrees);
+    public void flapToAngle(double degreesL, double degreesR) {
+        // System.out.println("left: " + this.leftServo.getAngle() + ", right: " + this.rightServo.getAngle());
+        this.leftServo.setAngle(degreesL);
+        this.rightServo.setAngle(degreesR);
     }
 
     public void pivotToAngle(double degrees) {
         if (Flags.Shooter.ENABLED && Flags.Shooter.PIVOT_ENABLED && Flags.Shooter.PIVOT_PID_CONTROL) {
-            this.pivotAngleSetpoint = degrees;
+            this.pivotAngleSetpoint = MathUtil.clamp(degrees, MIN_SHOOTER_ANGLE_DEG, MAX_SHOOTER_ANGLE_DEG);
         }
     }
 
@@ -148,9 +156,9 @@ public class ShooterSubsystem extends SubsystemBase {
         }
 
         // System.out.println("current color: " + ColorSensor.colorAsRGBString(ColorSensor.getColor()));
-        if (ColorSensor.isNoteColor()) {
+        // if (ColorSensor.isNoteColor()) {
             // System.out.println("omg its a note");
-        }
+        // }
         //lAmp.set(this.topMotor.getOutputCurrent());
         //rAmp.set(this.bottomMotor.getOutputCurrent());
         // System.out.println("shooter throughbore: " + this.throughboreEncoder.getAbsoluteEncoderValue());

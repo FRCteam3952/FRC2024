@@ -139,7 +139,7 @@ public class IntakeSubsystem extends SubsystemBase {
                 } else {
                     speed = this.pivotUpPIDController.calculate(this.throughboreEncoder.getAbsoluteEncoderValue(), this.pivotAngleSetpoint) + 0;
                 }
-                System.out.println("going to: " + this.pivotAngleSetpoint + " from " + this.throughboreEncoder.getAbsoluteEncoderValue() + ", desired pivot speed: " + speed);
+                // System.out.println("going to: " + this.pivotAngleSetpoint + " from " + this.throughboreEncoder.getAbsoluteEncoderValue() + ", desired pivot speed: " + speed);
                 // System.out.println("estimated encoder pos: " + this.pivotEncoder.getPosition());
             }
             this.pivotMotor.set(speed);

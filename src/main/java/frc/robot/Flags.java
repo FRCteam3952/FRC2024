@@ -11,7 +11,7 @@ public final class Flags {
      * Flags relating to the Operator console (i.e. relating to the Driver Station laptop).
      */
     public static class Operator {
-        public static final boolean NINTENDO_SWITCH_CONTROLLER_AS_PRIMARY = true;
+        public static final boolean NINTENDO_SWITCH_CONTROLLER_AS_PRIMARY = false;
     }
 
     /**
@@ -163,6 +163,6 @@ public final class Flags {
         /**
          * Whether to enable the test climber command rather than the normal command.
          */
-        public static final boolean USE_TEST_CLIMBER_COMMAND = false;
+        public static final boolean USE_TEST_CLIMBER_COMMAND = true;
     }
 }

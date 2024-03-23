@@ -14,7 +14,7 @@ import java.util.function.Supplier;
  * Does stuff for us
  */
 public final class Util {
-    public static final CoordinateSystem JETSON_APRILTAGS_COORD_SYSTEM = new CoordinateSystem(CoordinateAxis.E(), CoordinateAxis.U(), CoordinateAxis.N());
+    public static final CoordinateSystem JETSON_APRILTAGS_COORD_SYSTEM = new CoordinateSystem(CoordinateAxis.U(), CoordinateAxis.E(), CoordinateAxis.N());
     public static final AprilTagFieldLayout TAG_FIELD_LAYOUT = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
 
     private Util() {

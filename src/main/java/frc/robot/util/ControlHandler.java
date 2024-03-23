@@ -18,7 +18,7 @@ public final class ControlHandler {
     /**
      * Gets the {@link Trigger} from the given controller based on the requested button.
      * <p>
-     * IMPORTANT: THIS METHOD SHOULD NEVER BE CALLED PER-TICK AS IT WILL CREATE EXTRANEOUS OBJECTS.
+     * IMPORTANT: THIS METHOD SHOULD NEVER BE CALLED PER-TICK AS IT WILL CREATE EXTRANEOUS OBJECTS. PREFER TO STORE ONE INSTANCE OF THE TRIGGER INSTEAD.
      *
      * @param controller The controller to get the Trigger from.
      * @param type       The button to get.

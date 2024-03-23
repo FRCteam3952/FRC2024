@@ -24,6 +24,7 @@ import frc.robot.subsystems.staticsubsystems.ColorSensor;
 import frc.robot.subsystems.staticsubsystems.LimeLight;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.subsystems.swerve.DriveTrainSubsystem;
+import frc.robot.util.AprilTagHandler;
 import frc.robot.util.ControlHandler;
 import frc.robot.util.GyroPoseEstimator;
 import frc.robot.util.NetworkTablesUtil;
@@ -31,6 +32,7 @@ import frc.robot.util.Util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.function.Supplier;
 
 public class RobotContainer {
     private final DriveTrainSubsystem driveTrain;
@@ -45,11 +47,14 @@ public class RobotContainer {
     private final AbstractController primaryController = Flags.Operator.NINTENDO_SWITCH_CONTROLLER_AS_PRIMARY ? this.nintendoProController : this.ps5Controller;
     private final PowerHandler powerHandler = new PowerHandler();
     private final GyroPoseEstimator gyroPoseEstimator = new GyroPoseEstimator();
+    private final AprilTagHandler aprilTagHandler = new AprilTagHandler();
 
     private final SendableChooser<Command> autonChooser;
 
+    private final Supplier<DriveTrainSubsystem> driveTrainSubsystemCreator = () -> new DriveTrainSubsystem(aprilTagHandler);
+
     public RobotContainer() {
-        this.driveTrain = Util.createIfFlagElseNull(DriveTrainSubsystem::new, Flags.DriveTrain.IS_ATTACHED);
+        this.driveTrain = Util.createIfFlagElseNull(driveTrainSubsystemCreator, Flags.DriveTrain.IS_ATTACHED);
         this.intake     = Util.createIfFlagElseNull(IntakeSubsystem::new, Flags.Intake.IS_ATTACHED);
         this.shooter    = Util.createIfFlagElseNull(ShooterSubsystem::new, Flags.Shooter.IS_ATTACHED);
         this.conveyor   = Util.createIfFlagElseNull(ConveyorSubsystem::new, Flags.Conveyor.IS_ATTACHED);
@@ -116,7 +121,7 @@ public class RobotContainer {
             this.driveTrain.setHeadingLockMode(false);
         }));
 
-        sideJoystick.joystick.button(8).whileTrue(new CalibrateCommand(climber, intake, nintendoProController));
+        sideJoystick.joystick.button(8).whileTrue(new CalibrateIntakeCommand(climber, intake, nintendoProController));
     }
 
     public void onRobotInit() {
@@ -136,7 +141,7 @@ public class RobotContainer {
             if (Flags.Intake.USE_TEST_INTAKE_COMMAND) {
                 this.intake.setDefaultCommand(new TestIntakeCommand(this.intake, this.primaryController));
             } else if (Flags.Conveyor.IS_ATTACHED && Flags.Shooter.IS_ATTACHED) {
-                this.intake.setDefaultCommand(new RingHandlingCommand(shooter, intake, conveyor, this.primaryController, this.sideJoystick));
+                this.intake.setDefaultCommand(new RingHandlingCommand(shooter, intake, conveyor, this.primaryController, this.sideJoystick, this.driveTrain::getPose));
             } else {
                 this.intake.setDefaultCommand(new IntakeCommand(this.intake, this.primaryController));
             }
@@ -151,8 +156,8 @@ public class RobotContainer {
         }
 
         if(Flags.Climber.IS_ATTACHED) {
-            if(Flags.Climber.USE_TEST_CLIMBER_COMMAND) {
-                this.climber.setDefaultCommand(new TestClimberCommand(climber, this.primaryController));
+            if(Flags.Climber.USE_TEST_CLIMBER_COMMAND && !Flags.Operator.NINTENDO_SWITCH_CONTROLLER_AS_PRIMARY) {
+                this.climber.setDefaultCommand(new TestClimberCommand(climber, this.nintendoProController));
             }
         }
 
@@ -176,6 +181,5 @@ public class RobotContainer {
     
     public void onRobotPeriodic() {
         this.gyroPoseEstimator.update();
-        // System.out.println(NetworkTablesUtil.getJetsonAprilTagPoses());
     }
 }

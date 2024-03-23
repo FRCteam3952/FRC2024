@@ -21,7 +21,7 @@ public class PowerHandler {
         System.out.println("PDP FAULTS: ");
         try {
             for (Field field : f.getClass().getDeclaredFields()) {
-                System.out.println(field.getName() + ": " + field.getBoolean(f));
+                // System.out.println(field.getName() + ": " + field.getBoolean(f));
             }
         } catch (Exception ignored) {
         }

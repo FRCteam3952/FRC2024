@@ -1,5 +1,9 @@
 package frc.robot.commands;
 
+import java.util.function.Supplier;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -13,6 +17,7 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.staticsubsystems.ColorSensor;
 import frc.robot.util.ControlHandler;
 import frc.robot.util.NetworkTablesUtil;
+import frc.robot.util.Util;
 
 /**
  * also known as SonicTheHedgehogCommand
@@ -24,6 +29,7 @@ public class RingHandlingCommand extends Command {
     private final ConveyorSubsystem conveyor;
     private final AbstractController primaryController;
     private final FlightJoystick sideJoystick;
+    private final Supplier<Pose2d> robotPoseSupplier;
 
     private boolean intakeToggledOn = false;
     private boolean hasHandledNote = false;
@@ -35,18 +41,20 @@ public class RingHandlingCommand extends Command {
     private final InstantCommand toggleIntakeRun = new InstantCommand(() -> intakeToggledOn = !intakeToggledOn);
     private final InstantCommand toggleIntakePos = new InstantCommand(() -> intakeUp = !intakeUp);
 
-    private final Trigger reverseIntake, runShooterHigh, runShooterAmp;
+    private final Trigger reverseIntake, runShooterHigh, runShooterAmp, autoAimSubwoofer;
 
-    public RingHandlingCommand(ShooterSubsystem shooter, IntakeSubsystem intake, ConveyorSubsystem conveyor, AbstractController primaryController, FlightJoystick sideJoystick) {
+    public RingHandlingCommand(ShooterSubsystem shooter, IntakeSubsystem intake, ConveyorSubsystem conveyor, AbstractController primaryController, FlightJoystick sideJoystick, Supplier<Pose2d> robotPoseSupplier) {
         this.shooter = shooter;
         this.intake = intake;
         this.conveyor = conveyor;
         this.primaryController = primaryController;
         this.sideJoystick = sideJoystick;
+        this.robotPoseSupplier = robotPoseSupplier;
 
         this.reverseIntake = ControlHandler.get(primaryController, ControllerConstants.INTAKE_REVERSE);
         this.runShooterHigh = ControlHandler.get(primaryController, ControllerConstants.SHOOTER_RUN_HIGH_SPEED);
         this.runShooterAmp = ControlHandler.get(primaryController, ControllerConstants.SHOOTER_RUN_AMP_SPEED);
+        this.autoAimSubwoofer = ControlHandler.get(primaryController, ControllerConstants.AUTO_AIM_FOR_SHOOT);
 
         addRequirements(shooter, intake, conveyor);
     }
@@ -93,6 +101,12 @@ public class RingHandlingCommand extends Command {
             shooterAngle--;
         }
 
+        if(autoAimSubwoofer.getAsBoolean()) {
+            double angle = autoAimShooterPivotAngle();
+            shooterAngle = angle;
+            // System.out.println("rotating shooter to " + angle + " to shoot at target");
+        }
+
         this.shooter.pivotToAngle(shooterAngle);
 
         if(intakeUp) {
@@ -107,7 +121,7 @@ public class RingHandlingCommand extends Command {
         }
 
         if (shouldReverse && reverseTimerElapsed++ < 1) {
-            // System.out.println("reversing at " + reverseTimerElapsed + ", note handled: " + hasHandledNote + ", does it have one: " + hasNote);
+            System.out.println("reversing at " + reverseTimerElapsed + ", note handled: " + hasHandledNote + ", does it have one: " + hasNote);
             this.intake.setIntakeSpeed(-0.2, -0.2);
             this.conveyor.setConveyorMotorsSpeed(0.2);
             this.conveyor.setShooterFeederMotorSpeed(-0.3);
@@ -115,19 +129,19 @@ public class RingHandlingCommand extends Command {
             shouldReverse = false;
             reverseTimerElapsed = 0;
             if(hasNote) {
-                hasHandledNote = true;
-                intakeUp = true;
+                // hasHandledNote = true;
+                // intakeUp = true;
             }
         }
     
-        // System.out.println("note handled? " + hasHandledNote);
+        // System.out.println("note handled? " + hasHandledNote + ", has note: " + hasNote);
 
         if (reverseIntake.getAsBoolean()) { // eject takes priority
             shouldReverse = true;
         } else if (ColorSensor.isNoteColor()) {
             // System.out.println("NOTE FOUND");
             if(!hasHandledNote) {
-                shouldReverse = true;
+                // shouldReverse = true;
                 intakeToggledOn = false;
                 hasNote = true;
             }
@@ -151,7 +165,7 @@ public class RingHandlingCommand extends Command {
             shooter.setMotorRpm(2700);
             if (shooter.getShooterRpm() > 2600) {
                 this.conveyor.setShooterFeederMotorSpeed(1);
-                this.conveyor.setConveyorMotorsSpeed(-0.7);
+                this.conveyor.setConveyorMotorsSpeed(-1);
                 hasHandledNote = false;
                 hasNote = false;
             }
@@ -159,12 +173,12 @@ public class RingHandlingCommand extends Command {
             shooter.setMotorRpm(1400);
             if (shooter.getShooterRpm() > 1300) {
                 this.conveyor.setShooterFeederMotorSpeed(1);
-                this.conveyor.setConveyorMotorsSpeed(-0.7);
+                this.conveyor.setConveyorMotorsSpeed(-1);
                 hasHandledNote = false;
                 hasNote = false;
             }
         } else {
-            shooter.setMotorRpm(0); // 1300
+            shooter.setMotorRpm(1000); // 1300
         }
         // System.out.println("RPM: " + shooter.getShooterRpm());
         // rpmPub.set(shooter.getShooterRpm());
@@ -176,10 +190,34 @@ public class RingHandlingCommand extends Command {
         // System.out.println("lower intake current: " + this.intake.getFollowerMotorCurrent() + ", top current: " + this.intake.getLeaderMotorCurrent());
     }
 
-    private double autoAimAngle() {
-        // the middle of the speaker is 6'8 from the ground (avg. of bottom 6'6 and top 6'10+7/8), our shooter pivot is 16.5 in off the ground.
+    /**
+     * Calculate the angle the shooter pivot should be at in order to look at the speaker
+     * 
+     * @return A double representing the angle to the speaker in degrees. The shooter pivot value should equal this value when the robot is aiming into the speaker.
+     */
+    private double autoAimShooterPivotAngle() {
+        // middle of the speaker target is 204 cm = 2.04m high
+        // since we're gonna be farther back, aiming for 204 is actually bad b/c the straight line will get blocked by the roof, so we use 200cm (closer to the bottom) so we can get under
 
-        return 0;
+        // get the target for our alliance color
+        Pose3d targetPose;
+        if(Util.onBlueTeam()) {
+            // our target is tag 7
+            targetPose = Util.getTagPose(7);
+        } else {
+            // our target is tag 4
+            targetPose = Util.getTagPose(4);
+        }
+
+        // now we know where to aim, compare our current location with our target
+        Pose2d targetPose2d = targetPose.toPose2d();
+        Pose2d robotPos = this.robotPoseSupplier.get();
+        // tan(theta) = opp/adj
+        // theta = atan(opp/adj)
+        double distanceToTarget = Util.distance(targetPose2d.getX(), robotPos.getX(), targetPose2d.getY(), robotPos.getY());
+        double theta = Math.atan(2.00 / distanceToTarget); // trust me bro
+        System.out.println("distnace to target: " + distanceToTarget);
+        return Math.toDegrees(theta);
     }
 
     // Called once the command ends or is interrupted.

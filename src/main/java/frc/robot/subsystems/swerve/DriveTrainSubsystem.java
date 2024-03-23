@@ -4,11 +4,15 @@
 
 package frc.robot.subsystems.swerve;
 
+import java.util.ArrayList;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -19,11 +23,14 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -36,6 +43,7 @@ import frc.robot.Constants.RobotConstants;
 import frc.robot.Flags;
 import frc.robot.commands.ManualDriveCommand;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
+import frc.robot.util.AprilTagHandler;
 import frc.robot.util.NetworkTablesUtil;
 import frc.robot.util.Util;
 
@@ -50,10 +58,13 @@ public class DriveTrainSubsystem extends SubsystemBase {
     private static final boolean INVERT_DRIVE_MOTORS = true;
     static SwerveModuleState[] optimizedTargetStates = new SwerveModuleState[4]; // for debugging purposes
     // Location of each swerve drive, relative to motor center. +X -> moving to front of robot, +Y -> moving to left of robot. IMPORTANT.
-    private final Translation2d frontLeftLocation = new Translation2d(RobotConstants.LEG_LENGTHS_M, RobotConstants.LEG_LENGTHS_M);
-    private final Translation2d frontRightLocation = new Translation2d(RobotConstants.LEG_LENGTHS_M, -RobotConstants.LEG_LENGTHS_M);
-    private final Translation2d backLeftLocation = new Translation2d(-RobotConstants.LEG_LENGTHS_M, RobotConstants.LEG_LENGTHS_M);
-    private final Translation2d backRightLocation = new Translation2d(-RobotConstants.LEG_LENGTHS_M, -RobotConstants.LEG_LENGTHS_M);
+    private static final Translation2d frontLeftLocation = new Translation2d(RobotConstants.LEG_LENGTHS_M, RobotConstants.LEG_LENGTHS_M);
+    private static final Translation2d frontRightLocation = new Translation2d(RobotConstants.LEG_LENGTHS_M, -RobotConstants.LEG_LENGTHS_M);
+    private static final Translation2d backLeftLocation = new Translation2d(-RobotConstants.LEG_LENGTHS_M, RobotConstants.LEG_LENGTHS_M);
+    private static final Translation2d backRightLocation = new Translation2d(-RobotConstants.LEG_LENGTHS_M, -RobotConstants.LEG_LENGTHS_M);
+
+    private static final Translation2d cameraLocation = backRightLocation.plus(new Translation2d(0.075, 0.205));
+
     private final SwerveModule frontLeft = new SwerveModule(
             PortConstants.DTRAIN_FRONT_LEFT_DRIVE_MOTOR_ID,
             PortConstants.DTRAIN_FRONT_LEFT_ROTATION_MOTOR_ID,
@@ -91,6 +102,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
     private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, RobotGyro.getRotation2d(), this.getAbsoluteModulePositions(), new Pose2d());
 
     private final Field2d field = new Field2d();
+    private final Field2d estimatedField = new Field2d();
     // uploads the intended, estimated, and actual states of the robot.
     StructArrayPublisher<SwerveModuleState> targetSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("TargetStates", SwerveModuleState.struct).publish();
     StructArrayPublisher<SwerveModuleState> realSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("ActualStates", SwerveModuleState.struct).publish();
@@ -103,10 +115,15 @@ public class DriveTrainSubsystem extends SubsystemBase {
     DoublePublisher fRAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("fr_amp").publish();
     DoublePublisher bLAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("bl_amp").publish();
     DoublePublisher bRAmp = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("br_amp").publish();
-    public DriveTrainSubsystem() {
+
+    private final AprilTagHandler aprilTagHandler;
+    public DriveTrainSubsystem(AprilTagHandler aprilTagHandler) {
+        this.aprilTagHandler = aprilTagHandler;
+
         RobotGyro.resetGyroAngle();
 
         SmartDashboard.putData("Field", field);
+        SmartDashboard.putData("estimated field", estimatedField);
 
         this.setPose(new Pose2d(1, 5.50, RobotGyro.getRotation2d()));
 
@@ -334,6 +351,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
         }
 
         this.updateOdometry();
+        this.updateOdometryWithVision();
         field.setRobotPose(getPose());
         // System.out.println(this.getPose());
 
@@ -378,6 +396,46 @@ public class DriveTrainSubsystem extends SubsystemBase {
      * Updates the field relative position of the robot using vision measurements.
      */
     public void updateOdometryWithVision() {
-        // this.poseEstimator.addVisionMeasurement();
+        ArrayList<AprilTagHandler.RobotPoseAndTagDistance> tags = aprilTagHandler.getJetsonAprilTagPoses();
+        double timestamp = Timer.getFPGATimestamp();
+        Pose2d robotPose = this.getPose();
+        Rotation2d robotRotation = RobotGyro.getRotation2d();
+        for(AprilTagHandler.RobotPoseAndTagDistance poseAndTag : tags) {
+            Pose2d pose = poseAndTag.fieldRelativePose();
+            // thank you isaac part 2
+            // System.out.println("og pose: " + pose);
+            // pose = fixPose(pose);
+            // thank you isaac for deriving this math for me
+            double c = cameraLocation.getDistance(new Translation2d());
+            double theta = robotRotation.getRadians();
+            double thi = Math.asin(cameraLocation.getY() / c);
+            double yTranslation = c * Math.sin(theta - thi);
+            double xTranslation = c * Math.cos(theta - thi);
+
+            Translation2d newTranslation = pose.getTranslation().minus(new Translation2d(xTranslation, yTranslation));
+            Pose2d estimatedPose = new Pose2d(newTranslation, robotRotation);
+            if(estimatedPose.getTranslation().getDistance(robotPose.getTranslation()) <= 1.5) {
+                double distanceToTag = poseAndTag.tagDistanceFromRobot();
+                Matrix<N3, N1> stdevs;
+                if(distanceToTag < 3) {
+                    stdevs = new Matrix<>(Nat.N3(), Nat.N1(), new double[] {0.2, 0.2, 0.1}); // basically exact
+                } else if(distanceToTag < 7) {
+                    stdevs = new Matrix<>(Nat.N3(), Nat.N1(), new double[] {0.85, 0.85, 0.1}); // pretty accurate
+                } else {
+                    stdevs = new Matrix<>(Nat.N3(), Nat.N1(), new double[] {1.5, 1.5, 0.1}); // less accurate
+                }
+                this.poseEstimator.addVisionMeasurement(estimatedPose, timestamp, stdevs);
+            }
+            estimatedField.setRobotPose(pose);
+        }
+    }
+
+    public static Pose2d fixPose(Pose2d pose) {
+        double c = pose.getTranslation().getDistance(new Translation2d());
+        double thi = Math.asin(pose.getY() / c);
+        double y = c * Math.sin(RobotGyro.getRotation2d().getRadians() + thi);
+        double x = c * Math.cos(RobotGyro.getRotation2d().getRadians() + thi);
+
+        return new Pose2d(new Translation2d(x, y), pose.getRotation());
     }
 }

@@ -150,13 +150,13 @@ public final class Constants {
     }
 
     public static class RobotConstants {
-        public static final double SIDE_LENGTH_INCHES = 30; // square
+        public static final double SIDE_LENGTH_INCHES = 15; // square
 
-        public static final double DIAGONAL_LENGTH_INCHES = Math.sqrt(2) * SIDE_LENGTH_INCHES;
+        public static final double DIAGONAL_LENGTH_INCHES = 1.41421356 * SIDE_LENGTH_INCHES; // sqrt(2)
         public static final double DIAGONAL_LENGTH_CM = DIAGONAL_LENGTH_INCHES * 2.54;
         public static final double SWERVE_MODULE_INSET_FROM_CORNER_CM = 9; // CM
         public static final double SWERVE_MODULE_DIST_FROM_MIDDLE_CM = DIAGONAL_LENGTH_CM - SWERVE_MODULE_INSET_FROM_CORNER_CM;
-        public static final double LEG_LENGTHS_CM = SWERVE_MODULE_DIST_FROM_MIDDLE_CM / Math.sqrt(2);
+        public static final double LEG_LENGTHS_CM = SWERVE_MODULE_DIST_FROM_MIDDLE_CM / 1.41421356; // sqrt(2)
         public static final double LEG_LENGTHS_M = LEG_LENGTHS_CM / 100;
     }
 }

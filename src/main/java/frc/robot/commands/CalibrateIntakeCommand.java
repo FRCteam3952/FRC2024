@@ -5,18 +5,18 @@ import frc.robot.controllers.AbstractController;
 import frc.robot.subsystems.climber.ClimberSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 
-public class CalibrateCommand extends Command {
+public class CalibrateIntakeCommand extends Command {
     private final ClimberSubsystem climber;
     private final IntakeSubsystem intake;
     private final AbstractController joystick;
 
-    public CalibrateCommand(ClimberSubsystem climber, IntakeSubsystem intake, AbstractController joystick) {
+    public CalibrateIntakeCommand(ClimberSubsystem climber, IntakeSubsystem intake, AbstractController joystick) {
         this.climber = climber;
         this.intake = intake;
 
         this.joystick = joystick;
 
-        addRequirements(climber, intake);
+        addRequirements(intake);
     }
 
     @Override

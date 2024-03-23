@@ -21,7 +21,7 @@ public class ManualDriveCommand extends Command {
     private final AbstractController joystick;
     private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(1);
     private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(1);
-    private final SlewRateLimiter rotLimiter = new SlewRateLimiter(1);
+    private final SlewRateLimiter rotLimiter = new SlewRateLimiter(0.5);
     private final Trigger autoAimSubwoofer;
 
     public ManualDriveCommand(DriveTrainSubsystem driveTrain, AbstractController joystick) {
@@ -34,7 +34,7 @@ public class ManualDriveCommand extends Command {
 
     @Override
     public void initialize() {
-        this.driveTrain.setPose(new Pose2d(2, 7, RobotGyro.getRotation2d()));
+        // this.driveTrain.setPose(new Pose2d(2, 7, RobotGyro.getRotation2d()));
     }
 
     @Override
@@ -43,15 +43,24 @@ public class ManualDriveCommand extends Command {
         // this.driveTrain.drive(this.joystick.getVerticalMovement());
         double ySpeed = Util.squareKeepSign(this.ySpeedLimiter.calculate(-this.joystick.getLeftVerticalMovement())) * MAX_SPEED_METERS_PER_SEC;
         double xSpeed = Util.squareKeepSign(this.xSpeedLimiter.calculate(-this.joystick.getLeftHorizontalMovement())) * MAX_SPEED_METERS_PER_SEC;
-        double rotSpeed = this.rotLimiter.calculate(-this.joystick.getRightHorizontalMovement());
+        double rotSpeed = -this.joystick.getRightHorizontalMovement() * 1;
 
         if(autoAimSubwoofer.getAsBoolean()) {
             Rotation2d angleToSubwooferTarget = directionToSubwooferTarget();
             Rotation2d robotHeading = RobotGyro.getRotation2d();
-            double headingDeg = 180 - Util.bringAngleWithinUnitCircle(robotHeading.getDegrees());
-            double rotSpeed2 = MathUtil.clamp(1 * (Math.toRadians(headingDeg - angleToSubwooferTarget.getDegrees())), -0.5, 0.5); // 
-            System.out.println("angle to subwoofer target: " + directionToSubwooferTarget() + ", rotating " + (headingDeg - angleToSubwooferTarget.getDegrees()) + " at a speed of " + rotSpeed2 + " to get there");
-            System.out.println("current rot: " + RobotGyro.getRotation2d());
+            double headingDeg = 180 + Util.bringAngleWithinUnitCircle(robotHeading.getDegrees());
+            double rotateByAmount = headingDeg - angleToSubwooferTarget.getDegrees();
+            if(rotateByAmount > 180) {
+                rotateByAmount -= 360;
+            }
+            rotateByAmount = -rotateByAmount;
+            if(rotateByAmount < -180) {
+                rotateByAmount += 360;
+            }
+            double rotSpeed2 = MathUtil.clamp(1.6 * (Math.toRadians(rotateByAmount)), -1.7, 1.7);
+            System.out.println("angle to subwoofer target: " + directionToSubwooferTarget() + ", rotating " + rotateByAmount + " at a speed of " + rotSpeed2 + " to get there");
+            //System.out.println("current rot: " + RobotGyro.getRotation2d());
+            rotSpeed = rotSpeed2;
         }
 
         // System.out.println("forward speed: " + ySpeed + ", x speed: " + xSpeed);

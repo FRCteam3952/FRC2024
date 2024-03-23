@@ -4,10 +4,18 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
+import com.revrobotics.CANSparkBase.IdleMode;
+
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.GenericPublisher;
+import edu.wpi.first.networktables.NetworkTableType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PortConstants;
+import frc.robot.util.NetworkTablesUtil;
 
 public class ClimberSubsystem extends SubsystemBase {
+    private static final DoublePublisher lCurrentPublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("lclimb_current").publish();
+    private static final DoublePublisher rCurrentPublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("rclimb_current").publish();
 
     private final CANSparkMax leftHook;
     private final CANSparkMax rightHook;
@@ -28,8 +36,14 @@ public class ClimberSubsystem extends SubsystemBase {
         leftPid = leftHook.getPIDController();
         rightPid = rightHook.getPIDController();
 
+        leftHook.setIdleMode(IdleMode.kBrake);
+        rightHook.setIdleMode(IdleMode.kBrake);
+
         leftHook.enableVoltageCompensation(10);
         rightHook.enableVoltageCompensation(10);
+
+        leftHook.setSmartCurrentLimit(25);
+        rightHook.setSmartCurrentLimit(25);
 
         configurePID(leftPid);
         configurePID(rightPid);
@@ -72,5 +86,11 @@ public class ClimberSubsystem extends SubsystemBase {
 
     public void setRightSpeed(double speed) {
         rightHook.set(speed);
+    }
+
+    @Override
+    public void periodic() {
+        lCurrentPublisher.set(getLeftAmperage());
+        rCurrentPublisher.set(getRightAmperage());
     }
 }

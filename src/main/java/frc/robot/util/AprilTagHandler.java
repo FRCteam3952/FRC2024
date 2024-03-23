@@ -1,25 +1,26 @@
 package frc.robot.util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Optional;
 
 import edu.wpi.first.math.geometry.CoordinateSystem;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Quaternion;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import frc.robot.subsystems.swerve.DriveTrainSubsystem;
 
 public final class AprilTagHandler {
-    private double[] previousReading;
+    private double[] previousReading = new double[] {};
 
     /**
      * Returns the current robot pose according to AprilTags on Jetson, in meters since that's what they want. The rotation is really the gyro's rotation, since we know that the gyro is accurate.
      *
      * @return A {@link Translation2d} representing the robot's pose ([x, y, radians])
      */
-    public ArrayList<DistanceAndAprilTagDetection> getJetsonAprilTagPoses() {
+    public ArrayList<RobotPoseAndTagDistance> getJetsonAprilTagPoses() {
         if (!jetsonHasPose()) {
             return new ArrayList<>();
         }
@@ -34,16 +35,19 @@ public final class AprilTagHandler {
                 }
             }
             if(flag) {
+                // System.out.println("no AT readout");
                 return new ArrayList<>();
             }
         }
+
+        previousReading = readTags;
 
         if (readTags.length % 8 != 0) {
             System.out.println("Error: bad tag array");
             return new ArrayList<>();
         }
 
-        ArrayList<DistanceAndAprilTagDetection> poses = new ArrayList<>(readTags.length / 8);
+        ArrayList<RobotPoseAndTagDistance> poses = new ArrayList<>(readTags.length / 8);
         for (int i = 0; i < readTags.length; i += 8) {
             int tagId = (int) readTags[i + 0];
             Optional<Pose3d> fieldRelTagPoseOpt = Util.TAG_FIELD_LAYOUT.getTagPose(tagId);
@@ -55,15 +59,17 @@ public final class AprilTagHandler {
             // System.out.println("pose of tag: " + originToTag);
             Translation3d pose = new Translation3d(readTags[i + 1], readTags[i + 2], readTags[i + 3]);
             Quaternion q = new Quaternion(readTags[i + 4], readTags[i + 5], readTags[i + 6], readTags[i + 7]);
-            Pose3d tagOriginPose = CoordinateSystem.convert(new Pose3d(pose, new Rotation3d(q)), Util.JETSON_APRILTAGS_COORD_SYSTEM, CoordinateSystem.NWU()); // a pose where the tag is treated as the origin.
+            Pose3d tagOriginPose = CoordinateSystem.convert(new Pose3d(pose, new Rotation3d()), Util.JETSON_APRILTAGS_COORD_SYSTEM, CoordinateSystem.NWU()); // a pose where the tag is treated as the origin.
+            Pose2d newPose = DriveTrainSubsystem.fixPose(tagOriginPose.toPose2d());
             // System.out.println("tag origin pose: " + tagOriginPose);
+            // System.out.println("new pose: " + newPose);
             // System.out.println("tag angle: " + tagOriginPose.getRotation().getY());
-            var a = originToTag.minus(new Pose3d());
+            //var a = originToTag.minus(new Pose3d());
             // System.out.println("a: " + a);
-            Pose3d finalPose = originToTag.plus(tagOriginPose.minus(new Pose3d()));
-
+            Pose2d finalPose = originToTag.toPose2d().plus(newPose.minus(new Pose2d()));
+            //System.out.println("final pose: " + finalPose);
             if (checkRequestedPoseValues(finalPose)) {
-                poses.add(new DistanceAndAprilTagDetection(finalPose, tagOriginPose.getTranslation().getDistance(new Translation3d())));
+                poses.add(new RobotPoseAndTagDistance(finalPose, tagOriginPose.getTranslation().getDistance(new Translation3d())));
             }
         }
 
@@ -77,7 +83,7 @@ public final class AprilTagHandler {
      * @return True if the pose can reasonably be kept, false otherwise.
      */
     
-    private static boolean checkRequestedPoseValues(Pose3d pose) {
+    private static boolean checkRequestedPoseValues(Pose2d pose) {
         return true;
     }
 
@@ -85,6 +91,6 @@ public final class AprilTagHandler {
         return NetworkTablesUtil.getAprilTagEntry().length != 1;
     }
 
-    public record DistanceAndAprilTagDetection(Pose3d fieldRelativePose, double distanceFromRobot) {
+    public record RobotPoseAndTagDistance(Pose2d fieldRelativePose, double tagDistanceFromRobot) {
     }
 }

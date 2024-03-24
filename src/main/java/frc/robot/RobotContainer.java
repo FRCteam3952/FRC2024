@@ -114,9 +114,9 @@ public class RobotContainer {
 
     private void configureBindings() {
         if (Flags.DriveTrain.IS_ATTACHED) {
-            ControlHandler.get(this.primaryController, ControllerConstants.ZERO_SWERVE_MODULES).onTrue(this.driveTrain.rotateToAbsoluteZeroCommand());
+            ControlHandler.get(this.nintendoProController, ControllerConstants.ZERO_SWERVE_MODULES).onTrue(this.driveTrain.rotateToAbsoluteZeroCommand());
         }
-        ControlHandler.get(this.primaryController, ControllerConstants.ZERO_GYRO).onTrue(Commands.runOnce(() -> {
+        ControlHandler.get(this.nintendoProController, ControllerConstants.ZERO_GYRO).onTrue(Commands.runOnce(() -> {
             RobotGyro.resetGyroAngle();
             this.driveTrain.setHeadingLockMode(false);
         }));
@@ -141,7 +141,7 @@ public class RobotContainer {
             if (Flags.Intake.USE_TEST_INTAKE_COMMAND) {
                 this.intake.setDefaultCommand(new TestIntakeCommand(this.intake, this.primaryController));
             } else if (Flags.Conveyor.IS_ATTACHED && Flags.Shooter.IS_ATTACHED) {
-                this.intake.setDefaultCommand(new RingHandlingCommand(shooter, intake, conveyor, this.primaryController, this.sideJoystick, this.driveTrain::getPose));
+                this.intake.setDefaultCommand(new RingHandlingCommand(shooter, intake, conveyor, this.primaryController, this.nintendoProController, this.sideJoystick, this.driveTrain::getPose));
             } else {
                 this.intake.setDefaultCommand(new IntakeCommand(this.intake, this.primaryController));
             }

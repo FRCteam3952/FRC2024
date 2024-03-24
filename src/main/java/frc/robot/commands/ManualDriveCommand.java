@@ -43,7 +43,7 @@ public class ManualDriveCommand extends Command {
         // this.driveTrain.drive(this.joystick.getVerticalMovement());
         double ySpeed = Util.squareKeepSign(this.ySpeedLimiter.calculate(-this.joystick.getLeftVerticalMovement())) * MAX_SPEED_METERS_PER_SEC;
         double xSpeed = Util.squareKeepSign(this.xSpeedLimiter.calculate(-this.joystick.getLeftHorizontalMovement())) * MAX_SPEED_METERS_PER_SEC;
-        double rotSpeed = -this.joystick.getRightHorizontalMovement() * 1;
+        double rotSpeed = -this.joystick.getRightHorizontalMovement() * 1.2;
 
         if(autoAimSubwoofer.getAsBoolean()) {
             Rotation2d angleToSubwooferTarget = directionToSubwooferTarget();
@@ -57,7 +57,7 @@ public class ManualDriveCommand extends Command {
             if(rotateByAmount < -180) {
                 rotateByAmount += 360;
             }
-            double rotSpeed2 = MathUtil.clamp(1.6 * (Math.toRadians(rotateByAmount)), -1.7, 1.7);
+            double rotSpeed2 = MathUtil.clamp(3 * (Math.toRadians(rotateByAmount)), -1.7, 1.7);
             System.out.println("angle to subwoofer target: " + directionToSubwooferTarget() + ", rotating " + rotateByAmount + " at a speed of " + rotSpeed2 + " to get there");
             //System.out.println("current rot: " + RobotGyro.getRotation2d());
             rotSpeed = rotSpeed2;

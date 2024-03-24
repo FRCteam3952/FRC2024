@@ -63,7 +63,7 @@ public class ShooterSubsystem extends SubsystemBase {
         leftServo = new Servo(PortConstants.SHOOTER_LEFT_SERVO_PORT);
         rightServo = new Servo(PortConstants.SHOOTER_RIGHT_SERVO_PORT);
 
-        pivotPidController = new PIDController(1.5e-2, 0, 0);
+        pivotPidController = new PIDController(3e-2, 0, 1.2e-3);
         rightPidController = rightMotor.getPIDController();
         leftPidController = leftMotor.getPIDController();
 

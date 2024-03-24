@@ -99,7 +99,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
     );
     public final SwerveModule[] swerveModules = {frontLeft, frontRight, backLeft, backRight};
     private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(frontLeftLocation, frontRightLocation, backLeftLocation, backRightLocation);
-    private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, RobotGyro.getRotation2d(), this.getAbsoluteModulePositions(), new Pose2d());
+    private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, RobotGyro.getRotation2d(), this.getAbsoluteModulePositions(), new Pose2d(), new Matrix<>(Nat.N3(), Nat.N1(), new double[] {0.1, 0.1, 0.1}), new Matrix<>(Nat.N3(), Nat.N1(), new double[] {0.01, 0.01, 0.1}));
 
     private final Field2d field = new Field2d();
     private final Field2d estimatedField = new Field2d();
@@ -125,7 +125,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
         SmartDashboard.putData("Field", field);
         SmartDashboard.putData("estimated field", estimatedField);
 
-        this.setPose(new Pose2d(1, 5.50, RobotGyro.getRotation2d()));
+        this.setPose(new Pose2d(1.7, 5.50, RobotGyro.getRotation2d()));
 
         AutoBuilder.configureHolonomic(
                 this::getPose,
@@ -397,7 +397,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
      */
     public void updateOdometryWithVision() {
         ArrayList<AprilTagHandler.RobotPoseAndTagDistance> tags = aprilTagHandler.getJetsonAprilTagPoses();
-        double timestamp = Timer.getFPGATimestamp();
+        double timestamp = Timer.getFPGATimestamp() - 1;
         Pose2d robotPose = this.getPose();
         Rotation2d robotRotation = RobotGyro.getRotation2d();
         for(AprilTagHandler.RobotPoseAndTagDistance poseAndTag : tags) {
@@ -412,21 +412,27 @@ public class DriveTrainSubsystem extends SubsystemBase {
             double yTranslation = c * Math.sin(theta - thi);
             double xTranslation = c * Math.cos(theta - thi);
 
-            Translation2d newTranslation = pose.getTranslation().minus(new Translation2d(xTranslation, yTranslation));
+            Translation2d newTranslation = pose.getTranslation().plus(new Translation2d(xTranslation, yTranslation));
             Pose2d estimatedPose = new Pose2d(newTranslation, robotRotation);
-            if(estimatedPose.getTranslation().getDistance(robotPose.getTranslation()) <= 1.5) {
+            double poseDiff = estimatedPose.getTranslation().getDistance(robotPose.getTranslation());
+            if(poseDiff < 1 || (poseAndTag.tagDistanceFromRobot() < 2 && poseDiff < 2)) { // in case something horrific happens!
+                if(Math.random() > 0.3) return; // attempt to filter out false values using the "pure luck" strategy.
                 double distanceToTag = poseAndTag.tagDistanceFromRobot();
                 Matrix<N3, N1> stdevs;
-                if(distanceToTag < 3) {
-                    stdevs = new Matrix<>(Nat.N3(), Nat.N1(), new double[] {0.2, 0.2, 0.1}); // basically exact
+                ChassisSpeeds chassisSpeeds = this.getRobotRelativeChassisSpeeds();
+                boolean bruh = chassisSpeeds.vxMetersPerSecond > 1 || chassisSpeeds.vyMetersPerSecond > 1 || chassisSpeeds.omegaRadiansPerSecond > 0.1;
+                double mult = bruh ? 50 : 1;
+                if(distanceToTag < 2.5) {
+                    stdevs = new Matrix<>(Nat.N3(), Nat.N1(), new double[] {0.4 * mult, 0.4 * mult, 0.1}); // basically exact
                 } else if(distanceToTag < 7) {
-                    stdevs = new Matrix<>(Nat.N3(), Nat.N1(), new double[] {0.85, 0.85, 0.1}); // pretty accurate
+                    stdevs = new Matrix<>(Nat.N3(), Nat.N1(), new double[] {1 * mult, 1 * mult, 0.1}); // pretty accurate
                 } else {
-                    stdevs = new Matrix<>(Nat.N3(), Nat.N1(), new double[] {1.5, 1.5, 0.1}); // less accurate
+                    stdevs = new Matrix<>(Nat.N3(), Nat.N1(), new double[] {1.5 * mult, 1.5 * mult, 0.1}); // less accurate
                 }
                 this.poseEstimator.addVisionMeasurement(estimatedPose, timestamp, stdevs);
             }
-            estimatedField.setRobotPose(pose);
+            // System.out.println("psoe: " + estimatedPose);
+            estimatedField.setRobotPose(estimatedPose);
         }
     }
 

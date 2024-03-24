@@ -26,6 +26,8 @@ public final class Constants {
         public static class ControllerConstants {
             public static final TriggerType ZERO_GYRO               = TriggerType.LEFT_BUTTON;
             public static final TriggerType ZERO_SWERVE_MODULES     = TriggerType.UPPER_BUTTON;
+            public static final TriggerType RESET_POSE_ESTIMATOR    = TriggerType.RIGHT_BUTTON;
+            public static final TriggerType SHOOTER_IDLE_RPM_TOGGLE = TriggerType.RIGHT_SHOULDER_BUTTON;
 
             public static final TriggerType INTAKE_RUN              = TriggerType.RIGHT_BUTTON;
             public static final TriggerType INTAKE_REVERSE          = TriggerType.LOWER_BUTTON;

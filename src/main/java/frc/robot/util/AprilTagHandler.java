@@ -57,11 +57,11 @@ public final class AprilTagHandler {
             }
             Pose3d originToTag = fieldRelTagPoseOpt.get();
             // System.out.println("pose of tag: " + originToTag);
-            Translation3d pose = new Translation3d(readTags[i + 1], readTags[i + 2], readTags[i + 3]);
-            Quaternion q = new Quaternion(readTags[i + 4], readTags[i + 5], readTags[i + 6], readTags[i + 7]);
-            Pose3d tagOriginPose = CoordinateSystem.convert(new Pose3d(pose, new Rotation3d()), Util.JETSON_APRILTAGS_COORD_SYSTEM, CoordinateSystem.NWU()); // a pose where the tag is treated as the origin.
+            Translation3d pose = new Translation3d(readTags[i + 1], readTags[i + 2], Math.sin(Math.toRadians(50)) * readTags[i + 3]);
+            Quaternion q = new Quaternion(readTags[i + 4], readTags[i + 5], readTags[i + 6], readTags[i + 7]); // 50 deg
+            Pose3d tagOriginPose = CoordinateSystem.convert(new Pose3d(pose, new Rotation3d(q)), Util.JETSON_APRILTAGS_COORD_SYSTEM, CoordinateSystem.NWU()); // a pose where the tag is treated as the origin.
             Pose2d newPose = DriveTrainSubsystem.fixPose(tagOriginPose.toPose2d());
-            // System.out.println("tag origin pose: " + tagOriginPose);
+            System.out.println("tag origin pose: " + tagOriginPose);
             // System.out.println("new pose: " + newPose);
             // System.out.println("tag angle: " + tagOriginPose.getRotation().getY());
             //var a = originToTag.minus(new Pose3d());
@@ -69,7 +69,7 @@ public final class AprilTagHandler {
             Pose2d finalPose = originToTag.toPose2d().plus(newPose.minus(new Pose2d()));
             //System.out.println("final pose: " + finalPose);
             if (checkRequestedPoseValues(finalPose)) {
-                poses.add(new RobotPoseAndTagDistance(finalPose, tagOriginPose.getTranslation().getDistance(new Translation3d())));
+                poses.add(new RobotPoseAndTagDistance(finalPose, tagOriginPose.getTranslation().getDistance(new Translation3d()), tagId));
             }
         }
 
@@ -84,13 +84,13 @@ public final class AprilTagHandler {
      */
     
     private static boolean checkRequestedPoseValues(Pose2d pose) {
-        return true;
+        return pose.getX() > 0 && pose.getY() > 0 && pose.getX() < 16.764 && pose.getY() < 8.382;
     }
 
     public static boolean jetsonHasPose() {
         return NetworkTablesUtil.getAprilTagEntry().length != 1;
     }
 
-    public record RobotPoseAndTagDistance(Pose2d fieldRelativePose, double tagDistanceFromRobot) {
+    public record RobotPoseAndTagDistance(Pose2d fieldRelativePose, double tagDistanceFromRobot, int tagId) {
     }
 }

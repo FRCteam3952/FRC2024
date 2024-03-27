@@ -12,7 +12,7 @@
         "y": 4.041170363042481
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "lower subwoofer starting location"
     },
     {
       "anchor": {
@@ -36,12 +36,12 @@
         "y": 4.1046482092964185
       },
       "prevControl": {
-        "x": 1.5144000463439524,
-        "y": 4.095579945545856
+        "x": 1.5143426545684713,
+        "y": 4.1046482092964185
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "lower close note end location"
     }
   ],
   "rotationTargets": [
@@ -70,7 +70,7 @@
     "rotateFast": false
   },
   "reversed": false,
-  "folder": null,
+  "folder": "subwoofer to respective starting note",
   "previewStartingState": {
     "rotation": -60.0,
     "velocity": 0

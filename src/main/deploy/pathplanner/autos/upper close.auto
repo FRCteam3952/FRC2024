@@ -2,8 +2,8 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 0.7206357269857403,
-      "y": 6.699372255887369
+      "x": 0.72,
+      "y": 6.7
     },
     "rotation": 60.0
   },
@@ -31,15 +31,28 @@
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "grab upper close note"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "grab upper close note"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "activate_intake"
+                }
+              }
+            ]
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "adjust"
+            "pathName": "upper close to mid shooting position"
           }
         },
         {
@@ -51,6 +64,6 @@
       ]
     }
   },
-  "folder": null,
+  "folder": "AUTOS THAT ARENT TROLL",
   "choreoAuto": false
 }

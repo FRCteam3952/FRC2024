@@ -3,9 +3,9 @@
   "startingPose": {
     "position": {
       "x": 0.72,
-      "y": 4.38
+      "y": 6.7
     },
-    "rotation": -60.0
+    "rotation": 60.0
   },
   "command": {
     "type": "sequential",
@@ -37,7 +37,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "grab lower close note"
+                  "pathName": "grab upper close note"
                 }
               },
               {
@@ -52,7 +52,32 @@
         {
           "type": "path",
           "data": {
-            "pathName": "lower close to mid shooting position"
+            "pathName": "upper close to mid shooting position"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "mid shooting position to mid close note"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "activate_intake"
+                }
+              }
+            ]
           }
         },
         {

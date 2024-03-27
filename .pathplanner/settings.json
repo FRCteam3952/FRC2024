@@ -2,8 +2,16 @@
   "robotWidth": 0.93,
   "robotLength": 0.93,
   "holonomicMode": true,
-  "pathFolders": [],
-  "autoFolders": [],
+  "pathFolders": [
+    "arbitrary location to note",
+    "other",
+    "subwoofer to respective starting note",
+    "to shooting position"
+  ],
+  "autoFolders": [
+    "AUTOS THAT ARENT TROLL",
+    "TEST OR TROLL AUTOS"
+  ],
   "defaultMaxVel": 2.0,
   "defaultMaxAccel": 1.5,
   "defaultMaxAngVel": 540.0,

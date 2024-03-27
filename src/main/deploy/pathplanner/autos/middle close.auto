@@ -2,10 +2,10 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 0.72,
-      "y": 4.38
+      "x": 1.37,
+      "y": 5.52
     },
-    "rotation": -60.0
+    "rotation": 0.0
   },
   "command": {
     "type": "sequential",
@@ -37,7 +37,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "grab lower close note"
+                  "pathName": "grab middle close note"
                 }
               },
               {
@@ -47,12 +47,6 @@
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "lower close to mid shooting position"
           }
         },
         {

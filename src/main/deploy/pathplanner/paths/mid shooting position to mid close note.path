@@ -3,45 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.0,
-        "y": 5.5
+        "x": 2.0,
+        "y": 5.521063899270655
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.0000000000000044,
-        "y": 5.0
+        "x": 2.05,
+        "y": 5.521063899270655
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "midpoint shooting location"
     },
     {
       "anchor": {
-        "x": 5.0,
-        "y": 5.0
+        "x": 2.23,
+        "y": 5.521063899270655
       },
       "prevControl": {
-        "x": 4.0,
-        "y": 6.0
-      },
-      "nextControl": {
-        "x": 6.0,
-        "y": 4.0
-      },
-      "isLocked": false,
-      "linkedName": null
-    },
-    {
-      "anchor": {
-        "x": 7.0,
-        "y": 1.0
-      },
-      "prevControl": {
-        "x": 6.75,
-        "y": 2.5
+        "x": 2.1799999999999997,
+        "y": 5.521063899270655
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "middle close note end location"
     }
   ],
   "rotationTargets": [],
@@ -59,7 +43,10 @@
     "rotateFast": false
   },
   "reversed": false,
-  "folder": null,
-  "previewStartingState": null,
+  "folder": "arbitrary location to note",
+  "previewStartingState": {
+    "rotation": 0,
+    "velocity": 0
+  },
   "useDefaultConstraints": true
 }

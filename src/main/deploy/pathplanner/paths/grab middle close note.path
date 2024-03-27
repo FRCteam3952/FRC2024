@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.0,
-        "y": 7.0
+        "x": 1.3694255959940491,
+        "y": 5.521063899270655
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.25,
-        "y": 7.0
+        "x": 1.9996740881321424,
+        "y": 5.521063899270655
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "middle subwoofer starting location"
     },
     {
       "anchor": {
-        "x": 3.0,
-        "y": 7.0
+        "x": 2.23,
+        "y": 5.521063899270655
       },
       "prevControl": {
-        "x": 2.75,
-        "y": 7.0
+        "x": 1.5135497719300741,
+        "y": 5.521063899270655
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "middle close note end location"
     }
   ],
   "rotationTargets": [],
@@ -43,7 +43,10 @@
     "rotateFast": false
   },
   "reversed": false,
-  "folder": "other",
-  "previewStartingState": null,
-  "useDefaultConstraints": true
+  "folder": "subwoofer to respective starting note",
+  "previewStartingState": {
+    "rotation": 0.0,
+    "velocity": 0
+  },
+  "useDefaultConstraints": false
 }

@@ -60,6 +60,31 @@
           "data": {
             "name": "shoot"
           }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "mid shooting position to mid close note"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "activate_intake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
         }
       ]
     }

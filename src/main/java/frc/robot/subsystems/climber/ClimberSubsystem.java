@@ -42,8 +42,8 @@ public class ClimberSubsystem extends SubsystemBase {
         leftHook.enableVoltageCompensation(10);
         rightHook.enableVoltageCompensation(10);
 
-        leftHook.setSmartCurrentLimit(25);
-        rightHook.setSmartCurrentLimit(25);
+        leftHook.setSmartCurrentLimit(80);
+        rightHook.setSmartCurrentLimit(80);
 
         configurePID(leftPid);
         configurePID(rightPid);

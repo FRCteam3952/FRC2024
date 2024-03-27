@@ -17,21 +17,23 @@ public final class Constants {
         public static final String MAIN_TABLE_NAME = "robot";
     }
 
-    public static class OperatorConstants {
+    public static class OperatorConstants { // move it back by 10 cm!!!
         public static final int RIGHT_JOYSTICK_PORT = 2;
         public static final int NINTENDO_PRO_CONTROLLER = 1;
         public static final int PS5_CONTROLLER = 3;
 
         // Should this be here? especially with our new controller system, we could potentially refactor or re-abstract this using another class (maybe even for multiple driver preferences?)
         public static class ControllerConstants {
+            // Nintendo pro 2ndary controller
             public static final TriggerType ZERO_GYRO               = TriggerType.LEFT_BUTTON;
             public static final TriggerType ZERO_SWERVE_MODULES     = TriggerType.UPPER_BUTTON;
             public static final TriggerType RESET_POSE_ESTIMATOR    = TriggerType.RIGHT_BUTTON;
             public static final TriggerType SHOOTER_IDLE_RPM_TOGGLE = TriggerType.RIGHT_SHOULDER_BUTTON;
+            public static final TriggerType INTAKE_POS_TOGGLE       = TriggerType.LEFT_SHOULDER_BUTTON;
 
+            // PS5 primary controller
             public static final TriggerType INTAKE_RUN              = TriggerType.RIGHT_BUTTON;
             public static final TriggerType INTAKE_REVERSE          = TriggerType.LOWER_BUTTON;
-            public static final TriggerType INTAKE_POS_TOGGLE       = TriggerType.LEFT_SHOULDER_BUTTON;
 
             public static final TriggerType SHOOTER_RUN_HIGH_SPEED  = TriggerType.RIGHT_SHOULDER_TRIGGER;
             public static final TriggerType SHOOTER_RUN_AMP_SPEED   = TriggerType.LEFT_SHOULDER_TRIGGER;

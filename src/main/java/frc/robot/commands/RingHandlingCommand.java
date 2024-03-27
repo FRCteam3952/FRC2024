@@ -128,11 +128,16 @@ public class RingHandlingCommand extends Command {
         this.shooter.pivotToAngle(shooterAngle);
 
         if(intakeUp) {
-            double throughboreValue = this.intake.getThroughboreEncoder().getAbsoluteEncoderValue();
-            if (throughboreValue > 0 && throughboreValue < 3) {
-                this.intake.pivotToAngle(73 + throughboreValue);
-            } else {
-                this.intake.pivotToAngle(73); // 73
+            // our calibrate command sets our pivot target angle to ~80deg, but we don't want this command to override it early.
+            // Instead, wait for the pivot's position to be changed (to the down position) before we bring it back up to the standard value.
+            // This would ideally happen during autonomous, so when this command is actually scheduled, this state is never true. This is mainly in effect for in-pit calibration.
+            if(this.intake.getPivotTargetAngle() < 77) {
+                double throughboreValue = this.intake.getThroughboreEncoder().getAbsoluteEncoderValue();
+                if (throughboreValue > 0 && throughboreValue < 3) {
+                    this.intake.pivotToAngle(73 + throughboreValue);
+                } else {
+                    this.intake.pivotToAngle(73); // 73
+                }
             }
         } else {
             this.intake.pivotToAngle(0);
@@ -180,7 +185,7 @@ public class RingHandlingCommand extends Command {
 
         // when the shooter is up high enough we GO BRRRR
         if (runShooterHigh.getAsBoolean()) {
-            double distanceFromTarget = getDistanceToTarget(getTargetPose().toPose2d());
+            double distanceFromTarget = getDistanceToTarget(Util.getTargetPose().toPose2d());
             double targetRpm;
             if(distanceFromTarget > 4.267) { // meters
                 targetRpm = 2700;
@@ -218,15 +223,6 @@ public class RingHandlingCommand extends Command {
         hasHandledNotePub.setBoolean(hasHandledNote);
     }
 
-    private static Pose3d getTargetPose() {
-        if(Util.onBlueTeam()) {
-            // our target is tag 7
-            return Util.getTagPose(7);
-        }
-        // our target is tag 4
-        return Util.getTagPose(4);
-    }
-
     /**
      * Calculate the angle the shooter pivot should be at in order to look at the speaker
      * 
@@ -237,7 +233,7 @@ public class RingHandlingCommand extends Command {
         // since we're gonna be farther back, aiming for 204 is actually bad b/c the straight line will get blocked by the roof, so we use 200cm (closer to the bottom) so we can get under
 
         // get the target for our alliance color
-        Pose3d targetPose = getTargetPose();
+        Pose3d targetPose = Util.getTargetPose();
 
         // now we know where to aim, compare our current location with our target
         // tan(theta) = opp/adj

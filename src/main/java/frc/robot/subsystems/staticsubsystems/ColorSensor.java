@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj.util.Color;
 
 public final class ColorSensor {
     private static final Color NOTE_COLOR = new Color(132, 96, 27);
-    private static final Color THE_OTHER_NOTE_COLOR = new Color(94, 110, 51);
     private static final Color ANOTHER_NOTE_COLOR = new Color(108, 105, 42);
 
     private static final ColorSensorV3 colorSensor = new ColorSensorV3(I2C.Port.kOnboard);
@@ -16,7 +15,6 @@ public final class ColorSensor {
 
     public static void initialize() {
         colorMatcher.addColorMatch(NOTE_COLOR);
-        colorMatcher.addColorMatch(THE_OTHER_NOTE_COLOR);
         colorMatcher.addColorMatch(ANOTHER_NOTE_COLOR);
     }
 
@@ -37,7 +35,7 @@ public final class ColorSensor {
             return false;
         }
         // System.out.println("match result: " + colorAsRGBString(matchResult.color));
-        return matchResult.color == NOTE_COLOR || matchResult.color == THE_OTHER_NOTE_COLOR || matchResult.color == ANOTHER_NOTE_COLOR;
+        return matchResult.color == NOTE_COLOR || matchResult.color == ANOTHER_NOTE_COLOR;
     }
 
     public static String colorAsRGBString(Color c) {

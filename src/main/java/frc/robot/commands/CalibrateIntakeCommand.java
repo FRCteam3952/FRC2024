@@ -2,16 +2,13 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.controllers.AbstractController;
-import frc.robot.subsystems.climber.ClimberSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 
 public class CalibrateIntakeCommand extends Command {
-    private final ClimberSubsystem climber;
     private final IntakeSubsystem intake;
     private final AbstractController joystick;
 
-    public CalibrateIntakeCommand(ClimberSubsystem climber, IntakeSubsystem intake, AbstractController joystick) {
-        this.climber = climber;
+    public CalibrateIntakeCommand(IntakeSubsystem intake, AbstractController joystick) {
         this.intake = intake;
 
         this.joystick = joystick;

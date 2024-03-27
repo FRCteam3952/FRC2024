@@ -72,6 +72,7 @@ public class IntakeSubsystem extends SubsystemBase {
     public void setIntakeSpeed(double speed) {
         if (Flags.Intake.ENABLED) {
             leaderMotor.set(speed);
+            followerMotor.set(speed);
         }
     }
 
@@ -121,6 +122,10 @@ public class IntakeSubsystem extends SubsystemBase {
         if (Flags.Intake.ENABLED && Flags.Intake.PIVOT_ENABLED && Flags.Intake.PIVOT_PID_CONTROL) {
             this.pivotAngleSetpoint = degrees;
         }
+    }
+
+    public double getPivotTargetAngle() {
+        return this.pivotAngleSetpoint;
     }
 
     public ThroughboreEncoder getThroughboreEncoder() {

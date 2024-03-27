@@ -23,8 +23,8 @@ public class TestClimberCommand extends Command {
         double speedR = this.joystick.getRightVerticalMovement();
         double speedL = -this.joystick.getLeftVerticalMovement();
         // System.out.println("sending L: " + speedL + ", speed R: " + speedR);
-        // this.climber.setLeftSpeed(speedL);
-        // this.climber.setRightSpeed(speedR);
+        this.climber.setLeftSpeed(speedL);
+        this.climber.setRightSpeed(speedR);
         // this.climber.setLeftSpeed(speed); // - is down
         // this.climber.setRightSpeed(speed); // + is down
     }

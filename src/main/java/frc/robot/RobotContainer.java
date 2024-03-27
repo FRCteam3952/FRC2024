@@ -1,16 +1,21 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.OperatorConstants.ControllerConstants;
 import frc.robot.commands.*;
+import frc.robot.commands.auto.RingHandlingAutonCommand;
+import frc.robot.commands.auto.RunShooterAutonCommand;
 import frc.robot.controllers.AbstractController;
 import frc.robot.controllers.FlightJoystick;
 import frc.robot.controllers.NintendoProController;
@@ -59,6 +64,11 @@ public class RobotContainer {
         this.shooter    = Util.createIfFlagElseNull(ShooterSubsystem::new, Flags.Shooter.IS_ATTACHED);
         this.conveyor   = Util.createIfFlagElseNull(ConveyorSubsystem::new, Flags.Conveyor.IS_ATTACHED);
         this.climber    = Util.createIfFlagElseNull(ClimberSubsystem::new, Flags.Climber.IS_ATTACHED);
+
+        NamedCommands.registerCommand("shoot", new RunShooterAutonCommand(this.shooter, this.conveyor, 2500, 54));
+        NamedCommands.registerCommand("drop_intake", new InstantCommand(() -> this.intake.pivotToAngle(0), this.intake));
+        NamedCommands.registerCommand("activate_intake", new RingHandlingAutonCommand(this.conveyor, this.intake));
+        NamedCommands.registerCommand("adjust", new InstantCommand());
 
         configureBindings();
 
@@ -121,7 +131,10 @@ public class RobotContainer {
             this.driveTrain.setHeadingLockMode(false);
         }));
 
-        sideJoystick.joystick.button(8).whileTrue(new CalibrateIntakeCommand(climber, intake, nintendoProController));
+        sideJoystick.joystick.button(8).whileTrue(new CalibrateIntakeCommand(intake, nintendoProController));
+        if(Flags.DriveTrain.IS_ATTACHED) {
+            ControlHandler.get(this.nintendoProController, ControllerConstants.RESET_POSE_ESTIMATOR).onTrue(new InstantCommand(() -> this.driveTrain.resetPoseToFrontSubwoofer()));
+        }
     }
 
     public void onRobotInit() {

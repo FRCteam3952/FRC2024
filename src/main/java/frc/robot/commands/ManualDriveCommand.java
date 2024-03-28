@@ -16,7 +16,6 @@ import frc.robot.util.ControlHandler;
 import frc.robot.util.Util;
 
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class ManualDriveCommand extends Command {
     public static final double MAX_SPEED_METERS_PER_SEC = Flags.DriveTrain.LOWER_MAX_SPEED ? 1.5 : 3;
@@ -56,6 +55,8 @@ public class ManualDriveCommand extends Command {
         double flip = flipFactor();
         double ySpeed = Util.squareKeepSign(this.ySpeedLimiter.calculate(-this.joystick.getLeftVerticalMovement() * flip)) * MAX_SPEED_METERS_PER_SEC;
         double xSpeed = Util.squareKeepSign(this.xSpeedLimiter.calculate(-this.joystick.getLeftHorizontalMovement() * flip)) * MAX_SPEED_METERS_PER_SEC;
+//        double rotSpeed = -this.joystick.getRightHorizontalMovement() * 3.5;
+
         // this Should use option filtering, in the future...
 //        Optional<Rotation2d> angleToSubwooferTargetOption = directionToSubwooferTarget();
 
@@ -80,7 +81,7 @@ public class ManualDriveCommand extends Command {
                         return Optional.empty();
                     }
                 })
-                .orElse(-this.joystick.getRightHorizontalMovement() * 1.2);
+                .orElse(-this.joystick.getRightHorizontalMovement() * 3.5);
 
         // System.out.println("forward speed: " + ySpeed + ", x speed: " + xSpeed);
         // System.out.println("y: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftVerticalMovement()) + ", x: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftHorizontalMovement()));

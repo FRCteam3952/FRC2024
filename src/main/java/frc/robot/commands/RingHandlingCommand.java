@@ -3,12 +3,14 @@ package frc.robot.commands;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.GenericPublisher;
 import edu.wpi.first.networktables.NetworkTableType;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -211,13 +213,22 @@ public class RingHandlingCommand extends Command {
 
         // when the shooter is up high enough we GO BRRRR
         if (runShooterHigh.getAsBoolean()) {
-            getDistanceToTarget(Util.getTargetPose().toPose2d())
+            if(!autoAimSubwoofer.getAsBoolean()) {
+                shooter.setMotorRpm(2700);
+                if (shooter.getShooterRpm() > 2700 - 75) {
+                    this.conveyor.setShooterFeederMotorSpeed(1);
+                    this.conveyor.setConveyorMotorsSpeed(-1);
+                    hasHandledNote = false;
+                    hasNote = false;
+                }
+            } else {
+                getDistanceToTarget(Util.getTargetPose().toPose2d())
                     .map((distanceFromTarget) -> {
                         // Get the target RPM.
                         if(distanceFromTarget > 4.267) { // meters
                             return 2700.0;
                         } else {
-                            return Math.max(((distanceFromTarget + 1) / 4.267) * 2700 * 1.0, 1300);
+                            return MathUtil.clamp(((distanceFromTarget + 1) / 4.267) * 2700 * 1.0, 1300, 2800);
                         }
                     })
                     .ifPresent((targetRpm) -> {
@@ -231,6 +242,7 @@ public class RingHandlingCommand extends Command {
                             hasNote = false;
                         }
                     });
+            }
         } else if(runShooterAmp.getAsBoolean()) {
             shooter.setMotorRpm(1400);
             if (shooter.getShooterRpm() > 1300) {

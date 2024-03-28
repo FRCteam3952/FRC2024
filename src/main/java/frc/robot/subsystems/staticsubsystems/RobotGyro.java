@@ -92,7 +92,7 @@ public final class RobotGyro {
      */
     public static void setGyroAngle(double deg) {
         resetGyroAngle();
-        angleAdjust = deg;
+        angleAdjust = -deg;
     }
 
     /**

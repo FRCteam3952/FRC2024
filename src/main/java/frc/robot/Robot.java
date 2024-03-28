@@ -13,10 +13,13 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 public class Robot extends LoggedRobot {
+    public static Robot INSTANCE;
+
     private RobotContainer robotContainer;
 
     public Robot() {
         super();
+        INSTANCE = this;
     }
 
     @Override

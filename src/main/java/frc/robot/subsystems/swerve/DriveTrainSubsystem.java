@@ -127,23 +127,27 @@ public class DriveTrainSubsystem extends SubsystemBase {
         SmartDashboard.putData("Field", field);
         SmartDashboard.putData("estimated field", estimatedField);
 
-        this.setPose(new Pose2d(1.7, 5.50, RobotGyro.getRotation2d()));
+        // this.setPose(new Pose2d(1.7, 5.50, RobotGyro.getRotation2d()));
 
         AutoBuilder.configureHolonomic(
                 this::getPose,
                 this::setPose,
                 this::getRobotRelativeChassisSpeeds,
                 (chassisSpeeds) -> this.consumeRawModuleStates(kinematics.toSwerveModuleStates(chassisSpeeds)),
-                new HolonomicPathFollowerConfig(2.00, Math.PI, new ReplanningConfig(true, true, 1, 0.1)),
+                new HolonomicPathFollowerConfig(2.00, RobotConstants.LEG_LENGTHS_M * RobotConstants.LEG_LENGTHS_M, new ReplanningConfig(true, true, 1, 0.1)),
                 () -> !Util.onBlueTeam(),
                 this
         );
     }
 
+    public SwerveDrivePoseEstimator getPoseEstimator() {
+        return this.poseEstimator;
+    }
+
     /**
      * Resets the robot's pose to the pose against the front (i.e. edge parallel to the y-axis) of the subwoofer of our alliance side.
      */
-    public void resetPoseToFrontSubwoofer() {
+    public void resetPoseToMidSubwoofer() {
         if(Util.onBlueTeam()) {
             this.setPose(new Pose2d(1.35, 5.50, RobotGyro.getRotation2d()));
         } else {
@@ -180,6 +184,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
      * @param pose The desired current code
      */
     public void setPose(Pose2d pose) {
+        RobotGyro.setGyroAngle(pose.getRotation().getDegrees());
         poseEstimator.resetPosition(RobotGyro.getRotation2d(), this.getAbsoluteModulePositions(), pose);
     }
 

@@ -63,7 +63,7 @@ public class ShooterSubsystem extends SubsystemBase {
         leftServo = new Servo(PortConstants.SHOOTER_LEFT_SERVO_PORT);
         rightServo = new Servo(PortConstants.SHOOTER_RIGHT_SERVO_PORT);
 
-        pivotPidController = new PIDController(2e-2, 0, 1.2e-3);
+        pivotPidController = new PIDController(2e-2, 0, 1.5e-3);
         rightPidController = rightMotor.getPIDController();
         leftPidController = leftMotor.getPIDController();
 
@@ -155,7 +155,7 @@ public class ShooterSubsystem extends SubsystemBase {
     public void periodic() {
         if (Flags.Shooter.ENABLED && Flags.Shooter.PIVOT_ENABLED && Flags.Shooter.PIVOT_PID_CONTROL) {
             double speed = MathUtil.clamp(this.pivotPidController.calculate(this.throughboreEncoder.getAbsoluteEncoderValue(), this.pivotAngleSetpoint), -0.2, 0.2);
-            // System.out.println("shooter pivot sending " + speed + " to go to " + pivotAngleSetpoint + " from " + this.throughboreEncoder.getAbsoluteEncoderValue());
+            System.out.println("shooter pivot sending " + speed + " to go to " + pivotAngleSetpoint + " from " + this.throughboreEncoder.getAbsoluteEncoderValue());
             this.pivotMotor.set(speed);
         }
 

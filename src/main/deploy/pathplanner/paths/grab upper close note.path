@@ -51,7 +51,12 @@
       "rotateFast": false
     },
     {
-      "waypointRelativePos": 0.6,
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": 0,
+      "rotateFast": true
+    },
+    {
+      "waypointRelativePos": 0.7,
       "rotationDegrees": 0,
       "rotateFast": false
     }
@@ -75,5 +80,5 @@
     "rotation": 60.0,
     "velocity": 0
   },
-  "useDefaultConstraints": false
+  "useDefaultConstraints": true
 }

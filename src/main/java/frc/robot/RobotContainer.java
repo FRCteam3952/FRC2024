@@ -65,7 +65,9 @@ public class RobotContainer {
         this.conveyor   = Util.createIfFlagElseNull(ConveyorSubsystem::new, Flags.Conveyor.IS_ATTACHED);
         this.climber    = Util.createIfFlagElseNull(ClimberSubsystem::new, Flags.Climber.IS_ATTACHED);
 
-        NamedCommands.registerCommand("shoot", new RunShooterAutonCommand(this.shooter, this.conveyor, 2500, 54));
+        NamedCommands.registerCommand("shoot", new RunShooterAutonCommand(this.shooter, this.conveyor, 1900, 54));
+        NamedCommands.registerCommand("shoot_lower", new RunShooterAutonCommand(this.shooter, this.conveyor, 2600, 45));
+        NamedCommands.registerCommand("shoot_40", new RunShooterAutonCommand(shooter, conveyor, 2600, 40));
         NamedCommands.registerCommand("drop_intake", new InstantCommand(() -> this.intake.pivotToAngle(0), this.intake));
         NamedCommands.registerCommand("activate_intake", new RingHandlingAutonCommand(this.conveyor, this.intake));
         NamedCommands.registerCommand("adjust", new InstantCommand());
@@ -133,7 +135,7 @@ public class RobotContainer {
 
         sideJoystick.joystick.button(8).whileTrue(new CalibrateIntakeCommand(intake, nintendoProController));
         if(Flags.DriveTrain.IS_ATTACHED) {
-            ControlHandler.get(this.nintendoProController, ControllerConstants.RESET_POSE_ESTIMATOR).onTrue(new InstantCommand(() -> this.driveTrain.resetPoseToFrontSubwoofer()));
+            ControlHandler.get(this.nintendoProController, ControllerConstants.RESET_POSE_ESTIMATOR).onTrue(new InstantCommand(() -> this.driveTrain.resetPoseToMidSubwoofer()));
         }
     }
 
@@ -143,6 +145,7 @@ public class RobotContainer {
 
     public void onTeleopInit() {
         if (Flags.DriveTrain.IS_ATTACHED) {
+            RobotGyro.setGyroAngle(this.driveTrain.getPose().getRotation().getDegrees());
             if (Flags.DriveTrain.USE_TEST_DRIVE_COMMAND) {
                 this.driveTrain.setDefaultCommand(new TestDriveCommand(this.driveTrain, this.primaryController));
             } else {

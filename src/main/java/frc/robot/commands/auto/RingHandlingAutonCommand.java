@@ -23,8 +23,8 @@ public class RingHandlingAutonCommand extends Command {
     @Override
     public void execute() {
         this.intake.setIntakeSpeed(0.75, 1);
-        this.conveyor.setConveyorMotorsSpeed(-0.7);
-        this.conveyor.setShooterFeederMotorSpeed(0.7);
+        this.conveyor.setConveyorMotorsSpeed(-0.6);
+        this.conveyor.setShooterFeederMotorSpeed(0.6);
     }
 
     // Called once the command ends or is interrupted.

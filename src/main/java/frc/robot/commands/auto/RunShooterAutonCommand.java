@@ -9,7 +9,7 @@ public class RunShooterAutonCommand extends Command {
     private final ShooterSubsystem shooter;
     private final ConveyorSubsystem conveyor;
     private final double rpm, pivotAngle;
-    private final Timer timer = new Timer();
+    private final Timer shootForTimer = new Timer();
     private boolean startedTimer = false;
 
     public RunShooterAutonCommand(ShooterSubsystem shooter, ConveyorSubsystem conveyor, double rpm, double pivotAngle) {
@@ -23,15 +23,20 @@ public class RunShooterAutonCommand extends Command {
 
     @Override
     public void initialize() {
+        shootForTimer.reset();
+        startedTimer = false;
         this.shooter.pivotToAngle(pivotAngle);
         this.shooter.setMotorRpm(rpm);
+        System.out.println("started running shooter auto");
     }
 
     @Override
     public void execute() {
+        this.shooter.pivotToAngle(pivotAngle);
+        System.out.println("bringing shooter to " + pivotAngle);
         if(shooter.getShooterRpm() > rpm - 75) {
             if(!startedTimer) {
-                timer.restart();
+                shootForTimer.restart();
                 startedTimer = true;
             }
             this.conveyor.setShooterFeederMotorSpeed(1);
@@ -42,7 +47,7 @@ public class RunShooterAutonCommand extends Command {
     // Called once the command ends or is interrupted.
     @Override
     public void end(boolean interrupted) {
-        this.shooter.stopShooterPID();
+        this.shooter.setMotorRpm(1000);
         this.conveyor.setShooterFeederMotorSpeed(0);
         this.conveyor.setConveyorMotorsSpeed(0);
         System.out.println("shooter done running auto");
@@ -51,6 +56,6 @@ public class RunShooterAutonCommand extends Command {
     // Returns true when the command should end.
     @Override
     public boolean isFinished() {
-        return startedTimer && timer.get() > 1;
+        return startedTimer && shootForTimer.get() > 1.5;
     }
 }

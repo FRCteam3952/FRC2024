@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Quaternion;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 
 public final class AprilTagHandler {
@@ -21,7 +22,7 @@ public final class AprilTagHandler {
      * @return A {@link Translation2d} representing the robot's pose ([x, y, radians])
      */
     public ArrayList<RobotPoseAndTagDistance> getJetsonAprilTagPoses() {
-        if (!jetsonHasPose()) {
+        if (!jetsonHasPose() && !DriverStation.isAutonomous()) { // we don't want to update ourselves mid-auton
             return new ArrayList<>();
         }
 

@@ -71,6 +71,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("shoot_40", new RunShooterAutonCommand(shooter, conveyor, 2600, 40));
         NamedCommands.registerCommand("drop_intake", new InstantCommand(() -> this.intake.pivotToAngle(0), this.intake));
         NamedCommands.registerCommand("activate_intake", new RingHandlingAutonCommand(this.conveyor, this.intake));
+        NamedCommands.registerCommand("raise_intake", new InstantCommand(() -> this.intake.pivotToAngle(74), this.intake));
         NamedCommands.registerCommand("adjust", new InstantCommand());
         NamedCommands.registerCommand("shoot_30", new RunShooterAutonCommand(shooter, conveyor, 2600, 30));
 
@@ -87,6 +88,8 @@ public class RobotContainer {
         } else {
             this.autonChooser = null;
         }
+
+        NetworkTablesUtil.getConnections();
     }
 
     /**
@@ -131,7 +134,11 @@ public class RobotContainer {
             ControlHandler.get(this.nintendoProController, ControllerConstants.ZERO_SWERVE_MODULES).onTrue(this.driveTrain.rotateToAbsoluteZeroCommand());
         }
         ControlHandler.get(this.nintendoProController, ControllerConstants.ZERO_GYRO).onTrue(Commands.runOnce(() -> {
-            RobotGyro.resetGyroAngle();
+            if(Util.onBlueTeam()) {
+                RobotGyro.resetGyroAngle();
+            } else {
+                RobotGyro.setGyroAngle(180);
+            }
             this.driveTrain.setHeadingLockMode(false);
         }));
 

@@ -88,15 +88,35 @@
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "shoot_40"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "mid close note to exit position"
+            "commands": [
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "shoot_40"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "mid close note to exit position"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "raise_intake"
+                }
+              }
+            ]
           }
         }
       ]

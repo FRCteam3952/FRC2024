@@ -2,11 +2,13 @@ package frc.robot.commands;
 
 import java.util.function.Supplier;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.GenericPublisher;
 import edu.wpi.first.networktables.NetworkTableType;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -115,6 +117,7 @@ public class RingHandlingCommand extends Command {
     }
 
     private double shooterAngle = 45;
+    private double lastShooterAngleChangeTime = Timer.getFPGATimestamp();
 
     private double flapAngleTargetL = 155;
     private double flapAngleTargetR = 20;
@@ -133,17 +136,28 @@ public class RingHandlingCommand extends Command {
 
         this.shooter.flapToAngle(flapAngleTargetL, flapAngleTargetR);
 
+        double nextShooterAngle = shooterAngle;
         if(primaryController.getPOV() == 0) {
-            shooterAngle++;
+            nextShooterAngle++;
         } else if(primaryController.getPOV() == 180) {
-            shooterAngle--;
+            nextShooterAngle--;
         }
 
         if(autoAimSubwoofer.getAsBoolean()) {
             double angle = autoAimShooterPivotAngle();
-            shooterAngle = angle;
+            nextShooterAngle = angle;
             System.out.println("pivoting shooter to " + angle + " to shoot at target");
         }
+
+        if(Timer.getFPGATimestamp() - lastShooterAngleChangeTime > 10) {
+            // nextShooterAngle = 45;
+        }
+
+        if(Math.abs(nextShooterAngle - shooterAngle) > 0.7) {
+            lastShooterAngleChangeTime = Timer.getFPGATimestamp();
+            // shooterAngle = nextShooterAngle;
+        }
+        shooterAngle = nextShooterAngle;
 
         this.shooter.pivotToAngle(shooterAngle);
 
@@ -207,10 +221,10 @@ public class RingHandlingCommand extends Command {
         if (runShooterHigh.getAsBoolean()) {
             double distanceFromTarget = getDistanceToTarget(Util.getTargetPose().toPose2d());
             double targetRpm;
-            if(distanceFromTarget > 4.267) { // meters
+            if(distanceFromTarget > 4.267 || !autoAimSubwoofer.getAsBoolean()) { // meters
                 targetRpm = 2700;
             } else {
-                targetRpm = Math.max(((distanceFromTarget + 1) / 4.267) * 2700 * 1.0, 1300);
+                targetRpm = MathUtil.clamp(((distanceFromTarget + 1) / 4.267) * 2700 * 1.0, 1300, 2800);
             }
             System.out.println("using a target rpm of " + targetRpm);
             shooter.setMotorRpm(targetRpm);

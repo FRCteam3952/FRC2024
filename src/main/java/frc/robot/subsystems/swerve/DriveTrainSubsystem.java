@@ -105,6 +105,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     private final Field2d field = new Field2d();
     private final Field2d estimatedField = new Field2d();
+    private final Field2d limelightField = new Field2d();
     // uploads the intended, estimated, and actual states of the robot.
     StructArrayPublisher<SwerveModuleState> targetSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("TargetStates", SwerveModuleState.struct).publish();
     StructArrayPublisher<SwerveModuleState> realSwerveStatePublisher = NetworkTablesUtil.MAIN_ROBOT_TABLE.getStructArrayTopic("ActualStates", SwerveModuleState.struct).publish();
@@ -128,6 +129,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
         SmartDashboard.putData("estimated field", estimatedField);
 
         // this.setPose(new Pose2d(1.7, 5.50, RobotGyro.getRotation2d()));
+        this.setPose(GeometryUtil.flipFieldPose(new Pose2d(0.72, 6.7, new Rotation2d(Math.PI / 3))));
 
         AutoBuilder.configureHolonomic(
                 this::getPose,
@@ -138,10 +140,6 @@ public class DriveTrainSubsystem extends SubsystemBase {
                 () -> !Util.onBlueTeam(),
                 this
         );
-    }
-
-    public SwerveDrivePoseEstimator getPoseEstimator() {
-        return this.poseEstimator;
     }
 
     /**
@@ -185,6 +183,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
      */
     public void setPose(Pose2d pose) {
         RobotGyro.setGyroAngle(pose.getRotation().getDegrees());
+        System.out.println(RobotGyro.getRotation2d());
         poseEstimator.resetPosition(pose.getRotation(), this.getAbsoluteModulePositions(), pose);
     }
 
@@ -369,7 +368,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
         }
 
         this.updateOdometry();
-        this.updateOdometryWithVision();
+        this.updateOdometryWithJetsonVision();
         field.setRobotPose(getPose());
         // System.out.println(this.getPose());
 
@@ -413,7 +412,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
     /**
      * Updates the field relative position of the robot using vision measurements.
      */
-    public void updateOdometryWithVision() {
+    public void updateOdometryWithJetsonVision() {
         ArrayList<AprilTagHandler.RobotPoseAndTagDistance> tags = aprilTagHandler.getJetsonAprilTagPoses();
         double timestamp = Timer.getFPGATimestamp() - 0.5;
         Pose2d robotPose = this.getPose();
@@ -455,5 +454,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
             }
             // System.out.println("psoe: " + estimatedPose);
         }
+    }
+
+    public void updateOdometryWithLimelightVision() {
+        double[] vals = NetworkTablesUtil.getTable("limelight").getEntry("botpose_wpiblue").getDoubleArray(new double[] {});
+        
     }
 }

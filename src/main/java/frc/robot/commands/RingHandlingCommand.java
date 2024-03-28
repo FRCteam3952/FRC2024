@@ -1,9 +1,11 @@
 package frc.robot.commands;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.GenericPublisher;
 import edu.wpi.first.networktables.NetworkTableType;
@@ -16,6 +18,7 @@ import frc.robot.subsystems.conveyor.ConveyorSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.staticsubsystems.ColorSensor;
+import frc.robot.util.AprilTagHandler;
 import frc.robot.util.ControlHandler;
 import frc.robot.util.NetworkTablesUtil;
 import frc.robot.util.Util;
@@ -34,6 +37,7 @@ public class RingHandlingCommand extends Command {
     private final AbstractController primaryController;
     private final AbstractController secondaryController;
     private final Supplier<Pose2d> robotPoseSupplier;
+    private final AprilTagHandler aprilTagHandler;
 
     private boolean intakeToggledOn = false;
     private boolean hasHandledNote = false;
@@ -79,13 +83,14 @@ public class RingHandlingCommand extends Command {
 
     // 14ft = 4.267m => 2700 rpm
     // linear
-    public RingHandlingCommand(ShooterSubsystem shooter, IntakeSubsystem intake, ConveyorSubsystem conveyor, AbstractController primaryController, AbstractController secondaryController, Supplier<Pose2d> robotPoseSupplier) {
+    public RingHandlingCommand(ShooterSubsystem shooter, IntakeSubsystem intake, ConveyorSubsystem conveyor, AbstractController primaryController, AbstractController secondaryController, Supplier<Pose2d> robotPoseSupplier, AprilTagHandler aprilTagHandler) {
         this.shooter = shooter;
         this.intake = intake;
         this.conveyor = conveyor;
         this.primaryController = primaryController;
         this.secondaryController = secondaryController;
         this.robotPoseSupplier = robotPoseSupplier;
+        this.aprilTagHandler = aprilTagHandler;
 
         this.reverseIntake = ControlHandler.get(primaryController, ControllerConstants.INTAKE_REVERSE);
         this.runShooterHigh = ControlHandler.get(primaryController, ControllerConstants.SHOOTER_RUN_HIGH_SPEED);
@@ -140,9 +145,10 @@ public class RingHandlingCommand extends Command {
         }
 
         if(autoAimSubwoofer.getAsBoolean()) {
-            double angle = autoAimShooterPivotAngle();
-            shooterAngle = angle;
-            System.out.println("pivoting shooter to " + angle + " to shoot at target");
+            autoAimShooterPivotAngle().ifPresent(angle -> {
+                shooterAngle = angle;
+                System.out.println("pivoting shooter to " + angle + " to shoot at target");
+            });
         }
 
         this.shooter.pivotToAngle(shooterAngle);
@@ -205,21 +211,26 @@ public class RingHandlingCommand extends Command {
 
         // when the shooter is up high enough we GO BRRRR
         if (runShooterHigh.getAsBoolean()) {
-            double distanceFromTarget = getDistanceToTarget(Util.getTargetPose().toPose2d());
-            double targetRpm;
-            if(distanceFromTarget > 4.267) { // meters
-                targetRpm = 2700;
-            } else {
-                targetRpm = Math.max(((distanceFromTarget + 1) / 4.267) * 2700 * 1.0, 1300);
-            }
-            System.out.println("using a target rpm of " + targetRpm);
-            shooter.setMotorRpm(targetRpm);
-            if (shooter.getShooterRpm() > targetRpm - 75) {
-                this.conveyor.setShooterFeederMotorSpeed(1);
-                this.conveyor.setConveyorMotorsSpeed(-1);
-                hasHandledNote = false;
-                hasNote = false;
-            }
+            getDistanceToTarget(Util.getTargetPose().toPose2d())
+                    .map((distanceFromTarget) -> {
+                        // Get the target RPM.
+                        if(distanceFromTarget > 4.267) { // meters
+                            return 2700.0;
+                        } else {
+                            return Math.max(((distanceFromTarget + 1) / 4.267) * 2700 * 1.0, 1300);
+                        }
+                    })
+                    .ifPresent((targetRpm) -> {
+                        System.out.println("using a target rpm of " + targetRpm);
+                        shooter.setMotorRpm(targetRpm);
+
+                        if (shooter.getShooterRpm() > targetRpm - 75) {
+                            this.conveyor.setShooterFeederMotorSpeed(1);
+                            this.conveyor.setConveyorMotorsSpeed(-1);
+                            hasHandledNote = false;
+                            hasNote = false;
+                        }
+                    });
         } else if(runShooterAmp.getAsBoolean()) {
             shooter.setMotorRpm(1400);
             if (shooter.getShooterRpm() > 1300) {
@@ -248,7 +259,7 @@ public class RingHandlingCommand extends Command {
      * 
      * @return A double representing the angle to the speaker in degrees. The shooter pivot value should equal this value when the robot is aiming into the speaker.
      */
-    private double autoAimShooterPivotAngle() {
+    private Optional<Double> autoAimShooterPivotAngle() {
         // middle of the speaker target is 204 cm = 2.04m high
         // since we're gonna be farther back, aiming for 204 is actually bad b/c the straight line will get blocked by the roof, so we use 200cm (closer to the bottom) so we can get under
 
@@ -258,15 +269,38 @@ public class RingHandlingCommand extends Command {
         // now we know where to aim, compare our current location with our target
         // tan(theta) = opp/adj
         // theta = atan(opp/adj)
-        double distanceToTarget = getDistanceToTarget(targetPose.toPose2d());
-        double theta = Math.atan((2 - 0.25) / (distanceToTarget - 0.17)); // trust me bro
-        System.out.println("distnace to target: " + distanceToTarget);
-        return Math.toDegrees(theta);
+        return getDistanceToTarget(targetPose.toPose2d())
+                .map((distanceToTarget) -> {
+                    double theta = Math.atan((2 - 0.25) / (distanceToTarget - 0.17)); // trust me bro
+                    System.out.println("Distance to target: " + distanceToTarget);
+                    return Math.toDegrees(theta);
+                });
     }
 
-    private double getDistanceToTarget(Pose2d targetPose) {
-        Pose2d robotPos = this.robotPoseSupplier.get();
-        return Util.distance(targetPose.getX(), robotPos.getX(), targetPose.getY(), robotPos.getY());
+    private Optional<Double> getDistanceToTarget(Pose2d targetPose) {
+        int tagId;
+        if (Util.onBlueTeam()) {
+            tagId = 7;
+        } else {
+            tagId = 4;
+        }
+
+        // i love Optional<T> :3
+        return this.aprilTagHandler
+                .getJetsonAprilTagPoses()
+                .stream()
+                .filter((tag) -> tag.tagId() == tagId)
+                .findFirst()
+                .map(AprilTagHandler.RobotPoseAndTagDistance::fieldRelativePose)
+                .map((robotPose) -> {
+                    // now we know where to aim, compare our current location with our target
+                    double distance = Math.sqrt(
+                            Math.abs(targetPose.getY() - robotPose.getY()) +
+                            Math.abs(targetPose.getX() - robotPose.getX())
+                    ); // trust me bro
+
+                    return distance;
+                });
     }
 
     // Called once the command ends or is interrupted.

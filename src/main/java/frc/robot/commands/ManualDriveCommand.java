@@ -60,14 +60,11 @@ public class ManualDriveCommand extends Command {
         double xSpeed = Util.squareKeepSign(this.xSpeedLimiter.calculate(-this.joystick.getLeftHorizontalMovement() * flip)) * MAX_SPEED_METERS_PER_SEC;
         double rotSpeed = -this.joystick.getRightHorizontalMovement() * 1.2;
 
-        if(autoAimSubwoofer.getAsBoolean()) {
-            Optional<Rotation2d> angleToSubwooferTargetOption = directionToSubwooferTarget();
-            if (angleToSubwooferTargetOption.isEmpty()) {
-                // IS THIS THE WANTED BEHAVIOUR?
-                return;
-            }
-            Rotation2d angleToSubwooferTarget = angleToSubwooferTargetOption.get(); // this Should Never Error
+        // this Should use option filtering, in the future...
+        Optional<Rotation2d> angleToSubwooferTargetOption = directionToSubwooferTarget();
 
+        if(autoAimSubwoofer.getAsBoolean() && angleToSubwooferTargetOption.isPresent()) {
+            Rotation2d angleToSubwooferTarget = angleToSubwooferTargetOption.get(); // this Should Never Error
             Rotation2d robotHeading = RobotGyro.getRotation2d();
             double headingDeg = 180 + Util.bringAngleWithinUnitCircle(robotHeading.getDegrees());
             double rotateByAmount = headingDeg - angleToSubwooferTarget.getDegrees();

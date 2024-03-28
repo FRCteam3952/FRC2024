@@ -161,7 +161,7 @@ public class RobotContainer {
             if (Flags.Intake.USE_TEST_INTAKE_COMMAND) {
                 this.intake.setDefaultCommand(new TestIntakeCommand(this.intake, this.primaryController));
             } else if (Flags.Conveyor.IS_ATTACHED && Flags.Shooter.IS_ATTACHED) {
-                this.intake.setDefaultCommand(new RingHandlingCommand(shooter, intake, conveyor, this.primaryController, this.nintendoProController, this.driveTrain::getPose));
+                this.intake.setDefaultCommand(new RingHandlingCommand(shooter, intake, conveyor, this.primaryController, this.nintendoProController, this.driveTrain::getPose, this.aprilTagHandler));
             } else {
                 this.intake.setDefaultCommand(new IntakeCommand(this.intake, this.primaryController));
             }

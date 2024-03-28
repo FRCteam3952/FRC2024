@@ -292,15 +292,10 @@ public class RingHandlingCommand extends Command {
                 .filter((tag) -> tag.tagId() == tagId)
                 .findFirst()
                 .map(AprilTagHandler.RobotPoseAndTagDistance::fieldRelativePose)
-                .map((robotPose) -> {
-                    // now we know where to aim, compare our current location with our target
-                    double distance = Math.sqrt(
-                            Math.abs(targetPose.getY() - robotPose.getY()) +
-                            Math.abs(targetPose.getX() - robotPose.getX())
-                    ); // trust me bro
-
-                    return distance;
-                });
+                .map((robotPose) -> Math.sqrt(
+                        Math.abs(targetPose.getY() - robotPose.getY()) +
+                        Math.abs(targetPose.getX() - robotPose.getX())
+                ));
     }
 
     // Called once the command ends or is interrupted.

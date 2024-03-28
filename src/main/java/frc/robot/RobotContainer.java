@@ -153,7 +153,7 @@ public class RobotContainer {
             if (Flags.DriveTrain.USE_TEST_DRIVE_COMMAND) {
                 this.driveTrain.setDefaultCommand(new TestDriveCommand(this.driveTrain, this.primaryController));
             } else {
-                this.driveTrain.setDefaultCommand(new ManualDriveCommand(this.driveTrain, this.primaryController));
+                this.driveTrain.setDefaultCommand(new ManualDriveCommand(this.driveTrain, this.primaryController, this.aprilTagHandler));
             }
         }
 

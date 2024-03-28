@@ -2,10 +2,10 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 0.72,
-      "y": 6.7
+      "x": 1.37,
+      "y": 5.52
     },
-    "rotation": 60.0
+    "rotation": 0.0
   },
   "command": {
     "type": "sequential",
@@ -37,7 +37,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "grab upper close note"
+                  "pathName": "grab middle close note"
                 }
               },
               {
@@ -50,20 +50,14 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "upper close to mid shooting position"
-          }
-        },
-        {
           "type": "named",
           "data": {
-            "name": "shoot"
+            "name": "shoot_40"
           }
         }
       ]
     }
   },
-  "folder": "TEST OR TROLL AUTOS",
+  "folder": "AUTOS THAT ARENT TROLL",
   "choreoAuto": false
 }

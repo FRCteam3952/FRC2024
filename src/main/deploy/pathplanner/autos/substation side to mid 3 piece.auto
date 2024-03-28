@@ -31,13 +31,51 @@
           }
         },
         {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "grab lower close note"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "lower close to fast shoot position"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "activate_intake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot_30"
+          }
+        },
+        {
           "type": "parallel",
           "data": {
             "commands": [
               {
                 "type": "path",
                 "data": {
-                  "pathName": "grab lower close note"
+                  "pathName": "lower close note to lower far note"
                 }
               },
               {
@@ -52,38 +90,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "lower close to mid shooting position"
+            "pathName": "lower far note to shoot"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "shoot_lower"
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "mid shooting position to mid close note"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "activate_intake"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "shoot_40"
+            "name": "shoot_30"
           }
         }
       ]

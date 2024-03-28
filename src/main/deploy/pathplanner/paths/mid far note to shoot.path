@@ -3,29 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.23,
-        "y": 6.98
+        "x": 7.559055118110236,
+        "y": 4.091101515536365
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.4907942488604795,
-        "y": 6.099048890413176
+        "x": 6.780120226907121,
+        "y": 4.091101515536365
       },
       "isLocked": false,
-      "linkedName": "upper close note end location"
+      "linkedName": "mid far note location"
     },
     {
       "anchor": {
-        "x": 2.0,
-        "y": 5.521063899270655
+        "x": 5.01,
+        "y": 4.321395309457285
       },
       "prevControl": {
-        "x": 1.3399999999999999,
-        "y": 5.521063899270655
+        "x": 5.43528467125161,
+        "y": 4.0413297942428095
+      },
+      "nextControl": {
+        "x": 4.732292777918888,
+        "y": 4.504275675218017
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 4.0,
+        "y": 5.52
+      },
+      "prevControl": {
+        "x": 4.084328168656337,
+        "y": 5.100330200660401
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "midpoint shooting location"
+      "linkedName": "far mid aligned shoot location"
     }
   ],
   "rotationTargets": [],

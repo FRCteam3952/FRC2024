@@ -37,7 +37,6 @@ import frc.robot.util.Util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.function.Supplier;
 
 public class RobotContainer {
     private final DriveTrainSubsystem driveTrain;
@@ -56,10 +55,8 @@ public class RobotContainer {
 
     private final SendableChooser<Command> autonChooser;
 
-    private final Supplier<DriveTrainSubsystem> driveTrainSubsystemCreator = () -> new DriveTrainSubsystem(aprilTagHandler);
-
     public RobotContainer() {
-        this.driveTrain = Util.createIfFlagElseNull(driveTrainSubsystemCreator, Flags.DriveTrain.IS_ATTACHED);
+        this.driveTrain = Util.createIfFlagElseNull(() -> new DriveTrainSubsystem(aprilTagHandler), Flags.DriveTrain.IS_ATTACHED);
         this.intake     = Util.createIfFlagElseNull(IntakeSubsystem::new, Flags.Intake.IS_ATTACHED);
         this.shooter    = Util.createIfFlagElseNull(ShooterSubsystem::new, Flags.Shooter.IS_ATTACHED);
         this.conveyor   = Util.createIfFlagElseNull(ConveyorSubsystem::new, Flags.Conveyor.IS_ATTACHED);
@@ -71,6 +68,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("drop_intake", new InstantCommand(() -> this.intake.pivotToAngle(0), this.intake));
         NamedCommands.registerCommand("activate_intake", new RingHandlingAutonCommand(this.conveyor, this.intake));
         NamedCommands.registerCommand("adjust", new InstantCommand());
+        NamedCommands.registerCommand("shoot_30", new RunShooterAutonCommand(shooter, conveyor, 2600, 30));
 
         configureBindings();
 
@@ -144,6 +142,8 @@ public class RobotContainer {
     }
 
     public void onTeleopInit() {
+        this.getAutonomousCommand().cancel();
+
         if (Flags.DriveTrain.IS_ATTACHED) {
             RobotGyro.setGyroAngle(this.driveTrain.getPose().getRotation().getDegrees());
             if (Flags.DriveTrain.USE_TEST_DRIVE_COMMAND) {

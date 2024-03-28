@@ -3,60 +3,50 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.72,
-        "y": 6.7
+        "x": 2.89,
+        "y": 3.0
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.2514279496638943,
-        "y": 7.038817791974341
+        "x": 3.4882736432139536,
+        "y": 2.174244348488697
       },
       "isLocked": false,
-      "linkedName": "upper subwoofer starting location"
+      "linkedName": "lower close note fast shoot location"
     },
     {
       "anchor": {
-        "x": 1.2,
-        "y": 7.0
+        "x": 4.975700618067903,
+        "y": 1.3790534247735153
       },
       "prevControl": {
-        "x": 1.1149969978078613,
-        "y": 7.0
+        "x": 4.815849631699267,
+        "y": 1.4494962323271237
       },
       "nextControl": {
-        "x": 1.2850030021921386,
-        "y": 7.0
+        "x": 5.131265269698644,
+        "y": 1.3104995104942692
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.23,
-        "y": 6.98
+        "x": 7.56,
+        "y": 0.7653881974430609
       },
       "prevControl": {
-        "x": 1.5135497719300743,
-        "y": 6.98
+        "x": 6.549826432986204,
+        "y": 0.7450681568043067
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "upper close note end location"
+      "linkedName": "lower far note location"
     }
   ],
   "rotationTargets": [
     {
       "waypointRelativePos": 0.2,
-      "rotationDegrees": 60.0,
-      "rotateFast": false
-    },
-    {
-      "waypointRelativePos": 0.5,
-      "rotationDegrees": 0,
-      "rotateFast": true
-    },
-    {
-      "waypointRelativePos": 0.7,
       "rotationDegrees": 0,
       "rotateFast": false
     }
@@ -75,9 +65,9 @@
     "rotateFast": false
   },
   "reversed": false,
-  "folder": "subwoofer to respective starting note",
+  "folder": "arbitrary location to note",
   "previewStartingState": {
-    "rotation": 60.0,
+    "rotation": -46.06999999999999,
     "velocity": 0
   },
   "useDefaultConstraints": true

@@ -52,7 +52,13 @@
         {
           "type": "named",
           "data": {
-            "name": "shoot"
+            "name": "shoot_40"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "mid close note to exit position"
           }
         }
       ]

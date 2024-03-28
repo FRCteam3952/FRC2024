@@ -47,7 +47,7 @@ public class RunShooterAutonCommand extends Command {
     // Called once the command ends or is interrupted.
     @Override
     public void end(boolean interrupted) {
-        this.shooter.setMotorRpm(1000);
+        this.shooter.setMotorRpm(1800);
         this.conveyor.setShooterFeederMotorSpeed(0);
         this.conveyor.setConveyorMotorsSpeed(0);
         System.out.println("shooter done running auto");
@@ -56,6 +56,6 @@ public class RunShooterAutonCommand extends Command {
     // Returns true when the command should end.
     @Override
     public boolean isFinished() {
-        return startedTimer && shootForTimer.get() > 1.5;
+        return startedTimer && shootForTimer.get() > 0.4;
     }
 }

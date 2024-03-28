@@ -1,0 +1,84 @@
+{
+  "version": 1.0,
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 2.30385717914293,
+        "y": 5.521063899270655
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 3.440860215053764,
+        "y": 5.858945051223436
+      },
+      "isLocked": false,
+      "linkedName": "middle close note end location"
+    },
+    {
+      "anchor": {
+        "x": 4.504275675218017,
+        "y": 4.836169672339345
+      },
+      "prevControl": {
+        "x": 3.9777552290300147,
+        "y": 5.538196933923348
+      },
+      "nextControl": {
+        "x": 4.8497163660994,
+        "y": 4.375582084497503
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 5.770891541783084,
+        "y": 4.091101515536365
+      },
+      "prevControl": {
+        "x": 5.364490728981458,
+        "y": 4.091101515536365
+      },
+      "nextControl": {
+        "x": 6.241045947999425,
+        "y": 4.091101515536365
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.559055118110236,
+        "y": 4.091101515536365
+      },
+      "prevControl": {
+        "x": 6.559055118110236,
+        "y": 4.091101515536365
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "mid far note location"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 2.0,
+    "maxAcceleration": 1.5,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0,
+    "rotateFast": false
+  },
+  "reversed": false,
+  "folder": "arbitrary location to note",
+  "previewStartingState": {
+    "rotation": 0,
+    "velocity": 0
+  },
+  "useDefaultConstraints": true
+}

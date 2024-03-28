@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants.ControllerConstants;
 import frc.robot.controllers.AbstractController;
-import frc.robot.controllers.FlightJoystick;
 import frc.robot.subsystems.conveyor.ConveyorSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
@@ -34,7 +33,6 @@ public class RingHandlingCommand extends Command {
     private final ConveyorSubsystem conveyor;
     private final AbstractController primaryController;
     private final AbstractController secondaryController;
-    private final FlightJoystick sideJoystick;
     private final Supplier<Pose2d> robotPoseSupplier;
 
     private boolean intakeToggledOn = false;
@@ -81,13 +79,12 @@ public class RingHandlingCommand extends Command {
 
     // 14ft = 4.267m => 2700 rpm
     // linear
-    public RingHandlingCommand(ShooterSubsystem shooter, IntakeSubsystem intake, ConveyorSubsystem conveyor, AbstractController primaryController, AbstractController secondaryController, FlightJoystick sideJoystick, Supplier<Pose2d> robotPoseSupplier) {
+    public RingHandlingCommand(ShooterSubsystem shooter, IntakeSubsystem intake, ConveyorSubsystem conveyor, AbstractController primaryController, AbstractController secondaryController, Supplier<Pose2d> robotPoseSupplier) {
         this.shooter = shooter;
         this.intake = intake;
         this.conveyor = conveyor;
         this.primaryController = primaryController;
         this.secondaryController = secondaryController;
-        this.sideJoystick = sideJoystick;
         this.robotPoseSupplier = robotPoseSupplier;
 
         this.reverseIntake = ControlHandler.get(primaryController, ControllerConstants.INTAKE_REVERSE);
@@ -111,7 +108,7 @@ public class RingHandlingCommand extends Command {
 
         ControlHandler.get(secondaryController, ControllerConstants.TOGGLE_FLAP)
             .onTrue(toggleFlapStage);
-        
+
         ControlHandler.get(secondaryController, ControllerConstants.WIGGLE_FLAP)
             .onTrue(wiggleFlap)
             .onFalse(wiggleFlap);

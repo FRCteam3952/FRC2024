@@ -3,6 +3,8 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
+import edu.wpi.first.networktables.GenericPublisher;
+import edu.wpi.first.networktables.NetworkTableType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -39,6 +41,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
 public class RobotContainer {
+    private static final GenericPublisher COLOR_SENSOR_PUB = NetworkTablesUtil.getPublisher("robot", "color_sensor_sees_note", NetworkTableType.kBoolean);
+
     private final DriveTrainSubsystem driveTrain;
     private final IntakeSubsystem intake;
     private final ShooterSubsystem shooter;
@@ -196,6 +200,6 @@ public class RobotContainer {
     }
     
     public void onRobotPeriodic() {
-        this.gyroPoseEstimator.update();
+        COLOR_SENSOR_PUB.setBoolean(ColorSensor.isNoteColor());
     }
 }

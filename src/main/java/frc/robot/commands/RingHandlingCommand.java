@@ -45,6 +45,14 @@ public class RingHandlingCommand extends Command {
     private boolean hasNote = false;
     private boolean idleShooterRpm = true;
 
+    private enum FlapStage {
+        DOWN,
+        MIDDLE,
+        UP
+    }
+
+    private FlapStage flapStage = FlapStage.DOWN;
+
     private final InstantCommand toggleIntakeRun = new InstantCommand(() -> {
         if(!hasNote) {
             intakeToggledOn = !intakeToggledOn;
@@ -52,6 +60,22 @@ public class RingHandlingCommand extends Command {
     });
     private final InstantCommand toggleIntakePos = new InstantCommand(() -> intakeUp = !intakeUp);
     private final InstantCommand toggleIdleShooterRpm = new InstantCommand(() -> idleShooterRpm = !idleShooterRpm);
+
+    private final InstantCommand toggleFlapStage = new InstantCommand(() -> {
+        if(this.flapStage == FlapStage.DOWN) {
+            this.flapStage = FlapStage.MIDDLE;
+        } else {
+            this.flapStage = FlapStage.DOWN;
+        }
+    });
+
+    private final InstantCommand wiggleFlap = new InstantCommand(() -> {
+        if(this.flapStage == FlapStage.MIDDLE) {
+            this.flapStage = FlapStage.UP;
+        } else if(this.flapStage == FlapStage.UP) {
+            this.flapStage = FlapStage.MIDDLE;
+        }
+    });
 
     private final Trigger reverseIntake, runShooterHigh, runShooterAmp, autoAimSubwoofer;
 
@@ -84,6 +108,13 @@ public class RingHandlingCommand extends Command {
 
         ControlHandler.get(secondaryController, ControllerConstants.SHOOTER_IDLE_RPM_TOGGLE)
             .onTrue(toggleIdleShooterRpm);
+
+        ControlHandler.get(secondaryController, ControllerConstants.TOGGLE_FLAP)
+            .onTrue(toggleFlapStage);
+        
+        ControlHandler.get(secondaryController, ControllerConstants.WIGGLE_FLAP)
+            .onTrue(wiggleFlap)
+            .onFalse(wiggleFlap);
     }
 
     private double shooterAngle = 45;
@@ -92,26 +123,18 @@ public class RingHandlingCommand extends Command {
     private double flapAngleTargetR = 20;
     @Override
     public void execute() {
-        // this.shooter.flapToAngle(90 * (primaryController.getRightVerticalMovement() + 1));
-        if(sideJoystick.getRawButtonPressedWrapper(7)) {
+        if(this.flapStage == FlapStage.DOWN) {
             flapAngleTargetL = 155;
             flapAngleTargetR = 20;
-        } else if(sideJoystick.getRawButtonPressedWrapper(6)) {
+        } else if(this.flapStage == FlapStage.MIDDLE) {
             flapAngleTargetL = 60;
             flapAngleTargetR = 115;
-        } else if(sideJoystick.getRawButtonPressedWrapper(5)) {
+        } else if(this.flapStage == FlapStage.UP) {
             flapAngleTargetL = 45;
             flapAngleTargetR = 130;
         }
 
         this.shooter.flapToAngle(flapAngleTargetL, flapAngleTargetR);
-
-        /*
-        if (joystick.leftShoulderButton().getAsBoolean()) {
-            this.shooter.pivotToAngle(54);
-        } else if (joystick.leftShoulderTrigger().getAsBoolean()) {
-            this.shooter.pivotToAngle(30);
-        }*/
 
         if(primaryController.getPOV() == 0) {
             shooterAngle++;

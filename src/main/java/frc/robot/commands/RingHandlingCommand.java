@@ -41,7 +41,7 @@ public class RingHandlingCommand extends Command {
     private boolean hasHandledNote = false;
     private int reverseTimerElapsed = 0;
     private boolean shouldReverse = false;
-    private boolean intakeUp = true;
+    private boolean intakeUp = false;
     private boolean hasNote = false;
     private boolean idleShooterRpm = true;
 
@@ -153,7 +153,7 @@ public class RingHandlingCommand extends Command {
             reverseTimerElapsed = 0;
             if(hasNote) {
                 // hasHandledNote = true;
-                // intakeUp = true;
+                intakeUp = true;
             }
         }
     

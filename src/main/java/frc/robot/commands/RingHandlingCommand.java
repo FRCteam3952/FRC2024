@@ -122,7 +122,6 @@ public class RingHandlingCommand extends Command {
     }
 
     private double shooterAngle = 45;
-    private double lastShooterAngleChangeTime = Timer.getFPGATimestamp();
 
     private double flapAngleTargetL = 155;
     private double flapAngleTargetR = 20;
@@ -141,11 +140,10 @@ public class RingHandlingCommand extends Command {
 
         this.shooter.flapToAngle(flapAngleTargetL, flapAngleTargetR);
 
-        double nextShooterAngle = shooterAngle;
         if(primaryController.getPOV() == 0) {
-            nextShooterAngle++;
+            shooterAngle++;
         } else if(primaryController.getPOV() == 180) {
-            nextShooterAngle--;
+            shooterAngle--;
         }
 
         if(autoAimSubwoofer.getAsBoolean()) {
@@ -154,16 +152,6 @@ public class RingHandlingCommand extends Command {
                 System.out.println("pivoting shooter to " + angle + " to shoot at target");
             });
         }
-
-        if(Timer.getFPGATimestamp() - lastShooterAngleChangeTime > 10) {
-            // nextShooterAngle = 45;
-        }
-
-        if(Math.abs(nextShooterAngle - shooterAngle) > 0.7) {
-            lastShooterAngleChangeTime = Timer.getFPGATimestamp();
-            // shooterAngle = nextShooterAngle;
-        }
-        shooterAngle = nextShooterAngle;
 
         this.shooter.pivotToAngle(shooterAngle);
 

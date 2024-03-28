@@ -37,12 +37,20 @@ public class ManualDriveCommand extends Command {
         // this.driveTrain.setPose(new Pose2d(2, 7, RobotGyro.getRotation2d()));
     }
 
+    private double flipFactor() {
+        if(Util.onBlueTeam()) {
+            return 1;
+        }
+        return -1;
+    }
+
     @Override
     public void execute() {
         // System.out.println("vert: " + this.joystick.getRightVerticalMovement() + ", hor: " + this.joystick.getRightHorizontalMovement());
         // this.driveTrain.drive(this.joystick.getVerticalMovement());
-        double ySpeed = Util.squareKeepSign(this.ySpeedLimiter.calculate(-this.joystick.getLeftVerticalMovement())) * MAX_SPEED_METERS_PER_SEC;
-        double xSpeed = Util.squareKeepSign(this.xSpeedLimiter.calculate(-this.joystick.getLeftHorizontalMovement())) * MAX_SPEED_METERS_PER_SEC;
+        double flip = flipFactor();
+        double ySpeed = Util.squareKeepSign(this.ySpeedLimiter.calculate(-this.joystick.getLeftVerticalMovement() * flip)) * MAX_SPEED_METERS_PER_SEC;
+        double xSpeed = Util.squareKeepSign(this.xSpeedLimiter.calculate(-this.joystick.getLeftHorizontalMovement() * flip)) * MAX_SPEED_METERS_PER_SEC;
         double rotSpeed = -this.joystick.getRightHorizontalMovement() * 1.2;
 
         if(autoAimSubwoofer.getAsBoolean()) {

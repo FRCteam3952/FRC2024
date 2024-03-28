@@ -149,9 +149,9 @@ public class DriveTrainSubsystem extends SubsystemBase {
      */
     public void resetPoseToMidSubwoofer() {
         if(Util.onBlueTeam()) {
-            this.setPose(new Pose2d(1.35, 5.50, RobotGyro.getRotation2d()));
+            this.setPose(new Pose2d(1.35, 5.50, new Rotation2d()));
         } else {
-            this.setPose(GeometryUtil.flipFieldPose(new Pose2d(1.35, 5.50, RobotGyro.getRotation2d())));
+            this.setPose(GeometryUtil.flipFieldPose(new Pose2d(1.35, 5.50, new Rotation2d())));
         }
     }
 
@@ -185,7 +185,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
      */
     public void setPose(Pose2d pose) {
         RobotGyro.setGyroAngle(pose.getRotation().getDegrees());
-        poseEstimator.resetPosition(RobotGyro.getRotation2d(), this.getAbsoluteModulePositions(), pose);
+        poseEstimator.resetPosition(pose.getRotation(), this.getAbsoluteModulePositions(), pose);
     }
 
     /**

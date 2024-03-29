@@ -64,13 +64,15 @@ public class ManualDriveCommand extends Command {
         double xSpeed = Util.squareKeepSign(this.xSpeedLimiter.calculate(-this.joystick.getLeftHorizontalMovement() * flip)) * MAX_SPEED_METERS_PER_SEC;
 
 
-        // The rotSpeed will be empty IF:
-        // a: autoAim button pressed
-        // b. we can't see any notes.
-        // in this case, the robot will drive with speed 0.0.
-         Optional<Double> rotSpeed;
+
+         double rotSpeed;
 
          if (autoAimSubwoofer.getAsBoolean()) {
+             // addison & ivan run the robot
+             // The auto rotSpeed will be empty IF:
+             // a: autoAim button pressed
+             // b. we can't see any notes.
+             // in this case, the robot will drive with speed 0.0.
              rotSpeed = directionToSubwooferTarget()
                      .map(Rotation2d::getDegrees)
                      .map(avgDirectionToTarget -> {
@@ -85,20 +87,25 @@ public class ManualDriveCommand extends Command {
                              rotateByAmount += 360;
                          }
                          double rotSpeed2 = MathUtil.clamp(3 * (Math.toRadians(rotateByAmount)), -1.7, 1.7);
-                         System.out.println("AVERAGE angle to subwoofer target: " + directionToSubwooferTarget() + ", rotating " + rotateByAmount + " at a speed of " + rotSpeed2 + " to get there");
+                         System.out.println("AVERAGE angle to subwoofer target: " + avgDirectionToTarget + ", rotating " + rotateByAmount + " at a speed of " + rotSpeed2 + " to get there");
                          //System.out.println("current rot: " + RobotGyro.getRotation2d());
                          return rotSpeed2;
-                     });
+                     })
+                     // if we don't see an apriltag OR we haven't collected enough data,
+                     // don't begin moving.
+                     .orElse(0.0);
          } else {
+             // phong runs the robot!
              aprilTagHandler.resetAverageAutoAimPose();
-             rotSpeed = Optional.of(-this.joystick.getRightHorizontalMovement() * 3);
+             filter.reset();
+             rotSpeed = -this.joystick.getRightHorizontalMovement() * 3.0;
          }
 
 
 
         // System.out.println("forward speed: " + ySpeed + ", x speed: " + xSpeed);
         // System.out.println("y: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftVerticalMovement()) + ", x: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftHorizontalMovement()));
-        this.driveTrain.drive(ySpeed, xSpeed, rotSpeed.orElse(0.0), true);
+        this.driveTrain.drive(ySpeed, xSpeed, rotSpeed, true);
     }
 
     /**
@@ -124,6 +131,7 @@ public class ManualDriveCommand extends Command {
                             targetPose2d.getX() - robotPose.getX()
                     ) // trust me bro
                 )
+                // filter to decrease noise.
                 .map(filter::calculate)
                 .map(Rotation2d::new);
     }

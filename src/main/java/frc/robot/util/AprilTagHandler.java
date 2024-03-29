@@ -130,6 +130,7 @@ public final class AprilTagHandler {
 
     public Optional<Pose2d> averageAutoAimPose(int tagId) {
         // does not filter w/ wpilib filters.
+        // None -> Don't move.
 
         // 5 is an ARBITRARY VARIABLE
         // that SHOULD BE CHANGED
@@ -160,9 +161,9 @@ public final class AprilTagHandler {
         int newTotalNumPositions = previousAutoPositions.size();
 
 
-        // this coould be empty, if we can't collect any data
+        // this could be empty, if we can't collect any data
         // e.g. apriltag finder not working, robot can't see any.
-        Optional<Pose2d> averagePosition = previousAutoPositions
+        return previousAutoPositions
                 .stream()
                 // deconstruct into a double array, average them, then reconstruct into a Pose2d.
                 // probably could be done better
@@ -182,8 +183,6 @@ public final class AprilTagHandler {
                 .map(e -> new Pose2d(new Translation2d(e[0], e[1]), new Rotation2d(e[2])))
                 // don't move if we haven't collected enough data.
                 .filter(_e -> newTotalNumPositions >= dataPointsCollectedToStartMoving);
-
-        return averagePosition;
     }
 
     public void resetAverageAutoAimPose() {

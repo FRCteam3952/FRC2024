@@ -31,7 +31,7 @@ public class ManualDriveCommand extends Command {
     private final SlewRateLimiter rotLimiter = new SlewRateLimiter(0.5);
     private final Trigger autoAimSubwoofer;
     private final LinearFilter filter = LinearFilter.singlePoleIIR(0.1, 0.02);
-    private final List<Rotation2d> autoAimTargetAngles = new ArrayList<>();
+    private boolean wasAutomaticallyDrivingLastFrame = false;
 
     public ManualDriveCommand(DriveTrainSubsystem driveTrain, AbstractController joystick, AprilTagHandler aprilTagHandler) {
         this.driveTrain = driveTrain;
@@ -94,10 +94,13 @@ public class ManualDriveCommand extends Command {
                      // if we don't see an apriltag OR we haven't collected enough data,
                      // don't begin moving.
                      .orElse(0.0);
+             wasAutomaticallyDrivingLastFrame = true;
          } else {
              // phong runs the robot!
-             aprilTagHandler.resetAverageAutoAimPose();
-             filter.reset();
+             if (wasAutomaticallyDrivingLastFrame) {
+                 aprilTagHandler.resetAverageAutoAimPose();
+                 filter.reset();
+             }
              rotSpeed = -this.joystick.getRightHorizontalMovement() * 3.0;
          }
 
@@ -114,12 +117,7 @@ public class ManualDriveCommand extends Command {
      * @return A Rotation2d representing the angle to the speaker. The gyroscope value should equal this value when the robot is facing the speaker.
      */
     private Optional<Rotation2d> directionToSubwooferTarget() {
-        int tagId;
-        if (Util.onBlueTeam()) {
-            tagId = 7;
-        } else {
-            tagId = 4;
-        }
+        int tagId = Util.getTargetTagId();
         Pose2d targetPose2d = Util.getTagPose(tagId).toPose2d();
 
         // i love Optional<T> :3

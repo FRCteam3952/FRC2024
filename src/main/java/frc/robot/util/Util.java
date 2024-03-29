@@ -184,12 +184,15 @@ public final class Util {
         return TAG_FIELD_LAYOUT.getTagPose(tagId).orElse(new Pose3d());
     }
 
-    public static Pose3d getTargetPose() {
-        if(onBlueTeam()) {
-            // our target is tag 7
-            return getTagPose(7);
+    public static int getTargetTagId() {
+        if (onBlueTeam()) {
+            return 7;
+        } else {
+            return 4;
         }
-        // our target is tag 4
-        return getTagPose(4);
+    }
+
+    public static Pose3d getTargetPose() {
+        return getTagPose(getTargetTagId());
     }
 }

@@ -1,0 +1,76 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 0.72,
+      "y": 6.7
+    },
+    "rotation": 60.0
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "shoot"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "drop_intake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "grab upper close note"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "upper close to shoot angle"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "activate_intake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot_30"
+          }
+        }
+      ]
+    }
+  },
+  "folder": "AUTOS THAT ARENT TROLL",
+  "choreoAuto": false
+}

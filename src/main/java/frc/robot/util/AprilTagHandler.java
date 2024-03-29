@@ -20,8 +20,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.subsystems.swerve.DriveTrainSubsystem;
 
+import javax.swing.text.html.Option;
+import java.util.List;
+
 public final class AprilTagHandler {
     private final GenericPublisher skippedApriltagHandling = NetworkTablesUtil.getPublisher("robot", "skippedATHandling", NetworkTableType.kBoolean);
+
+    private final List<Pose2d> previousAutoPositions = new ArrayList<>();
 
     private double[] previousReading = new double[] {};
     private double previousReadingTime = Timer.getFPGATimestamp();
@@ -120,6 +125,61 @@ public final class AprilTagHandler {
 
         System.out.println("call to apriltaghandler gave: " + poses.size() + " poses.");
         return poses;
+    }
+
+    public Optional<Pose2d> averageAutoAimPose(int tagId) {
+        // does not filter w/ wpilib filters.
+
+        // 5 is an ARBITRARY VARIABLE
+        // that SHOULD BE CHANGED
+        // wait until we've collected some data to start moving
+        final int dataPointsCollectedToStartMoving = 5;
+
+        // the next line makes data collection stop when we start moving.
+        if (previousAutoPositions.size() < dataPointsCollectedToStartMoving)
+            // update by adding another pose.
+            // does getJetsonAprilTagPoses already filter? is that a problem?
+            getJetsonAprilTagPoses()
+                    .stream()
+                    .filter((tag) -> tag.tagId() == tagId)
+                    .findFirst()
+                    .map(AprilTagHandler.RobotPoseAndTagDistance::fieldRelativePose)
+                    .map(previousAutoPositions::add);
+
+        int totalNumPositions = previousAutoPositions.size();
+
+        Optional<Pose2d> averagePosition;
+
+        if (totalNumPositions >= dataPointsCollectedToStartMoving) {
+            // this coould be empty, if we can't collect any data
+            // e.g. apriltag finder not working, robot can't see any.
+            averagePosition = previousAutoPositions
+                    .stream()
+                    // deconstruct into a double array, average them, then reconstruct into a Pose2d.
+                    // probably could be done better
+                    .map(pose -> new double[]{pose.getX(), pose.getY(), pose.getRotation().getRadians()})
+                    // sum
+                    .reduce((e1, e2) -> new double[]{
+                            e1[0] + e2[0],
+                            e1[1] + e2[1],
+                            e1[2] + e2[2],
+                    })
+                    // sum -> average
+                    .map(e -> new double[]{
+                            e[0] / totalNumPositions,
+                            e[1] / totalNumPositions,
+                            e[2] / totalNumPositions,
+                    })
+                    .map(e -> new Pose2d(new Translation2d(e[0], e[1]), new Rotation2d(e[2])));
+        } else {
+            averagePosition = Optional.empty();
+        }
+
+        return averagePosition;
+    }
+
+    public void resetAverageAutoAimPose() {
+        previousAutoPositions.clear();
     }
 
     /**

@@ -294,16 +294,14 @@ public class RingHandlingCommand extends Command {
             tagId = 4;
         }
 
-        // i love Optional<T> :3
+        // this could be wrong IF
+        // AprilTagHangle.RobotPoseAndTagDistance
+        // tag distance is different than what can be derived just from
+        // using the pose.
+        // wait, why is this function taking a record that has the tag distance included in it,
+        // discarding the tag distance, and then calculating the tag distance with another method?
         return this.aprilTagHandler
-                .getJetsonAprilTagPoses()
-                .stream()
-                .filter((tag) -> {
-                    System.out.println("checking " + tag.tagId() + " against our goal of " + tagId);
-                    return tag.tagId() == tagId;
-                })
-                .findFirst()
-                .map(AprilTagHandler.RobotPoseAndTagDistance::fieldRelativePose)
+                .averageAutoAimPose(tagId)
                 .map((robotPose) -> Math.sqrt(
                         Math.pow(targetPose.getY() - robotPose.getY(), 2) +
                         Math.pow(targetPose.getX() - robotPose.getX(), 2)

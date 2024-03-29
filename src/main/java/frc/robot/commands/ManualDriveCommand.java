@@ -62,46 +62,43 @@ public class ManualDriveCommand extends Command {
         double flip = flipFactor();
         double ySpeed = Util.squareKeepSign(this.ySpeedLimiter.calculate(-this.joystick.getLeftVerticalMovement() * flip)) * MAX_SPEED_METERS_PER_SEC;
         double xSpeed = Util.squareKeepSign(this.xSpeedLimiter.calculate(-this.joystick.getLeftHorizontalMovement() * flip)) * MAX_SPEED_METERS_PER_SEC;
-//        double rotSpeed = -this.joystick.getRightHorizontalMovement() * 3.5;
 
-        // this Should use option filtering, in the future...
-//        Optional<Rotation2d> angleToSubwooferTargetOption = directionToSubwooferTarget();
 
-        // double rotSpeed;
-        // if (autoAimSubwoofer.getAsBoolean()) {
-            
-        // } else {
-        //     rotSpeed = -this.joystick.getRightHorizontalMovement() * 3;
-        // }
+        // The rotSpeed will be empty IF:
+        // a: autoAim button pressed
+        // b. we can't see any notes.
+        // in this case, the robot will drive with speed 0.0.
+         Optional<Double> rotSpeed;
 
-        double rotSpeed = directionToSubwooferTarget()
-                .flatMap(angleToSubwooferTarget -> {
-                    if(autoAimSubwoofer.getAsBoolean()) {
-                        Rotation2d robotHeading = RobotGyro.getRotation2d();
-                        double headingDeg = 180 + Util.bringAngleWithinUnitCircle(robotHeading.getDegrees());
-                        double rotateByAmount = headingDeg - angleToSubwooferTarget.getDegrees();
-                        if(rotateByAmount > 180) {
-                            rotateByAmount -= 360;
-                        }
-                        rotateByAmount = -rotateByAmount;
-                        if(rotateByAmount < -180) {
-                            rotateByAmount += 360;
-                        }
-                        double rotSpeed2 = MathUtil.clamp(3 * (Math.toRadians(rotateByAmount)), -1.7, 1.7);
-                        System.out.println("angle to subwoofer target: " + directionToSubwooferTarget() + ", rotating " + rotateByAmount + " at a speed of " + rotSpeed2 + " to get there");
-                        //System.out.println("current rot: " + RobotGyro.getRotation2d());
-                        return Optional.of(rotSpeed2);
-                    } else {
-                        // reset the filter as soon as manual control is re-enabled
-                        filter.reset();
-                        return Optional.empty();
-                    }
-                })
-                .orElse(-this.joystick.getRightHorizontalMovement() * 3);
+         if (autoAimSubwoofer.getAsBoolean()) {
+             rotSpeed = directionToSubwooferTarget()
+                     .map(Rotation2d::getDegrees)
+                     .map(avgDirectionToTarget -> {
+                         Rotation2d robotHeading = RobotGyro.getRotation2d();
+                         double headingDeg = 180 + Util.bringAngleWithinUnitCircle(robotHeading.getDegrees());
+                         double rotateByAmount = headingDeg - avgDirectionToTarget;
+                         if(rotateByAmount > 180) {
+                             rotateByAmount -= 360;
+                         }
+                         rotateByAmount = -rotateByAmount;
+                         if(rotateByAmount < -180) {
+                             rotateByAmount += 360;
+                         }
+                         double rotSpeed2 = MathUtil.clamp(3 * (Math.toRadians(rotateByAmount)), -1.7, 1.7);
+                         System.out.println("AVERAGE angle to subwoofer target: " + directionToSubwooferTarget() + ", rotating " + rotateByAmount + " at a speed of " + rotSpeed2 + " to get there");
+                         //System.out.println("current rot: " + RobotGyro.getRotation2d());
+                         return rotSpeed2;
+                     });
+         } else {
+             aprilTagHandler.resetAverageAutoAimPose();
+             rotSpeed = Optional.of(-this.joystick.getRightHorizontalMovement() * 3);
+         }
+
+
 
         // System.out.println("forward speed: " + ySpeed + ", x speed: " + xSpeed);
         // System.out.println("y: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftVerticalMovement()) + ", x: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftHorizontalMovement()));
-        this.driveTrain.drive(ySpeed, xSpeed, rotSpeed, true);
+        this.driveTrain.drive(ySpeed, xSpeed, rotSpeed.orElse(0.0), true);
     }
 
     /**
@@ -116,24 +113,17 @@ public class ManualDriveCommand extends Command {
         } else {
             tagId = 4;
         }
+        Pose2d targetPose2d = Util.getTagPose(tagId).toPose2d();
 
         // i love Optional<T> :3
-
         return aprilTagHandler
-                .getJetsonAprilTagPoses()
-                .stream()
-                .filter((tag) -> tag.tagId() == tagId)
-                .findFirst()
-                .map(AprilTagHandler.RobotPoseAndTagDistance::fieldRelativePose)
-                .map((robotPose) -> {
-                    Pose2d targetPose2d = Util.getTagPose(tagId).toPose2d();
-
-                    // now we know where to aim, compare our current location with our target
-                    return Math.atan2(
+                .averageAutoAimPose(tagId)
+                .map((robotPose) -> // now we know where to aim, compare our current location with our target
+                    Math.atan2(
                             targetPose2d.getY() - robotPose.getY(),
                             targetPose2d.getX() - robotPose.getX()
-                    ); // trust me bro
-                })
+                    ) // trust me bro
+                )
                 .map(filter::calculate)
                 .map(Rotation2d::new);
     }

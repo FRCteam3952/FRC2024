@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -26,12 +27,14 @@ public class ManualDriveCommand extends Command {
     private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(1);
     private final SlewRateLimiter rotLimiter = new SlewRateLimiter(0.5);
     private final Trigger autoAimSubwoofer;
+    private final LinearFilter filter = LinearFilter.singlePoleIIR(0.1, 0.02);
 
     public ManualDriveCommand(DriveTrainSubsystem driveTrain, AbstractController joystick, AprilTagHandler aprilTagHandler) {
         this.driveTrain = driveTrain;
         this.joystick = joystick;
         this.aprilTagHandler = aprilTagHandler;
         this.autoAimSubwoofer = ControlHandler.get(joystick, ControllerConstants.AUTO_AIM_FOR_SHOOT);
+
 
         addRequirements(driveTrain);
     }
@@ -78,6 +81,8 @@ public class ManualDriveCommand extends Command {
                         //System.out.println("current rot: " + RobotGyro.getRotation2d());
                         return Optional.of(rotSpeed2);
                     } else {
+                        // reset the filter as soon as manual control is re-enabled
+                        filter.reset();
                         return Optional.empty();
                     }
                 })
@@ -102,7 +107,7 @@ public class ManualDriveCommand extends Command {
         }
 
         // i love Optional<T> :3
-        return aprilTagHandler
+        Optional<Rotation2d> directionToSubwooferTarget = aprilTagHandler
                 .getJetsonAprilTagPoses()
                 .stream()
                 .filter((tag) -> tag.tagId() == tagId)
@@ -112,13 +117,15 @@ public class ManualDriveCommand extends Command {
                     Pose2d targetPose2d = Util.getTagPose(tagId).toPose2d();
 
                     // now we know where to aim, compare our current location with our target
-                    double theta = Math.atan2(
+                    return Math.atan2(
                             targetPose2d.getY() - robotPose.getY(),
                             targetPose2d.getX() - robotPose.getX()
                     ); // trust me bro
+                })
+                .map(filter::calculate)
+                .map(Rotation2d::new);
 
-                    return new Rotation2d(theta);
-                });
+        return directionToSubwooferTarget;
     }
 
     // Called once the command ends or is interrupted.

@@ -69,9 +69,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
         this.throughboreEncoder = new ThroughboreEncoder(PortConstants.SHOOTER_ABSOLUTE_ENCODER_ABS_PORT, PortConstants.SHOOTER_ABSOLUTE_ENCODER_A_PORT, PortConstants.SHOOTER_ABSOLUTE_ENCODER_B_PORT, 0.693, true);
 
-        leftMotor.enableVoltageCompensation(10);
-        rightMotor.enableVoltageCompensation(10);
-
 
         rightPidController.setP(5e-6, 0);
         rightPidController.setI(0, 0);
@@ -163,8 +160,8 @@ public class ShooterSubsystem extends SubsystemBase {
         // if (ColorSensor.isNoteColor()) {
             // System.out.println("omg its a note");
         // }
-        //lAmp.set(this.topMotor.getOutputCurrent());
-        //rAmp.set(this.bottomMotor.getOutputCurrent());
+        lAmp.set(this.leftMotor.getOutputCurrent());
+        rAmp.set(this.rightMotor.getOutputCurrent());
         // System.out.println("shooter throughbore: " + this.throughboreEncoder.getAbsoluteEncoderValue());
         // System.out.println("rel encoder: " + this.getPivotPosition());
     }

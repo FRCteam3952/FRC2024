@@ -65,7 +65,7 @@ public class ManualDriveCommand extends Command {
 
         double rotSpeed = directionToSubwooferTarget()
                 .flatMap(angleToSubwooferTarget -> {
-                    if(autoAimSubwoofer.getAsBoolean()) {
+                    if(false && autoAimSubwoofer.getAsBoolean()) {
                         Rotation2d robotHeading = RobotGyro.getRotation2d();
                         double headingDeg = 180 + Util.bringAngleWithinUnitCircle(robotHeading.getDegrees());
                         double rotateByAmount = headingDeg - angleToSubwooferTarget.getDegrees();

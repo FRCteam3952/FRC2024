@@ -65,7 +65,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
     private static final Translation2d backLeftLocation = new Translation2d(-RobotConstants.LEG_LENGTHS_M, RobotConstants.LEG_LENGTHS_M);
     private static final Translation2d backRightLocation = new Translation2d(-RobotConstants.LEG_LENGTHS_M, -RobotConstants.LEG_LENGTHS_M);
 
-    private static final Translation2d cameraLocation = backRightLocation.plus(new Translation2d(0.075, 0.205));
+    public static final Translation2d cameraLocation = backRightLocation.plus(new Translation2d(0.075, 0.205));
 
     private final SwerveModule frontLeft = new SwerveModule(
             PortConstants.DTRAIN_FRONT_LEFT_DRIVE_MOTOR_ID,
@@ -129,7 +129,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
         SmartDashboard.putData("estimated field", estimatedField);
 
         // this.setPose(new Pose2d(1.7, 5.50, RobotGyro.getRotation2d()));
-        this.setPose(GeometryUtil.flipFieldPose(new Pose2d(0.72, 6.7, new Rotation2d(Math.PI / 3))));
+        this.setPose(GeometryUtil.flipFieldPose(new Pose2d(1.37, 5.52, new Rotation2d())));
 
         AutoBuilder.configureHolonomic(
                 this::getPose,
@@ -368,7 +368,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
         }
 
         this.updateOdometry();
-        this.updateOdometryWithJetsonVision();
+        // this.updateOdometryWithJetsonVision();
         field.setRobotPose(getPose());
         // System.out.println(this.getPose());
 
@@ -458,6 +458,6 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     public void updateOdometryWithLimelightVision() {
         double[] vals = NetworkTablesUtil.getTable("limelight").getEntry("botpose_wpiblue").getDoubleArray(new double[] {});
-        
+
     }
 }

@@ -172,7 +172,7 @@ public class RingHandlingCommand extends Command {
         }
 
         if (shouldReverse && reverseTimerElapsed++ < 1) {
-            System.out.println("reversing at " + reverseTimerElapsed + ", note handled: " + hasHandledNote + ", does it have one: " + hasNote);
+            // System.out.println("reversing at " + reverseTimerElapsed + ", note handled: " + hasHandledNote + ", does it have one: " + hasNote);
             this.intake.setIntakeSpeed(-0.2, -0.2);
             this.conveyor.setConveyorMotorsSpeed(0.2);
             this.conveyor.setShooterFeederMotorSpeed(-0.3);
@@ -213,7 +213,9 @@ public class RingHandlingCommand extends Command {
 
         // when the shooter is up high enough we GO BRRRR
         if (runShooterHigh.getAsBoolean()) {
+            System.out.println("running shooter on high");
             if(!autoAimSubwoofer.getAsBoolean()) {
+                System.out.println("not using subwoofer auto aim, going to high speed");
                 shooter.setMotorRpm(2700);
                 if (shooter.getShooterRpm() > 2700 - 75) {
                     this.conveyor.setShooterFeederMotorSpeed(1);
@@ -222,6 +224,7 @@ public class RingHandlingCommand extends Command {
                     hasNote = false;
                 }
             } else {
+                System.out.println("attempting to use auto aims");
                 getDistanceToTarget(Util.getTargetPose().toPose2d())
                     .map((distanceFromTarget) -> {
                         // Get the target RPM.
@@ -230,9 +233,8 @@ public class RingHandlingCommand extends Command {
                         } else {
                             return MathUtil.clamp(((distanceFromTarget + 1) / 4.267) * 2700 * 1.0, 1300, 2800);
                         }
-                    })
-                    .ifPresent((targetRpm) -> {
-                        System.out.println("using a target rpm of " + targetRpm);
+                    }).ifPresentOrElse((targetRpm) -> {
+                        System.out.println("using an auto-set target rpm of " + targetRpm);
                         shooter.setMotorRpm(targetRpm);
 
                         if (shooter.getShooterRpm() > targetRpm - 75) {
@@ -241,6 +243,8 @@ public class RingHandlingCommand extends Command {
                             hasHandledNote = false;
                             hasNote = false;
                         }
+                    }, () -> {
+                        System.out.println("unable to use auto aim: no tag presetn.");
                     });
             }
         } else if(runShooterAmp.getAsBoolean()) {
@@ -301,12 +305,15 @@ public class RingHandlingCommand extends Command {
         return this.aprilTagHandler
                 .getJetsonAprilTagPoses()
                 .stream()
-                .filter((tag) -> tag.tagId() == tagId)
+                .filter((tag) -> {
+                    System.out.println("checking " + tag.tagId() + " against our goal of " + tagId);
+                    return tag.tagId() == tagId;
+                })
                 .findFirst()
                 .map(AprilTagHandler.RobotPoseAndTagDistance::fieldRelativePose)
                 .map((robotPose) -> Math.sqrt(
-                        Math.abs(targetPose.getY() - robotPose.getY()) +
-                        Math.abs(targetPose.getX() - robotPose.getX())
+                        Math.pow(targetPose.getY() - robotPose.getY(), 2) +
+                        Math.pow(targetPose.getX() - robotPose.getX(), 2)
                 ));
     }
 

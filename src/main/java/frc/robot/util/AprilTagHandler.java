@@ -7,14 +7,23 @@ import edu.wpi.first.math.geometry.CoordinateSystem;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Quaternion;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
+import frc.robot.subsystems.swerve.DriveTrainSubsystem;
 
 public final class AprilTagHandler {
     private double[] previousReading = new double[] {};
+    private final Field2d fieldTag = new Field2d();
+
+    public AprilTagHandler() {
+        SmartDashboard.putData("fieldTag", fieldTag);
+    }
 
     /**
      * Returns the current robot pose according to AprilTags on Jetson, in meters since that's what they want. The rotation is really the gyro's rotation, since we know that the gyro is accurate.
@@ -62,19 +71,43 @@ public final class AprilTagHandler {
             Translation3d pose = new Translation3d(readTags[i + 1], readTags[i + 2], Math.cos(Math.toRadians(50)) * readTags[i + 3]); // the camera is tilted at ~50deg angle, so adjust our z (axis straight out of the camera lens) distance so we get just the horizontal component.
             Quaternion q = new Quaternion(readTags[i + 4], readTags[i + 5], readTags[i + 6], readTags[i + 7]); // we don't even really use this
             Pose3d tagOriginPose = CoordinateSystem.convert(new Pose3d(pose, new Rotation3d(q)), Util.JETSON_APRILTAGS_COORD_SYSTEM, CoordinateSystem.NWU()); // a pose where the tag is treated as the origin.
-            Pose2d newPose = AprilTagHandler.fixPose(tagOriginPose.toPose2d());
+            Pose2d tagToCamPose = AprilTagHandler.fixPose(tagOriginPose.toPose2d());
             // System.out.println("tag origin pose: " + tagOriginPose);
             // System.out.println("new pose: " + newPose);
             // System.out.println("tag angle: " + tagOriginPose.getRotation().getY());
             //var a = originToTag.minus(new Pose3d());
             // System.out.println("a: " + a);
-            Pose2d finalPose = originToTag.toPose2d().plus(newPose.minus(new Pose2d()));
+            var temp = tagToCamPose.minus(new Pose2d());
+            System.out.println("tagToCamTranslation: " + temp);
+            var originAs2d = originToTag.toPose2d();
+            Pose2d camPoseFieldRel = new Pose2d(new Translation2d(originAs2d.getX() + temp.getX(), originAs2d.getY() + temp.getY()), new Rotation2d());// originToTag.toPose2d().plus(temp);
+            //fieldTag.setRobotPose(tagToCamPose);
+
+            Rotation2d robotRotation = RobotGyro.getRotation2d();
+            if(!Util.onBlueTeam()) {
+                // robotRotation = new Rotation2d(-Math.PI).minus(robotRotation);
+            }
+            System.out.println("using a robot rotation of: " + robotRotation + " to correct pose");
+    
+            double c = DriveTrainSubsystem.cameraLocation.getDistance(new Translation2d());
+            double theta = robotRotation.getRadians();
+            double thi = Math.asin(DriveTrainSubsystem.cameraLocation.getY() / c);
+            double yTranslation = c * Math.sin(theta - thi);
+            double xTranslation = c * Math.cos(theta - thi);
+
+            Translation2d newTranslation = camPoseFieldRel.getTranslation().plus(new Translation2d(xTranslation, yTranslation));
+            System.out.println("translating the pose by " + xTranslation + ", " + yTranslation);
+            Pose2d estimatedRobotPose = new Pose2d(newTranslation, RobotGyro.getRotation2d());
             //System.out.println("final pose: " + finalPose);
-            if (checkRequestedPoseValues(finalPose)) {
-                poses.add(new RobotPoseAndTagDistance(finalPose, tagOriginPose.getTranslation().getDistance(new Translation3d()), tagId));
+            fieldTag.setRobotPose(estimatedRobotPose);
+            if (checkRequestedPoseValues(estimatedRobotPose)) {
+                poses.add(new RobotPoseAndTagDistance(estimatedRobotPose, tagOriginPose.getTranslation().getDistance(new Translation3d()), tagId));
+            } else {
+                System.out.println("rejected the pose of tag " + tagId + ", est'd loc of " + estimatedRobotPose);
             }
         }
 
+        System.out.println("call to apriltaghandler gave: " + poses.size() + " poses.");
         return poses;
     }
 

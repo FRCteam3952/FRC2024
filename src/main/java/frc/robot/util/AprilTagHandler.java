@@ -136,56 +136,52 @@ public final class AprilTagHandler {
         // wait until we've collected some data to start moving
         final int dataPointsCollectedToStartMoving = 5;
 
-        // the next line makes data collection stop when we start moving.
-        if (previousAutoPositions.size() < dataPointsCollectedToStartMoving) {
-            // update by adding another pose.
-            // does getJetsonAprilTagPoses already filter? is that a problem?
-            getJetsonAprilTagPoses()
-                    .stream()
-                    .filter((tag) -> tag.tagId() == tagId)
-                    .findFirst()
-                    .map(AprilTagHandler.RobotPoseAndTagDistance::fieldRelativePose)
-                    .filter(pose ->
-                            // check if the pose is new: none of the old ones are equal to it.
-                        previousAutoPositions.stream().noneMatch(
-                                other ->
-                                    Math.abs(other.getTranslation().getX()    - pose.getTranslation().getX())    < 1E-4 &&
-                                    Math.abs(other.getTranslation().getY()    - pose.getTranslation().getY())    < 1E-4 &&
-                                    Math.abs(other.getRotation().getDegrees() - pose.getRotation().getDegrees()) < 1E-4
-                        )
+        // update by adding another pose.
+        // does getJetsonAprilTagPoses already filter? is that a problem?
+        getJetsonAprilTagPoses()
+                .stream()
+                .filter((tag) -> tag.tagId() == tagId)
+                .findFirst()
+                .map(AprilTagHandler.RobotPoseAndTagDistance::fieldRelativePose)
+                .filter(pose ->
+                        // check if the pose is new: none of the old ones are equal to it.
+                    previousAutoPositions.stream().noneMatch(
+                            other ->
+                                Math.abs(other.getTranslation().getX()    - pose.getTranslation().getX())    < 1E-4 &&
+                                Math.abs(other.getTranslation().getY()    - pose.getTranslation().getY())    < 1E-4 &&
+                                Math.abs(other.getRotation().getDegrees() - pose.getRotation().getDegrees()) < 1E-4
                     )
-                    .map(previousAutoPositions::add);
-        }
+                )
+                .filter(_e -> previousAutoPositions.size() < dataPointsCollectedToStartMoving)
+                .map(previousAutoPositions::add);
+
 
 
         int newTotalNumPositions = previousAutoPositions.size();
 
-        Optional<Pose2d> averagePosition;
 
-        if (newTotalNumPositions >= dataPointsCollectedToStartMoving) {
-            // this coould be empty, if we can't collect any data
-            // e.g. apriltag finder not working, robot can't see any.
-            averagePosition = previousAutoPositions
-                    .stream()
-                    // deconstruct into a double array, average them, then reconstruct into a Pose2d.
-                    // probably could be done better
-                    .map(pose -> new double[]{pose.getX(), pose.getY(), pose.getRotation().getRadians()})
-                    // sum
-                    .reduce((e1, e2) -> new double[]{
-                            e1[0] + e2[0],
-                            e1[1] + e2[1],
-                            e1[2] + e2[2],
-                    })
-                    // sum -> average
-                    .map(e -> new double[]{
-                            e[0] / newTotalNumPositions,
-                            e[1] / newTotalNumPositions,
-                            e[2] / newTotalNumPositions,
-                    })
-                    .map(e -> new Pose2d(new Translation2d(e[0], e[1]), new Rotation2d(e[2])));
-        } else {
-            averagePosition = Optional.empty();
-        }
+        // this coould be empty, if we can't collect any data
+        // e.g. apriltag finder not working, robot can't see any.
+        Optional<Pose2d> averagePosition = previousAutoPositions
+                .stream()
+                // deconstruct into a double array, average them, then reconstruct into a Pose2d.
+                // probably could be done better
+                .map(pose -> new double[]{pose.getX(), pose.getY(), pose.getRotation().getRadians()})
+                // sum
+                .reduce((e1, e2) -> new double[]{
+                        e1[0] + e2[0],
+                        e1[1] + e2[1],
+                        e1[2] + e2[2],
+                })
+                // sum -> average
+                .map(e -> new double[]{
+                        e[0] / newTotalNumPositions,
+                        e[1] / newTotalNumPositions,
+                        e[2] / newTotalNumPositions,
+                })
+                .map(e -> new Pose2d(new Translation2d(e[0], e[1]), new Rotation2d(e[2])))
+                // don't move if we haven't collected enough data.
+                .filter(_e -> newTotalNumPositions >= dataPointsCollectedToStartMoving);
 
         return averagePosition;
     }

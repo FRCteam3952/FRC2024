@@ -25,6 +25,9 @@ public final class AprilTagHandler {
         SmartDashboard.putData("fieldTag", fieldTag);
     }
 
+    private static final double c_camTranslation = DriveTrainSubsystem.cameraLocation.getDistance(new Translation2d());
+    private static final double thi_camTranslation = Math.asin(DriveTrainSubsystem.cameraLocation.getY() / c_camTranslation);
+
     /**
      * Returns the current robot pose according to AprilTags on Jetson, in meters since that's what they want. The rotation is really the gyro's rotation, since we know that the gyro is accurate.
      *
@@ -58,6 +61,11 @@ public final class AprilTagHandler {
         }
 
         ArrayList<RobotPoseAndTagDistance> poses = new ArrayList<>(readTags.length / 8);
+
+        Rotation2d robotRotation = RobotGyro.getRotation2d();
+        double theta = robotRotation.getRadians();
+        double yTranslation = c_camTranslation * Math.sin(theta - thi_camTranslation);
+        double xTranslation = c_camTranslation * Math.cos(theta - thi_camTranslation);
         // System.out.println("received: " + readTags.length / 8 + " tags");
         for (int i = 0; i < readTags.length; i += 8) {
             int tagId = (int) readTags[i + 0];
@@ -83,17 +91,7 @@ public final class AprilTagHandler {
             Pose2d camPoseFieldRel = new Pose2d(new Translation2d(originAs2d.getX() + temp.getX(), originAs2d.getY() + temp.getY()), new Rotation2d());// originToTag.toPose2d().plus(temp);
             //fieldTag.setRobotPose(tagToCamPose);
 
-            Rotation2d robotRotation = RobotGyro.getRotation2d();
-            if(!Util.onBlueTeam()) {
-                // robotRotation = new Rotation2d(-Math.PI).minus(robotRotation);
-            }
             System.out.println("using a robot rotation of: " + robotRotation + " to correct pose");
-    
-            double c = DriveTrainSubsystem.cameraLocation.getDistance(new Translation2d());
-            double theta = robotRotation.getRadians();
-            double thi = Math.asin(DriveTrainSubsystem.cameraLocation.getY() / c);
-            double yTranslation = c * Math.sin(theta - thi);
-            double xTranslation = c * Math.cos(theta - thi);
 
             Translation2d newTranslation = camPoseFieldRel.getTranslation().plus(new Translation2d(xTranslation, yTranslation));
             System.out.println("translating the pose by " + xTranslation + ", " + yTranslation);

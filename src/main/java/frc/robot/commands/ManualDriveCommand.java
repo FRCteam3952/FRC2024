@@ -65,7 +65,7 @@ public class ManualDriveCommand extends Command {
 
         double rotSpeed = directionToSubwooferTarget()
                 .flatMap(angleToSubwooferTarget -> {
-                    if(false && autoAimSubwoofer.getAsBoolean()) {
+                    if(autoAimSubwoofer.getAsBoolean()) {
                         Rotation2d robotHeading = RobotGyro.getRotation2d();
                         double headingDeg = 180 + Util.bringAngleWithinUnitCircle(robotHeading.getDegrees());
                         double rotateByAmount = headingDeg - angleToSubwooferTarget.getDegrees();
@@ -107,7 +107,8 @@ public class ManualDriveCommand extends Command {
         }
 
         // i love Optional<T> :3
-        Optional<Rotation2d> directionToSubwooferTarget = aprilTagHandler
+
+        return aprilTagHandler
                 .getJetsonAprilTagPoses()
                 .stream()
                 .filter((tag) -> tag.tagId() == tagId)
@@ -124,8 +125,6 @@ public class ManualDriveCommand extends Command {
                 })
                 .map(filter::calculate)
                 .map(Rotation2d::new);
-
-        return directionToSubwooferTarget;
     }
 
     // Called once the command ends or is interrupted.

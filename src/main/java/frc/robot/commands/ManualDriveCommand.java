@@ -16,6 +16,9 @@ import frc.robot.util.AprilTagHandler;
 import frc.robot.util.ControlHandler;
 import frc.robot.util.Util;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 public class ManualDriveCommand extends Command {
@@ -28,6 +31,7 @@ public class ManualDriveCommand extends Command {
     private final SlewRateLimiter rotLimiter = new SlewRateLimiter(0.5);
     private final Trigger autoAimSubwoofer;
     private final LinearFilter filter = LinearFilter.singlePoleIIR(0.1, 0.02);
+    private final List<Rotation2d> autoAimTargetAngles = new ArrayList<>();
 
     public ManualDriveCommand(DriveTrainSubsystem driveTrain, AbstractController joystick, AprilTagHandler aprilTagHandler) {
         this.driveTrain = driveTrain;
@@ -60,15 +64,21 @@ public class ManualDriveCommand extends Command {
         double xSpeed = Util.squareKeepSign(this.xSpeedLimiter.calculate(-this.joystick.getLeftHorizontalMovement() * flip)) * MAX_SPEED_METERS_PER_SEC;
 //        double rotSpeed = -this.joystick.getRightHorizontalMovement() * 3.5;
 
-        // this Should use option filtering, in the future...
-//        Optional<Rotation2d> angleToSubwooferTargetOption = directionToSubwooferTarget();
-
-        double rotSpeed = directionToSubwooferTarget()
-                .flatMap(angleToSubwooferTarget -> {
-                    if(autoAimSubwoofer.getAsBoolean()) {
+        double rotSpeed;
+        if (autoAimSubwoofer.getAsBoolean()) {
+            directionToSubwooferTarget().ifPresent(autoAimTargetAngles::add);
+            // get the average angle and move to that.
+            rotSpeed = autoAimTargetAngles.stream()
+                    .reduce(Rotation2d::plus)
+                    .map(totalRotation -> totalRotation.div(autoAimTargetAngles.size()))
+                    .map(Rotation2d::getDegrees)
+                    .ifPresent(avgTotalAngleDegrees -> {
+                        // get rotation speed from the angle.
+                        // addison's old code glued into the Optiona<> patterned method
+                        // highly suspect angle rotation code
                         Rotation2d robotHeading = RobotGyro.getRotation2d();
                         double headingDeg = 180 + Util.bringAngleWithinUnitCircle(robotHeading.getDegrees());
-                        double rotateByAmount = headingDeg - angleToSubwooferTarget.getDegrees();
+                        double rotateByAmount = headingDeg - avgTotalAngleDegrees;
                         if(rotateByAmount > 180) {
                             rotateByAmount -= 360;
                         }
@@ -77,16 +87,13 @@ public class ManualDriveCommand extends Command {
                             rotateByAmount += 360;
                         }
                         double rotSpeed2 = MathUtil.clamp(3 * (Math.toRadians(rotateByAmount)), -1.7, 1.7);
-                        System.out.println("angle to subwoofer target: " + directionToSubwooferTarget() + ", rotating " + rotateByAmount + " at a speed of " + rotSpeed2 + " to get there");
+                        System.out.println("NEW AVERAGE angle to subwoofer target: " + avgTotalAngleDegrees + ", rotating " + rotateByAmount + " at a speed of " + rotSpeed2 + " to get there");
                         //System.out.println("current rot: " + RobotGyro.getRotation2d());
-                        return Optional.of(rotSpeed2);
-                    } else {
-                        // reset the filter as soon as manual control is re-enabled
-                        filter.reset();
-                        return Optional.empty();
-                    }
-                })
-                .orElse(-this.joystick.getRightHorizontalMovement() * 3.5);
+                        return rotSpeed2;
+                    });
+        } else {
+            rotSpeed = -this.joystick.getRightHorizontalMovement() * 3.0;
+        }
 
         // System.out.println("forward speed: " + ySpeed + ", x speed: " + xSpeed);
         // System.out.println("y: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftVerticalMovement()) + ", x: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftHorizontalMovement()));

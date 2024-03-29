@@ -1,9 +1,9 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -16,8 +16,6 @@ import frc.robot.util.AprilTagHandler;
 import frc.robot.util.ControlHandler;
 import frc.robot.util.Util;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 public class ManualDriveCommand extends Command {
@@ -29,12 +27,14 @@ public class ManualDriveCommand extends Command {
     private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(1);
     private final SlewRateLimiter rotLimiter = new SlewRateLimiter(0.5);
     private final Trigger autoAimSubwoofer;
+    private final LinearFilter filter = LinearFilter.singlePoleIIR(0.1, 0.02);
 
     public ManualDriveCommand(DriveTrainSubsystem driveTrain, AbstractController joystick, AprilTagHandler aprilTagHandler) {
         this.driveTrain = driveTrain;
         this.joystick = joystick;
         this.aprilTagHandler = aprilTagHandler;
         this.autoAimSubwoofer = ControlHandler.get(joystick, ControllerConstants.AUTO_AIM_FOR_SHOOT);
+
 
         addRequirements(driveTrain);
     }
@@ -58,28 +58,35 @@ public class ManualDriveCommand extends Command {
         double flip = flipFactor();
         double ySpeed = Util.squareKeepSign(this.ySpeedLimiter.calculate(-this.joystick.getLeftVerticalMovement() * flip)) * MAX_SPEED_METERS_PER_SEC;
         double xSpeed = Util.squareKeepSign(this.xSpeedLimiter.calculate(-this.joystick.getLeftHorizontalMovement() * flip)) * MAX_SPEED_METERS_PER_SEC;
-        double rotSpeed = -this.joystick.getRightHorizontalMovement() * 3.5;
+//        double rotSpeed = -this.joystick.getRightHorizontalMovement() * 3.5;
 
         // this Should use option filtering, in the future...
-        Optional<Rotation2d> angleToSubwooferTargetOption = directionToSubwooferTarget();
+//        Optional<Rotation2d> angleToSubwooferTargetOption = directionToSubwooferTarget();
 
-        if(autoAimSubwoofer.getAsBoolean() && angleToSubwooferTargetOption.isPresent()) {
-            Rotation2d angleToSubwooferTarget = angleToSubwooferTargetOption.get(); // this Should Never Error
-            Rotation2d robotHeading = RobotGyro.getRotation2d();
-            double headingDeg = 180 + Util.bringAngleWithinUnitCircle(robotHeading.getDegrees());
-            double rotateByAmount = headingDeg - angleToSubwooferTarget.getDegrees();
-            if(rotateByAmount > 180) {
-                rotateByAmount -= 360;
-            }
-            rotateByAmount = -rotateByAmount;
-            if(rotateByAmount < -180) {
-                rotateByAmount += 360;
-            }
-            double rotSpeed2 = MathUtil.clamp(3 * (Math.toRadians(rotateByAmount)), -1.7, 1.7);
-            System.out.println("angle to subwoofer target: " + directionToSubwooferTarget() + ", rotating " + rotateByAmount + " at a speed of " + rotSpeed2 + " to get there");
-            //System.out.println("current rot: " + RobotGyro.getRotation2d());
-            rotSpeed = rotSpeed2;
-        }
+        double rotSpeed = directionToSubwooferTarget()
+                .flatMap(angleToSubwooferTarget -> {
+                    if(autoAimSubwoofer.getAsBoolean()) {
+                        Rotation2d robotHeading = RobotGyro.getRotation2d();
+                        double headingDeg = 180 + Util.bringAngleWithinUnitCircle(robotHeading.getDegrees());
+                        double rotateByAmount = headingDeg - angleToSubwooferTarget.getDegrees();
+                        if(rotateByAmount > 180) {
+                            rotateByAmount -= 360;
+                        }
+                        rotateByAmount = -rotateByAmount;
+                        if(rotateByAmount < -180) {
+                            rotateByAmount += 360;
+                        }
+                        double rotSpeed2 = MathUtil.clamp(3 * (Math.toRadians(rotateByAmount)), -1.7, 1.7);
+                        System.out.println("angle to subwoofer target: " + directionToSubwooferTarget() + ", rotating " + rotateByAmount + " at a speed of " + rotSpeed2 + " to get there");
+                        //System.out.println("current rot: " + RobotGyro.getRotation2d());
+                        return Optional.of(rotSpeed2);
+                    } else {
+                        // reset the filter as soon as manual control is re-enabled
+                        filter.reset();
+                        return Optional.empty();
+                    }
+                })
+                .orElse(-this.joystick.getRightHorizontalMovement() * 3.5);
 
         // System.out.println("forward speed: " + ySpeed + ", x speed: " + xSpeed);
         // System.out.println("y: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftVerticalMovement()) + ", x: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftHorizontalMovement()));
@@ -100,7 +107,7 @@ public class ManualDriveCommand extends Command {
         }
 
         // i love Optional<T> :3
-        return aprilTagHandler
+        Optional<Rotation2d> directionToSubwooferTarget = aprilTagHandler
                 .getJetsonAprilTagPoses()
                 .stream()
                 .filter((tag) -> tag.tagId() == tagId)
@@ -110,13 +117,15 @@ public class ManualDriveCommand extends Command {
                     Pose2d targetPose2d = Util.getTagPose(tagId).toPose2d();
 
                     // now we know where to aim, compare our current location with our target
-                    double theta = Math.atan2(
+                    return Math.atan2(
                             targetPose2d.getY() - robotPose.getY(),
                             targetPose2d.getX() - robotPose.getX()
                     ); // trust me bro
+                })
+                .map(filter::calculate)
+                .map(Rotation2d::new);
 
-                    return new Rotation2d(theta);
-                });
+        return directionToSubwooferTarget;
     }
 
     // Called once the command ends or is interrupted.

@@ -11,14 +11,21 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.networktables.GenericPublisher;
+import edu.wpi.first.networktables.NetworkTableType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.staticsubsystems.RobotGyro;
 import frc.robot.subsystems.swerve.DriveTrainSubsystem;
 
 public final class AprilTagHandler {
+    private final GenericPublisher skippedApriltagHandling = NetworkTablesUtil.getPublisher("robot", "skippedATHandling", NetworkTableType.kBoolean);
+
     private double[] previousReading = new double[] {};
+    private double previousReadingTime = Timer.getFPGATimestamp();
+
     private final Field2d fieldTag = new Field2d();
 
     public AprilTagHandler() {
@@ -47,13 +54,15 @@ public final class AprilTagHandler {
                     break;
                 }
             }
-            if(flag) {
+            skippedApriltagHandling.setBoolean(flag);
+            if(flag) { // if we don't get tag updates often enough due to 30fps on cam, we can supplement by checking the previousReadingTime
                 // System.out.println("no AT readout");
                 return new ArrayList<>();
             }
         }
 
         previousReading = readTags;
+        previousReadingTime = Timer.getFPGATimestamp();
 
         if (readTags.length % 8 != 0) { // this shouldn't happen
             System.out.println("Error: bad tag array");

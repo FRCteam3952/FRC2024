@@ -78,6 +78,13 @@ public class RingHandlingCommand extends Command {
         }
     });
 
+    private final InstantCommand resetState = new InstantCommand(() -> {
+        hasHandledNote = false;
+        shouldReverse = false;
+        reverseTimerElapsed = 0;
+        hasNote = false;
+    });
+
     private final Trigger reverseIntake, runShooterHigh, runShooterAmp, autoAimSubwoofer;
 
     // 14ft = 4.267m => 2700 rpm
@@ -115,6 +122,8 @@ public class RingHandlingCommand extends Command {
         ControlHandler.get(secondaryController, ControllerConstants.WIGGLE_FLAP)
             .onTrue(wiggleFlap)
             .onFalse(wiggleFlap);
+        ControlHandler.get(secondaryController, ControllerConstants.RESET_RING_HANDLING_STATE)
+            .onTrue(resetState);
     }
 
     private double shooterAngle = 45;
@@ -143,6 +152,7 @@ public class RingHandlingCommand extends Command {
         }
 
         Optional<Double> distanceToTargetOptional = getDistanceToTarget(Util.getTargetPose().toPose2d()); // reuse this optional
+        hasAutoAimAprilTag.setBoolean(distanceToTargetOptional.isPresent()); // if the optional is present we've found a tag that we can lock to, so we can tell drivers this
 
         if(autoAimSubwoofer.getAsBoolean()) {
             autoAimShooterPivotAngle(distanceToTargetOptional).ifPresent(angle -> {
@@ -222,7 +232,7 @@ public class RingHandlingCommand extends Command {
                     hasNote = false;
                 }
             } else {
-                System.out.println("attempting to use auto aims");
+                System.out.println("attempting to use auto aim");
                 distanceToTargetOptional
                     .map((distanceFromTarget) -> {
                         // Get the target RPM.
@@ -241,10 +251,8 @@ public class RingHandlingCommand extends Command {
                             hasHandledNote = false;
                             hasNote = false;
                         }
-                        hasAutoAimAprilTag.setBoolean(true);
                     }, () -> {
                         System.out.println("unable to use auto aim: no tag present.");
-                        hasAutoAimAprilTag.setBoolean(false);
                     });
             }
         } else if(runShooterAmp.getAsBoolean()) {
@@ -272,33 +280,10 @@ public class RingHandlingCommand extends Command {
 
     private Optional<Double> autoAimShooterPivotAngle(Optional<Double> distanceToTargetOptional) {
         return distanceToTargetOptional.map((d) -> {
-            double theta = Math.atan((2 - 0.25) / (d - 0.17)); // trust me bro
+            double theta = Math.toRadians(1) + Math.atan((2 - 0.25) / (d - 0.17)); // trust me bro
             System.out.println("Distance to target: " + d);
             return Math.toDegrees(theta);
         });
-    }
-
-    /**
-     * Calculate the angle the shooter pivot should be at in order to look at the speaker
-     * 
-     * @return A double representing the angle to the speaker in degrees. The shooter pivot value should equal this value when the robot is aiming into the speaker.
-     */
-    private Optional<Double> autoAimShooterPivotAngle() {
-        // middle of the speaker target is 204 cm = 2.04m high
-        // since we're gonna be farther back, aiming for 204 is actually bad b/c the straight line will get blocked by the roof, so we use 200cm (closer to the bottom) so we can get under
-
-        // get the target for our alliance color
-        Pose3d targetPose = Util.getTargetPose();
-
-        // now we know where to aim, compare our current location with our target
-        // tan(theta) = opp/adj
-        // theta = atan(opp/adj)
-        return getDistanceToTarget(targetPose.toPose2d())
-                .map((distanceToTarget) -> {
-                    double theta = Math.atan((2 - 0.25) / (distanceToTarget - 0.17)); // trust me bro
-                    System.out.println("Distance to target: " + distanceToTarget);
-                    return Math.toDegrees(theta);
-                });
     }
 
     private Optional<Double> getDistanceToTarget(Pose2d targetPose) {

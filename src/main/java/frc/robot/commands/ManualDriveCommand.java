@@ -17,6 +17,7 @@ import frc.robot.util.ControlHandler;
 import frc.robot.util.Util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +31,7 @@ public class ManualDriveCommand extends Command {
     private final SlewRateLimiter rotLimiter = new SlewRateLimiter(0.5);
     private final Trigger autoAimSubwoofer;
     private final LinearFilter filter = LinearFilter.singlePoleIIR(0.1, 0.02);
-    private final List<Rotation2d> autoAimRotations = new ArrayList<>();
+    private final List<Rotation2d> autoAimTargetAngles = new ArrayList<>();
 
     public ManualDriveCommand(DriveTrainSubsystem driveTrain, AbstractController joystick, AprilTagHandler aprilTagHandler) {
         this.driveTrain = driveTrain;

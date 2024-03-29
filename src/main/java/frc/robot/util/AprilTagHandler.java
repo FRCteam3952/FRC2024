@@ -57,7 +57,11 @@ public final class AprilTagHandler {
             skippedApriltagHandling.setBoolean(flag);
             if(flag) { // if we don't get tag updates often enough due to 30fps on cam, we can supplement by checking the previousReadingTime
                 // System.out.println("no AT readout");
-                return new ArrayList<>();
+                double dT = Timer.getFPGATimestamp() - previousReadingTime;
+                System.out.println("dT in reading of " + dT);
+                if(dT < 0.07) {
+                    return new ArrayList<>();
+                }
             }
         }
 

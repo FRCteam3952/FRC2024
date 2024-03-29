@@ -6,6 +6,7 @@ package frc.robot.subsystems.swerve;
 
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.CANSparkBase.ControlType;
+import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
@@ -126,6 +127,10 @@ public class SwerveModule {
         this.driveMotor.enableVoltageCompensation(10);
         this.turnMotor.enableVoltageCompensation(10);
         this.turnPIDController = this.turnMotor.getPIDController();
+
+        this.driveMotor.setSmartCurrentLimit(40);
+        this.turnMotor.setSmartCurrentLimit(40);
+        this.driveMotor.setIdleMode(IdleMode.kCoast);
 
         this.turnPIDController.setPositionPIDWrappingEnabled(true);
         this.turnPIDController.setPositionPIDWrappingMinInput(-Math.PI);

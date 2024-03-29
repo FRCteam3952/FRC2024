@@ -16,6 +16,8 @@ import frc.robot.util.AprilTagHandler;
 import frc.robot.util.ControlHandler;
 import frc.robot.util.Util;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class ManualDriveCommand extends Command {
@@ -28,6 +30,7 @@ public class ManualDriveCommand extends Command {
     private final SlewRateLimiter rotLimiter = new SlewRateLimiter(0.5);
     private final Trigger autoAimSubwoofer;
     private final LinearFilter filter = LinearFilter.singlePoleIIR(0.1, 0.02);
+    private final List<Rotation2d> autoAimRotations = new ArrayList<>();
 
     public ManualDriveCommand(DriveTrainSubsystem driveTrain, AbstractController joystick, AprilTagHandler aprilTagHandler) {
         this.driveTrain = driveTrain;
@@ -63,6 +66,13 @@ public class ManualDriveCommand extends Command {
         // this Should use option filtering, in the future...
 //        Optional<Rotation2d> angleToSubwooferTargetOption = directionToSubwooferTarget();
 
+        // double rotSpeed;
+        // if (autoAimSubwoofer.getAsBoolean()) {
+            
+        // } else {
+        //     rotSpeed = -this.joystick.getRightHorizontalMovement() * 3;
+        // }
+
         double rotSpeed = directionToSubwooferTarget()
                 .flatMap(angleToSubwooferTarget -> {
                     if(autoAimSubwoofer.getAsBoolean()) {
@@ -86,7 +96,7 @@ public class ManualDriveCommand extends Command {
                         return Optional.empty();
                     }
                 })
-                .orElse(-this.joystick.getRightHorizontalMovement() * 3.5);
+                .orElse(-this.joystick.getRightHorizontalMovement() * 3);
 
         // System.out.println("forward speed: " + ySpeed + ", x speed: " + xSpeed);
         // System.out.println("y: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftVerticalMovement()) + ", x: " + RobotMathUtil.roundNearestHundredth(this.joystick.getLeftHorizontalMovement()));

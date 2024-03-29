@@ -239,7 +239,7 @@ public class RingHandlingCommand extends Command {
                         if(distanceFromTarget > 4.267) { // meters
                             return 2700.0;
                         } else {
-                            return MathUtil.clamp(((distanceFromTarget + 1) / 4.267) * 2700 * 1.0, 1300, 2800);
+                            return MathUtil.clamp(((distanceFromTarget + 1) / 4.267) * 2700 * 1.5, 1300, 2800);
                         }
                     }).ifPresentOrElse((targetRpm) -> {
                         System.out.println("using an auto-set target rpm of " + targetRpm);
@@ -267,7 +267,7 @@ public class RingHandlingCommand extends Command {
             shooter.setMotorRpm(idleShooterRpm ? 1000 : 0); // 1300
         }
         // System.out.println("RPM: " + shooter.getShooterRpm());
-        // rpmPub.set(shooter.getShooterRpm());
+        rpmPub.set(shooter.getShooterRpm());
 
         // this.intake.setPivotSpeed(-joystick.getRightVerticalMovement());
 

@@ -60,6 +60,9 @@ public class ShooterSubsystem extends SubsystemBase {
         rightMotor.enableVoltageCompensation(10);
         pivotMotor.enableVoltageCompensation(10);
 
+        leftMotor.setSmartCurrentLimit(80);
+        rightMotor.setSmartCurrentLimit(80);
+
         leftServo = new Servo(PortConstants.SHOOTER_LEFT_SERVO_PORT);
         rightServo = new Servo(PortConstants.SHOOTER_RIGHT_SERVO_PORT);
 

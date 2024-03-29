@@ -418,19 +418,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
         Pose2d robotPose = this.getPose();
         Rotation2d robotRotation = RobotGyro.getRotation2d();
         for(AprilTagHandler.RobotPoseAndTagDistance poseAndTag : tags) {
-            Pose2d pose = poseAndTag.fieldRelativePose();
-            // thank you isaac part 2
-            // System.out.println("og pose: " + pose);
-            // pose = fixPose(pose);
-            // thank you isaac for deriving this math for me
-            double c = cameraLocation.getDistance(new Translation2d());
-            double theta = robotRotation.getRadians();
-            double thi = Math.asin(cameraLocation.getY() / c);
-            double yTranslation = c * Math.sin(theta - thi);
-            double xTranslation = c * Math.cos(theta - thi);
-
-            Translation2d newTranslation = pose.getTranslation().plus(new Translation2d(xTranslation, yTranslation));
-            Pose2d estimatedPose = new Pose2d(newTranslation, robotRotation);
+            Pose2d estimatedPose = poseAndTag.fieldRelativePose();
             double poseDiff = estimatedPose.getTranslation().getDistance(robotPose.getTranslation());
             if(poseDiff < 1 || (poseAndTag.tagDistanceFromRobot() < 2 && poseDiff < 2)) { // make sure our pose is somewhat close to where we think we are. If we're quite close to the tag we can allow for a slightly higher error since we'll likely be a bit off anyways
                 if(Math.random() > 0.3) return; // attempt to filter out false values using the "pure luck" strategy.

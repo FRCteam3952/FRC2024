@@ -1,16 +1,11 @@
 package frc.robot.commands;
 
-import java.util.Optional;
-import java.util.function.Supplier;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.GenericPublisher;
 import edu.wpi.first.networktables.NetworkTableType;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -25,6 +20,8 @@ import frc.robot.util.ControlHandler;
 import frc.robot.util.NetworkTablesUtil;
 import frc.robot.util.Util;
 
+import java.util.Optional;
+
 /**
  * also known as SonicTheHedgehogCommand
  */
@@ -32,13 +29,13 @@ public class RingHandlingCommand extends Command {
     private static final DoublePublisher rpmPub = NetworkTablesUtil.MAIN_ROBOT_TABLE.getDoubleTopic("shooter_rpm").publish();
     private static final GenericPublisher hasNotePub = NetworkTablesUtil.getPublisher("robot", "hasNote", NetworkTableType.kBoolean);
     private static final GenericPublisher hasHandledNotePub = NetworkTablesUtil.getPublisher("robot", "hasNote", NetworkTableType.kBoolean);
+    private static final GenericPublisher hasAutoAimAprilTag = NetworkTablesUtil.getPublisher("robot", "hasAutoAimAprilTag", NetworkTableType.kBoolean);
 
     private final ShooterSubsystem shooter;
     private final IntakeSubsystem intake;
     private final ConveyorSubsystem conveyor;
     private final AbstractController primaryController;
     private final AbstractController secondaryController;
-    private final Supplier<Pose2d> robotPoseSupplier;
     private final AprilTagHandler aprilTagHandler;
 
     private boolean intakeToggledOn = false;
@@ -85,13 +82,12 @@ public class RingHandlingCommand extends Command {
 
     // 14ft = 4.267m => 2700 rpm
     // linear
-    public RingHandlingCommand(ShooterSubsystem shooter, IntakeSubsystem intake, ConveyorSubsystem conveyor, AbstractController primaryController, AbstractController secondaryController, Supplier<Pose2d> robotPoseSupplier, AprilTagHandler aprilTagHandler) {
+    public RingHandlingCommand(ShooterSubsystem shooter, IntakeSubsystem intake, ConveyorSubsystem conveyor, AbstractController primaryController, AbstractController secondaryController, AprilTagHandler aprilTagHandler) {
         this.shooter = shooter;
         this.intake = intake;
         this.conveyor = conveyor;
         this.primaryController = primaryController;
         this.secondaryController = secondaryController;
-        this.robotPoseSupplier = robotPoseSupplier;
         this.aprilTagHandler = aprilTagHandler;
 
         this.reverseIntake = ControlHandler.get(primaryController, ControllerConstants.INTAKE_REVERSE);
@@ -146,8 +142,10 @@ public class RingHandlingCommand extends Command {
             shooterAngle--;
         }
 
+        Optional<Double> distanceToTargetOptional = getDistanceToTarget(Util.getTargetPose().toPose2d()); // reuse this optional
+
         if(autoAimSubwoofer.getAsBoolean()) {
-            autoAimShooterPivotAngle().ifPresent(angle -> {
+            autoAimShooterPivotAngle(distanceToTargetOptional).ifPresent(angle -> {
                 shooterAngle = angle;
                 System.out.println("pivoting shooter to " + angle + " to shoot at target");
             });
@@ -225,7 +223,7 @@ public class RingHandlingCommand extends Command {
                 }
             } else {
                 System.out.println("attempting to use auto aims");
-                getDistanceToTarget(Util.getTargetPose().toPose2d())
+                distanceToTargetOptional
                     .map((distanceFromTarget) -> {
                         // Get the target RPM.
                         if(distanceFromTarget > 4.267) { // meters
@@ -243,8 +241,10 @@ public class RingHandlingCommand extends Command {
                             hasHandledNote = false;
                             hasNote = false;
                         }
+                        hasAutoAimAprilTag.setBoolean(true);
                     }, () -> {
-                        System.out.println("unable to use auto aim: no tag presetn.");
+                        System.out.println("unable to use auto aim: no tag present.");
+                        hasAutoAimAprilTag.setBoolean(false);
                     });
             }
         } else if(runShooterAmp.getAsBoolean()) {
@@ -268,6 +268,14 @@ public class RingHandlingCommand extends Command {
         // System.out.println("lower intake current: " + this.intake.getFollowerMotorCurrent() + ", top current: " + this.intake.getLeaderMotorCurrent());
         hasNotePub.setBoolean(hasNote);
         hasHandledNotePub.setBoolean(hasHandledNote);
+    }
+
+    private Optional<Double> autoAimShooterPivotAngle(Optional<Double> distanceToTargetOptional) {
+        return distanceToTargetOptional.map((d) -> {
+            double theta = Math.atan((2 - 0.25) / (d - 0.17)); // trust me bro
+            System.out.println("Distance to target: " + d);
+            return Math.toDegrees(theta);
+        });
     }
 
     /**

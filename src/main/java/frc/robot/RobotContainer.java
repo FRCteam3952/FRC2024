@@ -144,7 +144,7 @@ public class RobotContainer {
 
         sideJoystick.joystick.button(8).whileTrue(new CalibrateIntakeCommand(intake, nintendoProController));
         if(Flags.DriveTrain.IS_ATTACHED) {
-            ControlHandler.get(this.nintendoProController, ControllerConstants.RESET_POSE_ESTIMATOR).onTrue(new InstantCommand(() -> this.driveTrain.resetPoseToMidSubwoofer()));
+            ControlHandler.get(this.nintendoProController, ControllerConstants.RESET_POSE_ESTIMATOR).onTrue(new InstantCommand(this.driveTrain::resetPoseToMidSubwoofer));
         }
     }
 
@@ -168,7 +168,7 @@ public class RobotContainer {
             if (Flags.Intake.USE_TEST_INTAKE_COMMAND) {
                 this.intake.setDefaultCommand(new TestIntakeCommand(this.intake, this.primaryController));
             } else if (Flags.Conveyor.IS_ATTACHED && Flags.Shooter.IS_ATTACHED) {
-                this.intake.setDefaultCommand(new RingHandlingCommand(shooter, intake, conveyor, this.primaryController, this.nintendoProController, this.driveTrain::getPose, this.aprilTagHandler));
+                this.intake.setDefaultCommand(new RingHandlingCommand(shooter, intake, conveyor, this.primaryController, this.nintendoProController, this.aprilTagHandler));
             } else {
                 this.intake.setDefaultCommand(new IntakeCommand(this.intake, this.primaryController));
             }

@@ -22,6 +22,7 @@ import frc.robot.subsystems.swerve.DriveTrainSubsystem;
 
 import javax.swing.text.html.Option;
 import java.util.List;
+//import java.util.HashSet;
 
 public final class AprilTagHandler {
     private final GenericPublisher skippedApriltagHandling = NetworkTablesUtil.getPublisher("robot", "skippedATHandling", NetworkTableType.kBoolean);
@@ -136,7 +137,7 @@ public final class AprilTagHandler {
         final int dataPointsCollectedToStartMoving = 5;
 
         // the next line makes data collection stop when we start moving.
-        if (previousAutoPositions.size() < dataPointsCollectedToStartMoving)
+        if (previousAutoPositions.size() < dataPointsCollectedToStartMoving) {
             // update by adding another pose.
             // does getJetsonAprilTagPoses already filter? is that a problem?
             getJetsonAprilTagPoses()
@@ -144,13 +145,24 @@ public final class AprilTagHandler {
                     .filter((tag) -> tag.tagId() == tagId)
                     .findFirst()
                     .map(AprilTagHandler.RobotPoseAndTagDistance::fieldRelativePose)
+                    .filter(pose ->
+                            // check if the pose is new: none of the old ones are equal to it.
+                        previousAutoPositions.stream().noneMatch(
+                                other ->
+                                    Math.abs(other.getTranslation().getX()    - pose.getTranslation().getX())    < 1E-4 &&
+                                    Math.abs(other.getTranslation().getY()    - pose.getTranslation().getY())    < 1E-4 &&
+                                    Math.abs(other.getRotation().getDegrees() - pose.getRotation().getDegrees()) < 1E-4
+                        )
+                    )
                     .map(previousAutoPositions::add);
+        }
 
-        int totalNumPositions = previousAutoPositions.size();
+
+        int newTotalNumPositions = previousAutoPositions.size();
 
         Optional<Pose2d> averagePosition;
 
-        if (totalNumPositions >= dataPointsCollectedToStartMoving) {
+        if (newTotalNumPositions >= dataPointsCollectedToStartMoving) {
             // this coould be empty, if we can't collect any data
             // e.g. apriltag finder not working, robot can't see any.
             averagePosition = previousAutoPositions
@@ -166,9 +178,9 @@ public final class AprilTagHandler {
                     })
                     // sum -> average
                     .map(e -> new double[]{
-                            e[0] / totalNumPositions,
-                            e[1] / totalNumPositions,
-                            e[2] / totalNumPositions,
+                            e[0] / newTotalNumPositions,
+                            e[1] / newTotalNumPositions,
+                            e[2] / newTotalNumPositions,
                     })
                     .map(e -> new Pose2d(new Translation2d(e[0], e[1]), new Rotation2d(e[2])));
         } else {

@@ -21,6 +21,7 @@ public final class Constants {
         public static final int RIGHT_JOYSTICK_PORT = 2;
         public static final int NINTENDO_PRO_CONTROLLER = 1;
         public static final int PS5_CONTROLLER = 3;
+        public static final int XBOX_CONTROLLER = 4;
 
         // Should this be here? especially with our new controller system, we could potentially refactor or re-abstract this using another class (maybe even for multiple driver preferences?)
         public static class ControllerConstants {

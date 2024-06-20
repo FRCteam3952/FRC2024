@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class ManualDriveCommand extends Command {
-    public static final double MAX_SPEED_METERS_PER_SEC = Flags.DriveTrain.LOWER_MAX_SPEED ? 1.5 : 3;
+    public static final double MAX_SPEED_METERS_PER_SEC = Flags.DriveTrain.LOWER_MAX_SPEED ? 1.25 : 3;
     private final DriveTrainSubsystem driveTrain;
     private final AbstractController joystick;
     private final AprilTagHandler aprilTagHandler;

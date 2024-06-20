@@ -18,10 +18,7 @@ import frc.robot.Constants.OperatorConstants.ControllerConstants;
 import frc.robot.commands.*;
 import frc.robot.commands.auto.RingHandlingAutonCommand;
 import frc.robot.commands.auto.RunShooterAutonCommand;
-import frc.robot.controllers.AbstractController;
-import frc.robot.controllers.FlightJoystick;
-import frc.robot.controllers.NintendoProController;
-import frc.robot.controllers.PS5Controller;
+import frc.robot.controllers.*;
 import frc.robot.subsystems.PowerHandler;
 import frc.robot.subsystems.climber.ClimberSubsystem;
 import frc.robot.subsystems.conveyor.ConveyorSubsystem;
@@ -52,7 +49,14 @@ public class RobotContainer {
     private final FlightJoystick sideJoystick = new FlightJoystick(new CommandJoystick(OperatorConstants.RIGHT_JOYSTICK_PORT));
     private final NintendoProController nintendoProController = new NintendoProController(new CommandXboxController(OperatorConstants.NINTENDO_PRO_CONTROLLER));
     private final PS5Controller ps5Controller = new PS5Controller(new CommandPS5Controller(OperatorConstants.PS5_CONTROLLER));
-    private final AbstractController primaryController = Flags.Operator.NINTENDO_SWITCH_CONTROLLER_AS_PRIMARY ? this.nintendoProController : this.ps5Controller;
+    private final XboxController xboxController = new XboxController(new CommandXboxController(OperatorConstants.XBOX_CONTROLLER));
+
+    private final AbstractController primaryController = Flags.Operator.NINTENDO_SWITCH_CONTROLLER_AS_PRIMARY ? this.nintendoProController : this.ps5Controller; // if nintendo is primary: set primary to nintendo; else set primary to ps5
+    /**
+     * Note: This is meant for demos where we're simulating a secondary controller as an xbox controller mapped to keyboard input. During competition the flag should be false.
+     */
+    private final AbstractController secondaryController = Flags.Operator.NINTENDO_SWITCH_CONTROLLER_AS_PRIMARY ? this.xboxController : this.nintendoProController; // if nintendo is primary: set 2ndary to xbox; else set 2ndary to nintendo
+
     private final PowerHandler powerHandler = new PowerHandler();
     private final GyroPoseEstimator gyroPoseEstimator = new GyroPoseEstimator();
     private final AprilTagHandler aprilTagHandler = new AprilTagHandler();
@@ -168,7 +172,7 @@ public class RobotContainer {
             if (Flags.Intake.USE_TEST_INTAKE_COMMAND) {
                 this.intake.setDefaultCommand(new TestIntakeCommand(this.intake, this.primaryController));
             } else if (Flags.Conveyor.IS_ATTACHED && Flags.Shooter.IS_ATTACHED) {
-                this.intake.setDefaultCommand(new RingHandlingCommand(shooter, intake, conveyor, this.primaryController, this.nintendoProController, this.aprilTagHandler));
+                this.intake.setDefaultCommand(new RingHandlingCommand(shooter, intake, conveyor, this.primaryController, this.secondaryController, this.aprilTagHandler));
             } else {
                 this.intake.setDefaultCommand(new IntakeCommand(this.intake, this.primaryController));
             }
@@ -183,8 +187,8 @@ public class RobotContainer {
         }
 
         if(Flags.Climber.IS_ATTACHED) {
-            if(Flags.Climber.USE_TEST_CLIMBER_COMMAND && !Flags.Operator.NINTENDO_SWITCH_CONTROLLER_AS_PRIMARY) {
-                this.climber.setDefaultCommand(new TestClimberCommand(climber, this.nintendoProController));
+            if(Flags.Climber.USE_TEST_CLIMBER_COMMAND) {
+                this.climber.setDefaultCommand(new TestClimberCommand(climber, this.secondaryController));
             }
         }
 

@@ -11,6 +11,9 @@ public final class Flags {
      * Flags relating to the Operator console (i.e. relating to the Driver Station laptop).
      */
     public static class Operator {
+        /**
+         * Normally we have the PS5 controller as our primary. This indicates that we should instead use the nintendo switch controller as the primary controller.
+         */
         public static final boolean NINTENDO_SWITCH_CONTROLLER_AS_PRIMARY = false;
     }
 
@@ -49,7 +52,7 @@ public final class Flags {
         /**
          * Whether to lower the maximum speed of the drive train.
          */
-        public static final boolean LOWER_MAX_SPEED = false;
+        public static final boolean LOWER_MAX_SPEED = true;
 
         /**
          * Whether to enable optimizing swerve module rotations.

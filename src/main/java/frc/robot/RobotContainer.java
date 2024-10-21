@@ -84,6 +84,7 @@ public class RobotContainer {
 
         if(Flags.DriveTrain.IS_ATTACHED) {
             this.autonChooser = AutoBuilder.buildAutoChooser();
+            autonChooser.addOption("newcommand", new randomcommand(shooter));
             SmartDashboard.putData("choose your auto", this.autonChooser);
         } else {
             this.autonChooser = null;

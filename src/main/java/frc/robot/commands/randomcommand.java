@@ -1,22 +1,24 @@
 package frc.robot.commands;
 
+// Importing in any needed libraries
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 
+// Start of command
 public class randomcommand extends Command {
     public ShooterSubsystem shooter;
     public Timer timer;
 
     public randomcommand(ShooterSubsystem shooter) {
         this.shooter = shooter;
-        this.timer = new Timer();
+        this.timer = new Timer(); 
         addRequirements(shooter);
     }
     // Resetting the timer
     @Override
     public void initialize() {
-        timer.reset();
+        timer.start();
     }
 
     @Override

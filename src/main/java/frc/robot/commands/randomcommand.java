@@ -24,6 +24,7 @@ public class randomcommand extends Command {
     @Override
     public void execute() {
         this.shooter.pivotToAngle(70);
+        System.out.println("70 degrees");
     }
 
     @Override // Called when command ends

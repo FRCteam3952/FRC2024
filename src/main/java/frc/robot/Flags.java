@@ -14,7 +14,7 @@ public final class Flags {
         /**
          * Normally we have the PS5 controller as our primary. This indicates that we should instead use the nintendo switch controller as the primary controller.
          */
-        public static final boolean NINTENDO_SWITCH_CONTROLLER_AS_PRIMARY = false;
+        public static final boolean NINTENDO_SWITCH_CONTROLLER_AS_PRIMARY = true;
     }
 
     /**
@@ -30,7 +30,7 @@ public final class Flags {
          * Whether the drive train should be allowed to send power to motor controllers. If false, motors will not be set to any power and PID requests will not be sent.
          */
         public static final boolean ENABLED = true;
-
+        
         /**
          * Whether the drive motors should be allowed to run. If false, drive motors will not be set to any power and PID requests will not be sent.
          */
@@ -52,7 +52,7 @@ public final class Flags {
         /**
          * Whether to lower the maximum speed of the drive train.
          */
-        public static final boolean LOWER_MAX_SPEED = true;
+        public static final boolean LOWER_MAX_SPEED = false;
 
         /**
          * Whether to enable optimizing swerve module rotations.
@@ -106,7 +106,7 @@ public final class Flags {
         /**
          * Whether the conveyor is physically attached and existing. If false, no motor contorllers are initialized since they are assumed to be nonexistent.
          */
-        public static final boolean IS_ATTACHED = true;
+        public static final boolean IS_ATTACHED = false;
 
         /**
          * Whether the conveyor should be allowed to send power to motor controllers. If false, motors will not be set to any power and PID requests will not be sent.

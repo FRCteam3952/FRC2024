@@ -257,7 +257,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
                     lockedHeadingMode = true;
                     lockedHeading = RobotGyro.getRotation2d();
                 } else {
-                    rotSpeed = MathUtil.clamp(1 * (lockedHeading.getRadians() - RobotGyro.getRotation2d().getRadians()), -0.3, 0.3); // account for heading drift when just moving w/o rotating
+                    rotSpeed = 0;// MathUtil.clamp(1 * (lockedHeading.getRadians() - RobotGyro.getRotation2d().getRadians()), -0.3, 0.3); // account for heading drift when just moving w/o rotating
                     // System.out.println("using a speed of " + rotSpeed + " to correct heading from " + RobotGyro.getRotation2d().getRadians() + " to " + lockedHeading.getRadians());
                 }
                 ChassisSpeeds chassisSpeeds = fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed, RobotGyro.getRotation2d()) : new ChassisSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed);

@@ -29,7 +29,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private final ThroughboreEncoder throughboreEncoder;
 
-    private double pivotAngleSetpoint = 73;
+    private double pivotAngleSetpoint = 0;
 
     public IntakeSubsystem() {
         leaderMotor = new CANSparkMax(PortConstants.INTAKE_TOP_MOTOR_ID, MotorType.kBrushless);

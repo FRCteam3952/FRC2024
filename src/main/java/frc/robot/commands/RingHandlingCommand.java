@@ -44,7 +44,7 @@ public class RingHandlingCommand extends Command {
     private boolean shouldReverse = false;
     private boolean intakeUp = false;
     private boolean hasNote = false;
-    private boolean idleShooterRpm = true;
+    private boolean idleShooterRpm = false;
 
     private enum FlapStage {
         DOWN,
@@ -224,8 +224,8 @@ public class RingHandlingCommand extends Command {
             System.out.println("running shooter on high");
             if(!autoAimSubwoofer.getAsBoolean()) {
                 System.out.println("not using subwoofer auto aim, going to high speed");
-                shooter.setMotorRpm(1000);
-                if (shooter.getShooterRpm() > 1000 - 75) {
+                shooter.setMotorRpm(2700);
+                if (shooter.getShooterRpm() > 2700 - 100) {
                     this.conveyor.setShooterFeederMotorSpeed(1);
                     this.conveyor.setConveyorMotorsSpeed(-1);
                     hasHandledNote = false;
@@ -256,8 +256,8 @@ public class RingHandlingCommand extends Command {
                     });
             }
         } else if(runShooterAmp.getAsBoolean()) {
-            shooter.setMotorRpm(1000);
-            if (shooter.getShooterRpm() > 1000 - 100) {
+            shooter.setMotorRpm(1400);
+            if (shooter.getShooterRpm() > 1400 - 100) {
                 this.conveyor.setShooterFeederMotorSpeed(1);
                 this.conveyor.setConveyorMotorsSpeed(-1);
                 hasHandledNote = false;

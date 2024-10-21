@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.OperatorConstants.ControllerConstants;
 import frc.robot.commands.*;
+import frc.robot.commands.auto.ExampleCommand;
 import frc.robot.commands.auto.RingHandlingAutonCommand;
 import frc.robot.commands.auto.RunShooterAutonCommand;
 import frc.robot.controllers.*;
@@ -70,6 +71,7 @@ public class RobotContainer {
         this.conveyor   = Util.createIfFlagElseNull(ConveyorSubsystem::new, Flags.Conveyor.IS_ATTACHED);
         this.climber    = Util.createIfFlagElseNull(ClimberSubsystem::new, Flags.Climber.IS_ATTACHED);
 
+        /*
         NamedCommands.registerCommand("shoot", new RunShooterAutonCommand(this.shooter, this.conveyor, 1900, 54));
         NamedCommands.registerCommand("shoot_lower", new RunShooterAutonCommand(this.shooter, this.conveyor, 2600, 45));
         NamedCommands.registerCommand("shoot_40", new RunShooterAutonCommand(shooter, conveyor, 2600, 40));
@@ -77,7 +79,10 @@ public class RobotContainer {
         NamedCommands.registerCommand("activate_intake", new RingHandlingAutonCommand(this.conveyor, this.intake));
         NamedCommands.registerCommand("raise_intake", new InstantCommand(() -> this.intake.pivotToAngle(74), this.intake));
         NamedCommands.registerCommand("adjust", new InstantCommand());
-        NamedCommands.registerCommand("shoot_30", new RunShooterAutonCommand(shooter, conveyor, 2600, 30));
+        NamedCommands.registerCommand("shoot_30", new RunShooterAutonCommand(shooter, conveyor, 2600, 30));*/
+        
+        NamedCommands.registerCommand("misc_intake_command", new InstantCommand(() -> this.intake.pivotToAngle(30), this.intake));
+        // NamedCommands.registerCommand("test_climber", new TestClimberCommand(climber, joystick));
 
         configureBindings();
 
@@ -88,6 +93,9 @@ public class RobotContainer {
 
         if(Flags.DriveTrain.IS_ATTACHED) {
             this.autonChooser = AutoBuilder.buildAutoChooser();
+            //autonChooser.addOption("auto/RingHandlingAutonCommand.java", new RingHandlingAutonCommand(conveyor, intake));
+            autonChooser.addOption("auto/ExampleCommand.java", new ExampleCommand(shooter));
+            autonChooser.addOption("auto/IvanCommand.java", new IvanCommand(driveTrain));
             SmartDashboard.putData("choose your auto", this.autonChooser);
         } else {
             this.autonChooser = null;
@@ -135,9 +143,9 @@ public class RobotContainer {
 
     private void configureBindings() {
         if (Flags.DriveTrain.IS_ATTACHED) {
-            ControlHandler.get(this.nintendoProController, ControllerConstants.ZERO_SWERVE_MODULES).onTrue(this.driveTrain.rotateToAbsoluteZeroCommand());
+            ControlHandler.get(this.secondaryController, ControllerConstants.ZERO_SWERVE_MODULES).onTrue(this.driveTrain.rotateToAbsoluteZeroCommand());
         }
-        ControlHandler.get(this.nintendoProController, ControllerConstants.ZERO_GYRO).onTrue(Commands.runOnce(() -> {
+        ControlHandler.get(this.secondaryController, ControllerConstants.ZERO_GYRO).onTrue(Commands.runOnce(() -> {
             if(Util.onBlueTeam()) {
                 RobotGyro.resetGyroAngle();
             } else {
@@ -146,9 +154,9 @@ public class RobotContainer {
             this.driveTrain.setHeadingLockMode(false);
         }));
 
-        sideJoystick.joystick.button(8).whileTrue(new CalibrateIntakeCommand(intake, nintendoProController));
+        sideJoystick.joystick.button(8).whileTrue(new CalibrateIntakeCommand(intake, secondaryController));
         if(Flags.DriveTrain.IS_ATTACHED) {
-            ControlHandler.get(this.nintendoProController, ControllerConstants.RESET_POSE_ESTIMATOR).onTrue(new InstantCommand(this.driveTrain::resetPoseToMidSubwoofer));
+            ControlHandler.get(this.secondaryController, ControllerConstants.RESET_POSE_ESTIMATOR).onTrue(new InstantCommand(this.driveTrain::resetPoseToMidSubwoofer));
         }
     }
 

@@ -243,51 +243,62 @@ public class DriveTrainSubsystem extends SubsystemBase {
      * @param fieldRelative Whether the provided x and y speeds are relative to the field.
      */
     public void drive(double forwardSpeed, double sidewaysSpeed, double rotSpeed, boolean fieldRelative) {
-        if (Flags.DriveTrain.ENABLED) {
-            // System.out.println("targets: x: " + xSpeed + " y: " + ySpeed + " rot: " + rot);
-            // System.out.println("Gyro angle: " + RobotGyro.getRotation2d().getDegrees());
-            SwerveModuleState[] swerveModuleStates;
-            if(Math.abs(rotSpeed) > 0.01) {
-                lockedHeadingMode = false;
-                // System.out.println("not locking to heading, correcting for drift when turning+rotating at a rotSpeed of " + rotSpeed);
-                ChassisSpeeds chassisSpeeds = fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed, RobotGyro.getRotation2d()) : new ChassisSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed);
-                swerveModuleStates = kinematics.toSwerveModuleStates(ChassisSpeeds.discretize(chassisSpeeds, 0.03)); // an attempt to account for movement drift when rotating + moving
-            } else {
-                if(!lockedHeadingMode) {
-                    lockedHeadingMode = true;
-                    lockedHeading = RobotGyro.getRotation2d();
-                } else {
-                    rotSpeed = MathUtil.clamp(1 * (lockedHeading.getRadians() - RobotGyro.getRotation2d().getRadians()), -0.3, 0.3); // account for heading drift when just moving w/o rotating
-                    // System.out.println("using a speed of " + rotSpeed + " to correct heading from " + RobotGyro.getRotation2d().getRadians() + " to " + lockedHeading.getRadians());
-                }
-                ChassisSpeeds chassisSpeeds = fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed, RobotGyro.getRotation2d()) : new ChassisSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed);
-                swerveModuleStates = kinematics.toSwerveModuleStates(chassisSpeeds);
-            }
+        if (!Flags.DriveTrain.ENABLED) 
+            return;
+        // System.out.println("targets: x: " + xSpeed + " y: " + ySpeed + " rot: " + rot);
+        // System.out.println("Gyro angle: " + RobotGyro.getRotation2d().getDegrees());
+        SwerveModuleState[] swerveModuleStates;
 
-            SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, ManualDriveCommand.MAX_SPEED_METERS_PER_SEC);
-            boolean shouldOptimize = true;
-            for (SwerveModule swerveModule : swerveModules) {
-                if (Math.abs(swerveModule.getDriveVelocity()) > SMART_OPTIMIZATION_THRESH_M_PER_SEC) {
-                    shouldOptimize = false;
-                    break;
-                }
+        boolean shouldBeRotating = Math.abs(rotSpeed) > 0.01;
+        if(shouldBeRotating) {
+            lockedHeadingMode = false;
+        } else {
+            if(lockedHeadingMode == false) {
+                // As soon as the robot isn't rotating (the driver's thumb isn't on the rotation joystick anymore),
+                // we set lockedHeadingMode to true and store the current heading so we can keep moving at it.
+                lockedHeadingMode = true;
+                lockedHeading = RobotGyro.getRotation2d();
             }
-            if (shouldOptimize || !Flags.DriveTrain.SPEED_BASED_SWERVE_MODULE_OPTIMIZATION) {
-                // System.out.println("Optimizing");
-                frontLeft.setDesiredState(swerveModuleStates[0], 0);
-                frontRight.setDesiredState(swerveModuleStates[1], 1);
-                backLeft.setDesiredState(swerveModuleStates[2], 2);
-                backRight.setDesiredState(swerveModuleStates[3], 3);
-            } else {
-                System.out.println("Not Optimizing");
-                frontLeft.setDesiredStateNoOptimize(swerveModuleStates[0], 0);
-                frontRight.setDesiredStateNoOptimize(swerveModuleStates[1], 1);
-                backLeft.setDesiredStateNoOptimize(swerveModuleStates[2], 2);
-                backRight.setDesiredStateNoOptimize(swerveModuleStates[3], 3);
-            }
-
-            targetSwerveStatePublisher.set(optimizedTargetStates);
+            double headingError = lockedHeading.getRadians() - RobotGyro.getRotation2d().getRadians();
+            double unboundedRotSpeed = 1 * headingError;
+            rotSpeed = MathUtil.clamp(unboundedRotSpeed, -0.3, 0.3);
         }
+            
+        ChassisSpeeds chassisSpeeds; 
+        if(fieldRelative) {
+            chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed, RobotGyro.getRotation2d());
+        } else {
+            chassisSpeeds = new ChassisSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed);
+        }
+        
+        if (shouldBeRotating) {
+            chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.3);
+        }
+        swerveModuleStates = kinematics.toSwerveModuleStates(chassisSpeeds);
+
+        SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, ManualDriveCommand.MAX_SPEED_METERS_PER_SEC);
+        // boolean shouldOptimize = true;
+        // for (SwerveModule swerveModule : swerveModules) {
+        //     if (Math.abs(swerveModule.getDriveVelocity()) > SMART_OPTIMIZATION_THRESH_M_PER_SEC) {
+        //         shouldOptimize = false;
+        //         break;
+        //     }
+        // }
+        // if (shouldOptimize || !Flags.DriveTrain.SPEED_BASED_SWERVE_MODULE_OPTIMIZATION) {
+            // System.out.println("Optimizing");
+            frontLeft.setDesiredState(swerveModuleStates[0], 0);
+            frontRight.setDesiredState(swerveModuleStates[1], 1);
+            backLeft.setDesiredState(swerveModuleStates[2], 2);
+            backRight.setDesiredState(swerveModuleStates[3], 3);
+        // } else {
+        //     System.out.println("Not Optimizing");
+        //     frontLeft.setDesiredStateNoOptimize(swerveModuleStates[0], 0);
+        //     frontRight.setDesiredStateNoOptimize(swerveModuleStates[1], 1);
+        //     backLeft.setDesiredStateNoOptimize(swerveModuleStates[2], 2);
+        //     backRight.setDesiredStateNoOptimize(swerveModuleStates[3], 3);
+        // }
+
+        targetSwerveStatePublisher.set(optimizedTargetStates);
     }
 
     /**

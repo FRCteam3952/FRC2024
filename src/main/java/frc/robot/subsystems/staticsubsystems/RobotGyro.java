@@ -35,6 +35,7 @@ public final class RobotGyro {
      * @return The robot's current rotation as a {@link Rotation2d}
      */
     public static Rotation2d getRotation2d() {
+        // TODO: who knows if this is supposed to be negative or not
         return new Rotation2d(-Math.toRadians(gyro.getAngle(IMUAxis.kZ) + angleAdjust));
     }
 
@@ -82,6 +83,7 @@ public final class RobotGyro {
      */
     public static void resetGyroAngle() {
         gyro.reset();
+        gyro.setGyroAngle(IMUAxis.kZ, 0);
         angleAdjust = 0;
     }
 

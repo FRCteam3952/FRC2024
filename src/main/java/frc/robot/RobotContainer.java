@@ -77,7 +77,7 @@ public class RobotContainer {
         // Initialize static subsystems (this is a Java thing don't worry about it just copy it so that static blocks run on startup)
         LimeLight.poke();
         RobotGyro.poke();
-        ColorSensor.initialize();
+        ColorSensor.poke();
 
         if(Flags.DriveTrain.IS_ATTACHED) {
             this.autonChooser = AutoBuilder.buildAutoChooser();

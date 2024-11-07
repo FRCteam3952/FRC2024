@@ -243,25 +243,24 @@ public class DriveTrainSubsystem extends SubsystemBase {
      * @param fieldRelative Whether the provided x and y speeds are relative to the field.
      */
     public void drive(double forwardSpeed, double sidewaysSpeed, double rotSpeed, boolean fieldRelative) {
-        if (!Flags.DriveTrain.ENABLED) 
-            return;
-        // System.out.println("targets: x: " + xSpeed + " y: " + ySpeed + " rot: " + rot);
-        // System.out.println("Gyro angle: " + RobotGyro.getRotation2d().getDegrees());
+        if (!Flags.DriveTrain.ENABLED) return;
         SwerveModuleState[] swerveModuleStates;
 
-        boolean shouldBeRotating = Math.abs(rotSpeed) > 0.01;
-        if(shouldBeRotating) {
-            lockedHeadingMode = false;
-        } else {
-            if(lockedHeadingMode == false) {
-                // As soon as the robot isn't rotating (the driver's thumb isn't on the rotation joystick anymore),
-                // we set lockedHeadingMode to true and store the current heading so we can keep moving at it.
-                lockedHeadingMode = true;
-                lockedHeading = RobotGyro.getRotation2d();
+        if (Flags.DriveTrain.ENABLE_LOCKED_HEADING_MODE) {
+            // As soon as the robot isn't rotating (the driver's thumb isn't on the rotation joystick anymore),
+            // we set lockedHeadingMode to true and store the current heading so we can keep moving at it.
+            boolean shouldBeRotating = Math.abs(rotSpeed) > 0.01;
+            if(shouldBeRotating) {
+                lockedHeadingMode = false;
+            } else {
+                if(lockedHeadingMode == false) {
+                    lockedHeadingMode = true;
+                    lockedHeading = RobotGyro.getRotation2d();
+                }
+                double headingError = lockedHeading.getRadians() - RobotGyro.getRotation2d().getRadians();
+                double unboundedRotSpeed = 1 * headingError; // 1 is changeable constant
+                rotSpeed = MathUtil.clamp(unboundedRotSpeed, -0.3, 0.3);
             }
-            double headingError = lockedHeading.getRadians() - RobotGyro.getRotation2d().getRadians();
-            double unboundedRotSpeed = 1 * headingError;
-            rotSpeed = MathUtil.clamp(unboundedRotSpeed, -0.3, 0.3);
         }
             
         ChassisSpeeds chassisSpeeds; 
@@ -270,33 +269,13 @@ public class DriveTrainSubsystem extends SubsystemBase {
         } else {
             chassisSpeeds = new ChassisSpeeds(forwardSpeed, sidewaysSpeed, rotSpeed);
         }
-        
-        if (shouldBeRotating) {
-            chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.3);
-        }
         swerveModuleStates = kinematics.toSwerveModuleStates(chassisSpeeds);
 
         SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, ManualDriveCommand.MAX_SPEED_METERS_PER_SEC);
-        // boolean shouldOptimize = true;
-        // for (SwerveModule swerveModule : swerveModules) {
-        //     if (Math.abs(swerveModule.getDriveVelocity()) > SMART_OPTIMIZATION_THRESH_M_PER_SEC) {
-        //         shouldOptimize = false;
-        //         break;
-        //     }
-        // }
-        // if (shouldOptimize || !Flags.DriveTrain.SPEED_BASED_SWERVE_MODULE_OPTIMIZATION) {
-            // System.out.println("Optimizing");
-            frontLeft.setDesiredState(swerveModuleStates[0], 0);
-            frontRight.setDesiredState(swerveModuleStates[1], 1);
-            backLeft.setDesiredState(swerveModuleStates[2], 2);
-            backRight.setDesiredState(swerveModuleStates[3], 3);
-        // } else {
-        //     System.out.println("Not Optimizing");
-        //     frontLeft.setDesiredStateNoOptimize(swerveModuleStates[0], 0);
-        //     frontRight.setDesiredStateNoOptimize(swerveModuleStates[1], 1);
-        //     backLeft.setDesiredStateNoOptimize(swerveModuleStates[2], 2);
-        //     backRight.setDesiredStateNoOptimize(swerveModuleStates[3], 3);
-        // }
+        frontLeft .setDesiredState(swerveModuleStates[0], 0);
+        frontRight.setDesiredState(swerveModuleStates[1], 1);
+        backLeft  .setDesiredState(swerveModuleStates[2], 2);
+        backRight .setDesiredState(swerveModuleStates[3], 3);
 
         targetSwerveStatePublisher.set(optimizedTargetStates);
     }
@@ -307,10 +286,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
      * @param speed The desired speed, [-1, 1]
      */
     public void directDriveSpeed(double speed) { // INCHES: 10 rot ~= 18.25, ~ 9 rot ~= 15.75
-        frontLeft.directDrive(speed);
+        frontLeft .directDrive(speed);
         frontRight.directDrive(speed);
-        backLeft.directDrive(speed);
-        backRight.directDrive(speed);
+        backLeft  .directDrive(speed);
+        backRight .directDrive(speed);
     }
 
     /**
@@ -319,10 +298,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
      * @param speed The desired speed, [-1, 1]
      */
     public void directTurnSpeed(double speed) {
-        frontLeft.directTurn(speed);
+        frontLeft .directTurn(speed);
         frontRight.directTurn(speed);
-        backLeft.directTurn(speed);
-        backRight.directTurn(speed);
+        backLeft  .directTurn(speed);
+        backRight .directTurn(speed);
     }
 
     /**
@@ -331,10 +310,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
      * @param volts The desired voltage output
      */
     public void directDriveVoltage(double volts) {
-        frontLeft.setVoltages(volts, 0);
+        frontLeft .setVoltages(volts, 0);
         frontRight.setVoltages(volts, 0);
-        backLeft.setVoltages(volts, 0);
-        backRight.setVoltages(volts, 0);
+        backLeft  .setVoltages(volts, 0);
+        backRight .setVoltages(volts, 0);
     }
 
     /**
@@ -343,20 +322,20 @@ public class DriveTrainSubsystem extends SubsystemBase {
      * @param states An array of 4 desired states, in the order FL, FR, BL, BR.
      */
     public void consumeRawModuleStates(SwerveModuleState[] states) {
-        frontLeft.setDesiredState(states[0]);
+        frontLeft .setDesiredState(states[0]);
         frontRight.setDesiredState(states[1]);
-        backLeft.setDesiredState(states[2]);
-        backRight.setDesiredState(states[3]);
+        backLeft  .setDesiredState(states[2]);
+        backRight .setDesiredState(states[3]);
     }
 
     /**
      * Stops all motors, driving or turning, by sending a target voltage of 0.
      */
     public void stop() {
-        this.frontLeft.stop();
+        this.frontLeft .stop();
         this.frontRight.stop();
-        this.backLeft.stop();
-        this.backRight.stop();
+        this.backLeft  .stop();
+        this.backRight .stop();
     }
 
     @Override
